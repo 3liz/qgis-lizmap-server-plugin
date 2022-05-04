@@ -8,11 +8,12 @@ from qgis.core import Qgis
 from qgis.PyQt.QtCore import QRegularExpression
 from qgis.server import QgsServerOgcApi, QgsServerOgcApiHandler
 
-from lizmap.server.exception import ServiceError
-from lizmap.server.tools import check_environment_variable
+from lizmap_server.exception import ServiceError
+from lizmap_server.tools import check_environment_variable
 
 try:
     # Py-QGIS-Server
+    # noinspection PyUnresolvedReferences
     from pyqgisserver.plugins import plugin_list, plugin_metadata
     IS_PY_QGIS_SERVER = True
 except ImportError:
@@ -24,7 +25,7 @@ except ImportError:
         """ To match Py-QGIS-Server API."""
         return server_active_plugins
 
-from lizmap.server.tools import to_bool
+from lizmap_server.tools import to_bool
 
 
 def plugin_metadata_key(name: str, key: str, ) -> str:

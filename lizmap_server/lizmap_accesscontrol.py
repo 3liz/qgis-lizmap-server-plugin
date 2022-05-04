@@ -11,7 +11,7 @@ from qgis.core import (
 )
 from qgis.server import QgsAccessControlFilter, QgsServerInterface
 
-from lizmap.server.core import (
+from lizmap_server.core import (
     get_lizmap_config,
     get_lizmap_groups,
     get_lizmap_layer_login_filter,
@@ -20,13 +20,13 @@ from lizmap.server.core import (
     get_lizmap_user_login,
     is_editing_context,
 )
-from lizmap.server.filter_by_polygon import (
+from lizmap_server.filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
 )
-from lizmap.server.logger import Logger, profiling
-from lizmap.server.tools import to_bool
+from lizmap_server.logger import Logger, profiling
+from lizmap_server.tools import to_bool
 
 
 class LizmapAccessControlFilter(QgsAccessControlFilter):

@@ -5,9 +5,9 @@ __email__ = 'info@3liz.org'
 from qgis.core import QgsProject
 from qgis.server import QgsServerFilter, QgsServerInterface
 
-from lizmap.server.core import get_lizmap_config, get_lizmap_groups
-from lizmap.server.exception import LizmapFilterException
-from lizmap.server.logger import Logger
+from lizmap_server.core import get_lizmap_config, get_lizmap_groups
+from lizmap_server.exception import LizmapFilterException
+from lizmap_server.logger import Logger
 
 
 class LizmapFilter(QgsServerFilter):

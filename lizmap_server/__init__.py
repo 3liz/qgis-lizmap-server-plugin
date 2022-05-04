@@ -28,7 +28,8 @@ def classFactory(iface):
     return Nothing(iface)
 
 
-def serverClassFactory(serverIface):  # pylint: disable=invalid-name
+# noinspection PyPep8Naming
+def serverClassFactory(serverIface):
     """Load Lizmap server class.
 
     :param serverIface: A QGIS Server interface instance.

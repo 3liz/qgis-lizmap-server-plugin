@@ -22,10 +22,10 @@ from qgis.core import (
 )
 from qgis.server import QgsServerFilter
 
-from lizmap.server.core import find_vector_layer, server_feature_id_expression
-from lizmap.server.logger import Logger, exception_handler
-from lizmap.server.tools import to_bool
-from lizmap.tooltip import Tooltip
+from lizmap_server.core import find_vector_layer, server_feature_id_expression
+from lizmap_server.logger import Logger, exception_handler
+from lizmap_server.tools import to_bool
+from lizmap_server.tooltip import Tooltip
 
 """
 QGIS Server filter for the GetFeatureInfo according to CFG config.

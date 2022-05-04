@@ -10,7 +10,7 @@ import unittest
 
 from qgis.core import QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer, edit
 
-from lizmap.server.filter_by_polygon import FilterByPolygon
+from lizmap_server.filter_by_polygon import FilterByPolygon
 
 
 class TestFilterByPolygon(unittest.TestCase):

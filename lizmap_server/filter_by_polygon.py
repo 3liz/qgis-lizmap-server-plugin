@@ -24,7 +24,7 @@ if Qgis.QGIS_VERSION_INT > 31000:
 
     from qgis.core import QgsProviderRegistry
 
-from lizmap.server.logger import Logger, profiling
+from lizmap_server.logger import Logger, profiling
 
 # TODO implement LRU cache with this variable
 CACHE_MAX_SIZE = 100

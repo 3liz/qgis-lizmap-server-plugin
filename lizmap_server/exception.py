@@ -6,8 +6,8 @@ from qgis.PyQt.QtCore import QByteArray
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.server import QgsServerException, QgsServerResponse
 
-from lizmap.server.core import write_json_response
-from lizmap.server.logger import Logger
+from lizmap_server.core import write_json_response
+from lizmap_server.logger import Logger
 
 
 class ServiceError(Exception):

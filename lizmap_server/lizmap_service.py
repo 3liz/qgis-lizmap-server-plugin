@@ -15,7 +15,7 @@ from qgis.server import (
     QgsService,
 )
 
-from lizmap.server.core import (
+from lizmap_server.core import (
     find_vector_layer_from_params,
     get_lizmap_config,
     get_lizmap_groups,
@@ -24,14 +24,14 @@ from lizmap.server.core import (
     is_editing_context,
     write_json_response,
 )
-from lizmap.server.exception import ServiceError
-from lizmap.server.filter_by_polygon import (
+from lizmap_server.exception import ServiceError
+from lizmap_server.filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
 )
-from lizmap.server.logger import Logger, profiling
-from lizmap.server.tools import version
+from lizmap_server.logger import Logger, profiling
+from lizmap_server.tools import version
 
 
 class LizmapServiceError(ServiceError):

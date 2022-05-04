@@ -17,8 +17,8 @@ from qgis.core import (
 )
 from qgis.server import QgsRequestHandler, QgsServerResponse
 
-from lizmap.server.logger import Logger
-from lizmap.server.tools import to_bool
+from lizmap_server.logger import Logger
+from lizmap_server.tools import to_bool
 
 
 def write_json_response(data: Dict[str, str], response: QgsServerResponse, code: int = 200) -> None:

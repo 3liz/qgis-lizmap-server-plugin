@@ -11,7 +11,7 @@ from contextlib import contextmanager
 
 from qgis.core import Qgis, QgsMessageLog
 
-from lizmap.server.tools import to_bool
+from lizmap_server.tools import to_bool
 
 PLUGIN = 'Lizmap'
 

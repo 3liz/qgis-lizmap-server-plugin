@@ -27,16 +27,16 @@ from qgis.server import (
     QgsService,
 )
 
-from lizmap.server.core import (
+from lizmap_server.core import (
     find_vector_layer,
     get_lizmap_groups,
     get_lizmap_user_login,
     get_server_fid,
     write_json_response,
 )
-from lizmap.server.exception import ExpressionServiceError
-from lizmap.server.logger import Logger
-from lizmap.server.tools import to_bool
+from lizmap_server.exception import ExpressionServiceError
+from lizmap_server.logger import Logger
+from lizmap_server.tools import to_bool
 
 
 class ExpressionService(QgsService):

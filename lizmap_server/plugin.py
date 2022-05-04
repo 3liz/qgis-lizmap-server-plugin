@@ -5,16 +5,16 @@ __email__ = 'info@3liz.org'
 from qgis.core import Qgis
 from qgis.server import QgsServerInterface, QgsServerOgcApi
 
-from lizmap.server.expression_service import ExpressionService
-from lizmap.server.get_feature_info import GetFeatureInfoFilter
-from lizmap.server.lizmap_accesscontrol import LizmapAccessControlFilter
-from lizmap.server.lizmap_filter import LizmapFilter
-from lizmap.server.lizmap_service import LizmapService
-from lizmap.server.logger import Logger
-from lizmap.server.tools import check_environment_variable, version
+from lizmap_server.expression_service import ExpressionService
+from lizmap_server.get_feature_info import GetFeatureInfoFilter
+from lizmap_server.lizmap_accesscontrol import LizmapAccessControlFilter
+from lizmap_server.lizmap_filter import LizmapFilter
+from lizmap_server.lizmap_service import LizmapService
+from lizmap_server.logger import Logger
+from lizmap_server.tools import check_environment_variable, version
 
 if Qgis.QGIS_VERSION_INT >= 31000:
-    from lizmap.server.server_info_handler import ServerInfoHandler
+    from lizmap_server.server_info_handler import ServerInfoHandler
 
 
 class LizmapServer:
