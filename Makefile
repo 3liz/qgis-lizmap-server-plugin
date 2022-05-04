@@ -1,18 +1,3 @@
-start_tests:
-	@echo 'Start docker-compose'
-	@cd .docker && ./start.sh
-
-run_tests:
-	@echo 'Running tests, containers must be running'
-	@cd .docker && ./exec.sh
-	@flake8
-
-stop_tests:
-	@echo 'Stopping/killing containers'
-	@cd .docker && ./stop.sh
-
-tests: start_tests run_tests stop_tests
-
 SHELL:=bash
 
 COMMITID=$(shell git rev-parse --short HEAD)
@@ -33,7 +18,7 @@ LOCAL_HOME ?= $(shell pwd)
 
 SRCDIR=$(shell realpath .)
 
-test_server:
+tests:
 	@mkdir -p $$(pwd)/.local $(LOCAL_HOME)/.cache
 	@docker run --rm --name qgis-server-lizmap-test-$(FLAVOR)-$(COMMITID) -w /src/test/server \
 		-u $(BECOME_USER) \

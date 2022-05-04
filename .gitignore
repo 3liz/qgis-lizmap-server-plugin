@@ -30,9 +30,7 @@ __output__
 *.qgz
 
 # QGIS-Plugin-CI
-lizmap.*.zip
-lizmap/i18n/lizmap_qgis_plugin_*.ts
-lizmap/i18n/lizmap_qgis_plugin_*.qm
+lizmap_server.*.zip
 
 unittest.qgs
 lizmap/test/data/*.gpkg-shm

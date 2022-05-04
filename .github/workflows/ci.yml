@@ -7,14 +7,13 @@ on:
     branches:
       - master
     paths:
-      - 'lizmap/**'
-      - '.docker/**'
+      - 'lizmap_server/**'
       - 'test/**'
   pull_request:
     branches:
       - master
     paths:
-      - 'lizmap/**'
+      - 'lizmap_server/**'
       - 'test/**'
 
 jobs:
@@ -45,22 +44,7 @@ jobs:
       - name: Run flake8
         run: flake8
 
-  test-desktop:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .docker
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v2
-        with:
-          submodules: 'true'
-      - name: Launching docker-compose
-        run: ./start.sh
-      - name: Running tests
-        run: ./exec.sh
-
-  test-server:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -100,7 +84,7 @@ jobs:
           ./run-tests.sh
 
   release:
-    needs: [test-desktop, test-server, flake8]
+    needs: [tests, flake8]
 
     runs-on: ubuntu-latest
     if: github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/')
@@ -157,7 +141,7 @@ jobs:
           consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
           access_token_key: ${{ secrets.TWITTER_ACCESS_TOKEN_KEY }}
           access_token_secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
-          tweet_body: "New version of @LizmapForQgis plugin ${{ env.RELEASE_VERSION }} 🦎 on #QGIS https://github.com/3liz/lizmap-plugin/releases"
+          tweet_body: "New version of @LizmapForQgis server plugin ${{ env.RELEASE_VERSION }} 🦎 on #QGIS https://github.com/3liz/qgis-lizmap-server-plugin/releases"
 
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v2
