@@ -16,6 +16,8 @@ echo "Installing required packages..."
 $PIP_INSTALL -q pip setuptools wheel
 $PIP_INSTALL -q -U --prefer-binary --user -r requirements.txt
 
+export PYTHONPATH=$PYTHONPATH:/src/
+
 # Disable qDebug stuff that bloats test outputs
 export QT_LOGGING_RULES="*.debug=false;*.warning=false"
 

@@ -2,13 +2,11 @@ __copyright__ = 'Copyright 2021, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
-from qgis.core import Qgis, QgsCoordinateReferenceSystem
-
 """ Test filter by polygon. """
 
 import unittest
 
-from qgis.core import QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer, edit
+from qgis.core import QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer, edit, Qgis, QgsCoordinateReferenceSystem
 
 from lizmap_server.filter_by_polygon import FilterByPolygon
 
@@ -202,8 +200,8 @@ class TestFilterByPolygon(unittest.TestCase):
         """ Test building a postgresql string for filter by polygon. """
         # ST_Intersect
         sql = FilterByPolygon._format_sql_st_relationship(
-            QgsCoordinateReferenceSystem(2154),
-            QgsCoordinateReferenceSystem(4326),
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            QgsCoordinateReferenceSystem("EPSG:4326"),
             'geom',
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=True,
@@ -217,8 +215,8 @@ ST_Intersects(
 
         # ST_Contains
         sql = FilterByPolygon._format_sql_st_relationship(
-            QgsCoordinateReferenceSystem(2154),
-            QgsCoordinateReferenceSystem(4326),
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            QgsCoordinateReferenceSystem("EPSG:4326"),
             'geom',
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=False,

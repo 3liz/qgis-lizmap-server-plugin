@@ -17,7 +17,7 @@ qgis-server:
         "nightly-release",
       ]
   script:
-    - make test FLAVOR=${QGIS_VERSION}
+    - make tests FLAVOR=${QGIS_VERSION}
   environment:
     name: snap
   tags:

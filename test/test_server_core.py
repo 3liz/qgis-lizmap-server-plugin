@@ -42,7 +42,7 @@ class TestServerCore(unittest.TestCase):
         qgis_project_path = os.path.join(data_path, 'foobar.qgs')
         self.assertIsNone(get_lizmap_config(qgis_project_path))
 
-        qgis_project_path = os.path.join(data_path, 'lizmap_3_3.qgs')
+        qgis_project_path = os.path.join(data_path, 'france_parts_liz.qgs')
         self.assertIsNotNone(get_lizmap_config(qgis_project_path))
 
     def test_get_lizmap_layers_config(self):
@@ -114,7 +114,7 @@ class TestServerCore(unittest.TestCase):
             },
             'lines-geojson'))
 
-        goodDict = {
+        good_dict = {
             'loginFilteredLayers': {
                 'lines-geojson': {
                     'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3',
@@ -125,11 +125,11 @@ class TestServerCore(unittest.TestCase):
             }
         }
 
-        self.assertIsNone(get_lizmap_layer_login_filter(goodDict, 'foobar'))
-        self.assertIsNone(get_lizmap_layer_login_filter(goodDict, None))
-        self.assertIsNone(get_lizmap_layer_login_filter(goodDict, 10))
+        self.assertIsNone(get_lizmap_layer_login_filter(good_dict, 'foobar'))
+        self.assertIsNone(get_lizmap_layer_login_filter(good_dict, None))
+        self.assertIsNone(get_lizmap_layer_login_filter(good_dict, 10))
 
-        cfg_layer_login_filter = get_lizmap_layer_login_filter(goodDict, 'lines-geojson')
+        cfg_layer_login_filter = get_lizmap_layer_login_filter(good_dict, 'lines-geojson')
         self.assertIsNotNone(cfg_layer_login_filter)
         self.assertDictEqual(
             cfg_layer_login_filter,
