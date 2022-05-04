@@ -6,7 +6,15 @@ __email__ = 'info@3liz.org'
 
 import unittest
 
-from qgis.core import QgsFeature, QgsGeometry, QgsProject, QgsVectorLayer, edit, Qgis, QgsCoordinateReferenceSystem
+from qgis.core import (
+    Qgis,
+    QgsCoordinateReferenceSystem,
+    QgsFeature,
+    QgsGeometry,
+    QgsProject,
+    QgsVectorLayer,
+    edit,
+)
 
 from lizmap_server.filter_by_polygon import FilterByPolygon
 
