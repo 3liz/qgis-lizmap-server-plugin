@@ -20,7 +20,7 @@ SRCDIR=$(shell realpath .)
 
 tests:
 	@mkdir -p $$(pwd)/.local $(LOCAL_HOME)/.cache
-	@docker run --rm --name qgis-server-lizmap-test-$(FLAVOR)-$(COMMITID) -w /src/test/server \
+	@docker run --rm --name qgis-server-lizmap-test-$(FLAVOR)-$(COMMITID) -w /src/test/ \
 		-u $(BECOME_USER) \
 		-v $(SRCDIR):/src \
 		-v $$(pwd)/.local:/.local \
