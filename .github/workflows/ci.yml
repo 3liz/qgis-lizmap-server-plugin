@@ -81,7 +81,7 @@ jobs:
           -v ${GITHUB_WORKSPACE}:/src
           -v ${GITHUB_WORKSPACE}/.local:/.local
           3liz/qgis-platform:${{ matrix.qgis_version }}
-          ./run-tests.sh
+          /src/test/run-tests.sh
 
   release:
     needs: [tests, flake8]
