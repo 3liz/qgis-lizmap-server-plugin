@@ -100,11 +100,6 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install Qt lrelease
-        run: |
-          sudo apt-get update
-          sudo apt-get install qt5-default qttools5-dev-tools
-
       - uses: actions/cache@v3.0.2
         with:
           path: ~/.cache/pip
@@ -149,4 +144,4 @@ jobs:
           token: ${{ secrets.BOT_HUB_TOKEN }}
           repository: 3liz/3liz.github.io
           event-type: merge-plugins
-          client-payload: '{"name": "lizmap", "version": "${{ env.RELEASE_VERSION }}", "url": "https://github.com/3liz/lizmap-plugin/releases/latest/download/plugins.xml"}'
+          client-payload: '{"name": "lizmap_server", "version": "${{ env.RELEASE_VERSION }}", "url": "https://github.com/3liz/qgis-lizmap-server-plugin/releases/latest/download/plugins.xml"}'

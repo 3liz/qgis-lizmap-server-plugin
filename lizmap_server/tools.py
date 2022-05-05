@@ -29,7 +29,6 @@ def to_bool(val: Union[str, int, float, bool], default_value: bool = True) -> bo
 
 def version() -> str:
     """ Returns the Lizmap current version. """
-    # Do not use qgis_plugin_tools because of the packaging
     file_path = Path(__file__).parent.joinpath('metadata.txt')
     config = configparser.ConfigParser()
     try:
