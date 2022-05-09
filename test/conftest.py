@@ -12,7 +12,7 @@ from qgis.PyQt import Qt
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
-    import gdal
+    from osgeo import gdal
 
 logging.basicConfig( stream=sys.stderr )
 logging.disable(logging.NOTSET)
