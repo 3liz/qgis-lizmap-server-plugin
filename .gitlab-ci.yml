@@ -7,7 +7,6 @@ stages:
 - test
 - package
 - deploy
-# - release
 
 qgis-server:
   stage: test
@@ -52,12 +51,13 @@ package-nightly:
     # Temporary command until the PR is merged in qgis-plugin-ci about the "next" command
     - TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
     - VERSION=$(echo ${TAG} | awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{if(length($NF+1)>length($NF))$(NF-1)++; $NF=sprintf("%0*d", length($NF), ($NF+1)%(10^length($NF))); print}')-alpha
-    - mv lizmap_server.${VERSION}.zip lizmap_server.${CI_COMMIT_REF_NAME}.zip
+    - cp lizmap_server.${VERSION}.zip lizmap_server.latest.zip
   tags:
     - infrav3-plain
   artifacts:
     expose_as: 'QGIS package'
     paths:
+      - lizmap_server.${VERSION}.zip
       - lizmap_server.${CI_COMMIT_REF_NAME}.zip
 
 package-tag:
@@ -81,6 +81,10 @@ deploy-website:
     - upload_to_packages_server lizmap_server.${CI_COMMIT_REF_NAME}.zip pub/lizmap-server-qgis-plugin/
   tags:
     - fabric
+
+# Dev for infra-V2 and infra-V3
+# For snap, artifact available : lizmap_server.master.zip
+# For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
 
 tickets:
   stage: deploy
