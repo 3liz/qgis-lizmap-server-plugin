@@ -83,65 +83,65 @@ jobs:
           3liz/qgis-platform:${{ matrix.qgis_version }}
           ./run-tests.sh
 
-  release:
-    needs: [tests, flake8]
-
-    runs-on: ubuntu-latest
-    if: github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/')
-
-    steps:
-      - name: Set env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-
-      - uses: actions/checkout@v2
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v3
-        with:
-          python-version: "3.10"
-
-      - uses: actions/cache@v3.0.2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/packaging.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install Python requirements
-        run: pip install -r requirements/packaging.txt
-
-      - name : Fetch current changelog
-        run: qgis-plugin-ci changelog ${{ env.RELEASE_VERSION }} >> release.md
-
-      - name: Create release on GitHub
-        uses: ncipollo/release-action@v1.10.0
-        with:
-          bodyFile: release.md
-          token: ${{ secrets.BOT_HUB_TOKEN }}
-
-      - name: Package and deploy the zip
-        run: >-
-          qgis-plugin-ci
-          release ${{ env.RELEASE_VERSION }}
-          --github-token ${{ secrets.BOT_HUB_TOKEN }}
-          --transifex-token ${{ secrets.TRANSIFEX_TOKEN }}
-          --osgeo-username ${{ secrets.OSGEO_USERNAME }}
-          --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
-          --create-plugin-repo
-
-      - name: Tweet
-        uses: mugi111/tweet-trigger-release@v1.2
-        with:
-          consumer_key: ${{ secrets.TWITTER_CONSUMER_KEY }}
-          consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
-          access_token_key: ${{ secrets.TWITTER_ACCESS_TOKEN_KEY }}
-          access_token_secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
-          tweet_body: "New version of @LizmapForQgis server plugin ${{ env.RELEASE_VERSION }} 🦎 on #QGIS https://github.com/3liz/qgis-lizmap-server-plugin/releases"
-
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          token: ${{ secrets.BOT_HUB_TOKEN }}
-          repository: 3liz/3liz.github.io
-          event-type: merge-plugins
-          client-payload: '{"name": "lizmap_server", "version": "${{ env.RELEASE_VERSION }}", "url": "https://github.com/3liz/qgis-lizmap-server-plugin/releases/latest/download/plugins.xml"}'
+#  release:
+#    needs: [tests, flake8]
+#
+#    runs-on: ubuntu-latest
+#    if: github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/')
+#
+#    steps:
+#      - name: Set env
+#        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+#
+#      - uses: actions/checkout@v2
+#
+#      - name: Set up Python 3.10
+#        uses: actions/setup-python@v3
+#        with:
+#          python-version: "3.10"
+#
+#      - uses: actions/cache@v3.0.2
+#        with:
+#          path: ~/.cache/pip
+#          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/packaging.txt') }}
+#          restore-keys: |
+#            ${{ runner.os }}-pip-
+#
+#      - name: Install Python requirements
+#        run: pip install -r requirements/packaging.txt
+#
+#      - name : Fetch current changelog
+#        run: qgis-plugin-ci changelog ${{ env.RELEASE_VERSION }} >> release.md
+#
+#      - name: Create release on GitHub
+#        uses: ncipollo/release-action@v1.10.0
+#        with:
+#          bodyFile: release.md
+#          token: ${{ secrets.BOT_HUB_TOKEN }}
+#
+#      - name: Package and deploy the zip
+#        run: >-
+#          qgis-plugin-ci
+#          release ${{ env.RELEASE_VERSION }}
+#          --github-token ${{ secrets.BOT_HUB_TOKEN }}
+#          --transifex-token ${{ secrets.TRANSIFEX_TOKEN }}
+#          --osgeo-username ${{ secrets.OSGEO_USERNAME }}
+#          --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
+#          --create-plugin-repo
+#
+#      - name: Tweet
+#        uses: mugi111/tweet-trigger-release@v1.2
+#        with:
+#          consumer_key: ${{ secrets.TWITTER_CONSUMER_KEY }}
+#          consumer_secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+#          access_token_key: ${{ secrets.TWITTER_ACCESS_TOKEN_KEY }}
+#          access_token_secret: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+#          tweet_body: "New version of @LizmapForQgis server plugin ${{ env.RELEASE_VERSION }} 🦎 on #QGIS https://github.com/3liz/qgis-lizmap-server-plugin/releases"
+#
+#      - name: Repository Dispatch
+#        uses: peter-evans/repository-dispatch@v2
+#        with:
+#          token: ${{ secrets.BOT_HUB_TOKEN }}
+#          repository: 3liz/3liz.github.io
+#          event-type: merge-plugins
+#          client-payload: '{"name": "lizmap_server", "version": "${{ env.RELEASE_VERSION }}", "url": "https://github.com/3liz/qgis-lizmap-server-plugin/releases/latest/download/plugins.xml"}'
