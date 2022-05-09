@@ -74,7 +74,7 @@ package-tag:
   tags:
     - infrav3-plain
 
-packages-website:
+deploy-website:
   stage: deploy
   script:
     - upload_to_packages_server lizmap_server.${CI_COMMIT_REF_NAME}.zip pub/lizmap-server-qgis-plugin/
