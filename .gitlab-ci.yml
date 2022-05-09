@@ -70,7 +70,7 @@ package-tag:
   artifacts:
     expose_as: 'QGIS package'
     paths:
-      - ${PLUGIN_NAME}.${CI_COMMIT_REF_NAME}.zip
+      - lizmap_server.${CI_COMMIT_REF_NAME}.zip
   tags:
     - infrav3-plain
 
