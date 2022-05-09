@@ -15,8 +15,8 @@ qgis-server:
     matrix:
       - QGIS_VERSION: [
         "3.16",
-        # "3.22",
-        # "nightly-release",
+        "3.22",
+        "nightly-release",
       ]
   script:
     - make tests FLAVOR=${QGIS_VERSION}
