@@ -29,4 +29,3 @@ tests:
 		-e QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE \
 		-e PYTEST_ADDOPTS="$(TEST_OPTS)" \
 		$(QGIS_IMAGE) ./run-tests.sh
-	@flake8
