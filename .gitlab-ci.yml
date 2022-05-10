@@ -1,12 +1,14 @@
 variables:
   FACTORY_PRODUCT_NAME: lizmap_server
-  # FACTORY_PACKAGE_NAME: lizmap_server_qgis_plugin
+  FACTORY_PACKAGE_NAME: lizmap_server_qgis_plugin
   FACTORY_PACKAGE_TYPE: plugin
 
 stages:
 - test
 - package
+- package-infra
 - deploy
+- release
 
 qgis-server:
   stage: test
@@ -77,17 +79,7 @@ deploy-website:
   tags:
     - fabric
 
-# Dev for infra-V2 and infra-V3
-# For snap, artifact available : lizmap_server.master.zip
-# For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
 
-tickets:
-  stage: deploy
-  only:
-    - tags
-  image:
-    name: registry.snap.lizlan:5000/infra/ci-tools:latest
-  script:
-    - create_ticket.py
-  tags:
-    - factory-plain
+
+# Infra v2/v3 build
+include: '/.lizcloud/.gitlab-ci.yml'

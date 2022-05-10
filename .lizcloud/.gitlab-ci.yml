@@ -1,0 +1,106 @@
+
+# Dev for infra-V2 and infra-V3
+# For snap, artifact available : lizmap_server.master.zip
+# For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
+
+
+variables:
+  FACTORY_MANIFEST: ".lizcloud/factory.manifest"
+
+build:infrav3:
+  stage: package-infra
+  script:
+    - make -C .lizcloud -f factory.mk package
+  environment:
+    name: snap
+  artifacts:
+    paths:
+      - ".lizcloud/factory.manifest"
+  only:
+    refs:
+      - tags
+      - master
+  tags:
+    - infrav3-dind
+
+deploy:infrav3:
+  stage: deploy
+  script:
+    - $FACTORY_SCRIPTS/deploy-package $FACTORY_PACKAGE_NAME
+  dependencies:
+    - build:infrav3
+  environment:
+    name: snap
+  only:
+    refs:
+      - tags
+      - master
+  tags:
+    - infrav3-dind
+
+release:infrav3:
+  stage: release
+  script:
+    - $FACTORY_SCRIPTS/release-package $FACTORY_PACKAGE_NAME
+  environment:
+    name: production
+  dependencies:
+    - build:infrav3
+  when: manual
+  only:
+    - tags
+  tags:
+    - infrav3-dind
+
+build:infrav2:
+  stage: package-infra
+  script:
+    - make -C .lizcloud -f fabric.mk package
+  environment:
+    name: snap
+  only:
+    refs:
+      - tags
+      - master
+  tags:
+    - fabric
+
+deploy:infrav2:
+  stage: deploy
+  script:
+    - sudo -u fabric fab snap deploy:$FACTORY_PACKAGE_NAME,force=true
+  dependencies:
+    - build:infrav2
+  environment:
+    name: snap
+  only:
+    refs:
+      - tags
+      - master
+  tags:
+    - fabric
+
+release:infrav2:
+  stage: release
+  script:
+    - sudo -u fabric fab prod release:$FACTORY_PACKAGE_NAME
+  environment:
+    name: production
+  dependencies:
+    - build:infrav2
+  when: manual
+  only:
+    - tags
+  tags:
+    - fabric
+
+tickets:
+  stage: release
+  only:
+    - tags
+  image:
+    name: registry.snap.lizlan:5000/infra/ci-tools:latest
+  script:
+    - create_ticket.py
+  tags:
+    - factory-plain
