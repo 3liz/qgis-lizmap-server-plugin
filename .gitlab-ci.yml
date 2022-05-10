@@ -19,8 +19,6 @@ qgis-server:
       ]
   script:
     - make tests FLAVOR=${QGIS_VERSION}
-  environment:
-    name: snap
   tags:
     - infrav3
 
@@ -43,7 +41,6 @@ package-nightly:
     - TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
     - VERSION=$(echo ${TAG} | awk -F. -v OFS=. 'NF==1{print ++$NF}; NF>1{if(length($NF+1)>length($NF))$(NF-1)++; $NF=sprintf("%0*d", length($NF), ($NF+1)%(10^length($NF))); print}')-alpha
   image: registry.snap.lizlan:5000/factory/qgis-plugin-ci:latest
-  environment: snap
   script:
     - qgis-plugin-ci package ${VERSION}
   after_script:
@@ -64,7 +61,6 @@ package-tag:
   only:
     - tags
   image: registry.snap.lizlan:5000/factory/qgis-plugin-ci:latest
-  environment: snap
   script:
     - qgis-plugin-ci package ${CI_COMMIT_REF_NAME}
   artifacts:
