@@ -76,7 +76,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         expected_list = (
             'wfsOutputExtension',
             'cadastre',
-            'lizmap',
+            'lizmap_server',
             'atlasprint',
             # waiting a little for these ones
             # 'tilesForServer',
