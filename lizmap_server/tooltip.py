@@ -304,13 +304,13 @@ class Tooltip:
 
         elif dview == QgsExternalResourceWidget.NoContent:
             field_view = '''
-                concat(
-                    '<a href="',
-                    "{0}",
-                    '" target="_blank">',
-                    base_file_name({0}),
-                    '</a>'
-                )'''.format(name)
+                    concat(
+                        '<a href="',
+                        "{0}",
+                        '" target="_blank">',
+                        base_file_name({0}),
+                        '</a>'
+                    )'''.format(name)
 
         else:
             raise Exception('Unknown external resource widget')
