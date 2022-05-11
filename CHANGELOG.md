@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* If QGIS 3.24, use the native function from QGIS server API to fetch the feature ID
 * Provide the Py-QGIS-Server version if possible in the JSON metadata
 * Use LRU Cache when reading the CFG file to avoid multiple access
 

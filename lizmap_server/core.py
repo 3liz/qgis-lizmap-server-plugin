@@ -9,11 +9,13 @@ from functools import lru_cache
 from typing import Dict, Tuple, Union
 
 from qgis.core import (
+    Qgis,
     QgsExpression,
     QgsFeature,
     QgsFields,
     QgsMapLayer,
     QgsProject,
+    QgsVectorDataProvider,
     QgsVectorLayer,
 )
 from qgis.server import QgsRequestHandler, QgsServerResponse
@@ -319,8 +321,19 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
     return False
 
 
-def server_feature_id_expression(feature_id, pk_attributes: list, fields: QgsFields) -> str:
-    """ Port of QgsServerFeatureId::getExpressionFromServerFid.
+def server_feature_id_expression(feature_id, data_provider: QgsVectorDataProvider) -> str:
+    """ Fetch the QGIS server feature ID expression according to the current QGIS version. """
+    if Qgis.QGIS_VERSION_INT >= 32400:
+        from qgis.server import QgsServerFeatureId
+
+        # noinspection PyArgumentList
+        return QgsServerFeatureId.getExpressionFromServerFid(feature_id, data_provider)
+
+    return _server_feature_id_expression(feature_id, data_provider.pkAttributeIndexes(), data_provider.fields())
+
+
+def _server_feature_id_expression(feature_id, pk_attributes: list, fields: QgsFields) -> str:
+    """ Port of QgsServerFeatureId::getExpressionFromServerFid for QGIS < 3.24
 
     The value "@@" is hardcoded in the CPP file.
     """

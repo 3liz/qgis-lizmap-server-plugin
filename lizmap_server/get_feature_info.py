@@ -208,8 +208,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 distance_area.setEllipsoid(project.ellipsoid())
                 exp_context.appendScope(QgsExpressionContextUtils.layerScope(result.layer))
 
-                expression = server_feature_id_expression(
-                    result.feature_id, result.layer.primaryKeyAttributes(), result.layer.fields())
+                expression = server_feature_id_expression(result.feature_id, result.layer.dataProvider())
                 if expression:
                     expression_request = QgsFeatureRequest(QgsExpression(expression))
                     expression_request.setFlags(QgsFeatureRequest.NoGeometry)
@@ -244,7 +243,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                         result.feature_id, result.layer.name()))
                 xml = self.append_maptip(xml, result.layer.name(), result.feature_id, value)
 
-            # Safe guard, it shouldn't happen
+            # Safeguard, it shouldn't happen
             if not xml:
                 logger.critical(
                     "The new XML for the GetFeatureInfo is empty. Let's return the default previous XML")

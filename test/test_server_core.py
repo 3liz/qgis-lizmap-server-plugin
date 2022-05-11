@@ -8,10 +8,10 @@ from qgis.core import QgsField, QgsFields
 from qgis.PyQt.QtCore import QVariant
 
 from lizmap_server.core import (
+    _server_feature_id_expression,
     get_lizmap_config,
     get_lizmap_layer_login_filter,
     get_lizmap_layers_config,
-    server_feature_id_expression,
 )
 from lizmap_server.get_feature_info import GetFeatureInfoFilter
 from lizmap_server.tools import to_bool
@@ -245,13 +245,13 @@ class TestServerCore(unittest.TestCase):
 
         self.assertEqual(
             "",
-            server_feature_id_expression("1", [], fields)
+            _server_feature_id_expression("1", [], fields)
         )
         self.assertEqual(
             "\"field_1\" = '1'",
-            server_feature_id_expression("1", ['field_1'], fields)
+            _server_feature_id_expression("1", ['field_1'], fields)
         )
         self.assertEqual(
             "\"field_1\" = '1' AND \"field_2\" = '2'",
-            server_feature_id_expression("1@@2", ['field_1', 'field_2'], fields)
+            _server_feature_id_expression("1@@2", ['field_1', 'field_2'], fields)
         )

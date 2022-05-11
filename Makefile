@@ -8,7 +8,7 @@ ifdef REGISTRY_URL
 	REGISTRY_PREFIX=$(REGISTRY_URL)/
 endif
 
-FLAVOR:=3.16
+FLAVOR:=3.22
 
 BECOME_USER:=$(shell id -u)
 
