@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Provide the Py-QGIS-Server version if possible in the JSON metadata
 * Use LRU Cache when reading the CFG file to avoid multiple access
 
 ## 1.0.0 - 2022-05-11

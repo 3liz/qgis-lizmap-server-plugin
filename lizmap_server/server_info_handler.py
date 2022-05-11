@@ -42,6 +42,16 @@ def plugin_metadata_key(name: str, key: str, ) -> str:
             return value
 
 
+def py_qgis_server_version() -> str:
+    """ Return the Py-QGIS-Server version or an empty string. """
+    # noinspection PyBroadException
+    try:
+        from pyqgisserver.version import __version__
+        return __version__
+    except Exception:
+        return ''
+
+
 class ServerInfoHandler(QgsServerOgcApiHandler):
 
     def path(self):
@@ -108,6 +118,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
                     'py_qgis_server': IS_PY_QGIS_SERVER,  # bool
+                    'py_qgis_server_version': py_qgis_server_version,  # str
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
                 'services': services_available,
