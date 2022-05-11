@@ -2,11 +2,12 @@ __copyright__ = 'Copyright 2021, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+import binascii
+
 from functools import lru_cache
 from typing import Tuple, Union
 
 from qgis.core import (
-    Qgis,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsDataSourceUri,
@@ -14,15 +15,11 @@ from qgis.core import (
     QgsGeometry,
     QgsProject,
     QgsProviderConnectionException,
+    QgsProviderRegistry,
     QgsSpatialIndex,
     QgsVectorLayer,
 )
 from qgis.PyQt.QtCore import QVariant
-
-if Qgis.QGIS_VERSION_INT > 31000:
-    import binascii
-
-    from qgis.core import QgsProviderRegistry
 
 from lizmap_server.logger import Logger, profiling
 
@@ -161,7 +158,7 @@ class FilterByPolygon:
 
         # We need to have a cache for this, valid for the combo polygon layer id & user_groups
         # as it will be done for each WMS or WFS query
-        if self.polygon.providerType() == 'postgres' and Qgis.QGIS_VERSION_INT > 31000:
+        if self.polygon.providerType() == 'postgres':
             polygon = self._polygon_for_groups_with_sql_query(groups)
         else:
             polygon = self._polygon_for_groups_with_qgis_api(groups)
@@ -178,7 +175,7 @@ class FilterByPolygon:
         )
 
         if self.layer.providerType() == 'postgres':
-            if self.use_st_relationship or Qgis.QGIS_VERSION_INT > 31000:
+            if self.use_st_relationship:
                 uri = QgsDataSourceUri(self.layer.source())
                 use_st_intersect = False if self.spatial_relationship == 'contains' else True
                 st_relation = self._format_sql_st_relationship(

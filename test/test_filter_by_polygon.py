@@ -7,7 +7,6 @@ __email__ = 'info@3liz.org'
 import unittest
 
 from qgis.core import (
-    Qgis,
     QgsCoordinateReferenceSystem,
     QgsFeature,
     QgsGeometry,
@@ -21,7 +20,6 @@ from lizmap_server.filter_by_polygon import FilterByPolygon
 
 class TestFilterByPolygon(unittest.TestCase):
 
-    @unittest.skipIf(Qgis.QGIS_VERSION_INT < 31000, 'Memory layer does not work well with 3.4')
     def test_not_filtered_layer(self):
         """ Test for not filtered layer. """
         json = {
@@ -43,7 +41,6 @@ class TestFilterByPolygon(unittest.TestCase):
         self.assertFalse(FilterByPolygon(json, points).is_valid())
 
     # noinspection PyArgumentList
-    @unittest.skipIf(Qgis.QGIS_VERSION_INT < 31000, 'Memory layer does not work well with 3.4')
     def test_filter_by_polygon_filter(self):
         """ Test the generation of filter by polygon. """
         polygon = QgsVectorLayer('Polygon?field=id:integer&field=groups:string', 'polygon', 'memory')

@@ -11,7 +11,6 @@ import re
 from typing import Union
 
 from qgis.core import (
-    Qgis,
     QgsAttributeEditorContainer,
     QgsAttributeEditorElement,
     QgsAttributeEditorField,
@@ -304,22 +303,14 @@ class Tooltip:
                     )'''.format(name, fname)
 
         elif dview == QgsExternalResourceWidget.NoContent:
-            if Qgis.QGIS_VERSION_INT >= 30800:
-                field_view = '''
-                    concat(
-                        '<a href="',
-                        "{0}",
-                        '" target="_blank">',
-                        base_file_name({0}),
-                        '</a>'
-                    )'''.format(name)
-            else:
-                field_view = '''
-                    concat(
-                        '<a href="',
-                        "{}",
-                        '" target="_blank">{}</a>'
-                    )'''.format(name, fname)
+            field_view = '''
+                concat(
+                    '<a href="',
+                    "{0}",
+                    '" target="_blank">',
+                    base_file_name({0}),
+                    '</a>'
+                )'''.format(name)
 
         else:
             raise Exception('Unknown external resource widget')

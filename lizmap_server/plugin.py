@@ -2,7 +2,6 @@ __copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
-from qgis.core import Qgis
 from qgis.server import QgsServerInterface, QgsServerOgcApi
 
 from lizmap_server.expression_service import ExpressionService
@@ -11,10 +10,8 @@ from lizmap_server.lizmap_accesscontrol import LizmapAccessControlFilter
 from lizmap_server.lizmap_filter import LizmapFilter
 from lizmap_server.lizmap_service import LizmapService
 from lizmap_server.logger import Logger
+from lizmap_server.server_info_handler import ServerInfoHandler
 from lizmap_server.tools import check_environment_variable, version
-
-if Qgis.QGIS_VERSION_INT >= 31000:
-    from lizmap_server.server_info_handler import ServerInfoHandler
 
 
 class LizmapServer:
@@ -30,22 +27,17 @@ class LizmapServer:
         service_registry = server_iface.serviceRegistry()
 
         # Register API
-        if Qgis.QGIS_VERSION_INT < 31000:
-            self.logger.warning(
-                'Not possible to register the API needed for Lizmap Web Client ≥ 3.5. '
-                'QGIS Server/Desktop must be 3.10 minimum.')
-        else:
-            lizmap_api = QgsServerOgcApi(
-                self.server_iface,
-                '/lizmap',
-                'Lizmap',
-                'The Lizmap API endpoint',
-                self.version)
-            service_registry.registerApi(lizmap_api)
-            lizmap_api.registerHandler(ServerInfoHandler())
-            self.logger.info('API "/lizmap" loaded with the server info handler')
+        lizmap_api = QgsServerOgcApi(
+            self.server_iface,
+            '/lizmap',
+            'Lizmap',
+            'The Lizmap API endpoint',
+            self.version)
+        service_registry.registerApi(lizmap_api)
+        lizmap_api.registerHandler(ServerInfoHandler())
+        self.logger.info('API "/lizmap" loaded with the server info handler')
 
-            check_environment_variable()
+        check_environment_variable()
 
         # Register service
         try:
