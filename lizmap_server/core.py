@@ -77,7 +77,7 @@ def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
     return '@@'.join([str(feature.attribute(pk)) for pk in pk_attributes])
 
 
-@lru_cache
+@lru_cache(maxsize=100)
 def get_lizmap_config(qgis_project_path: str) -> Union[Dict, None]:
     """ Get the lizmap config based on QGIS project path """
 
