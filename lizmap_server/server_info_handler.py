@@ -2,9 +2,13 @@ __copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+import sys
+import warnings
+
 from typing import Union
 
 from qgis.core import Qgis
+from qgis.PyQt import Qt
 from qgis.PyQt.QtCore import QRegularExpression
 from qgis.server import QgsServerOgcApi, QgsServerOgcApiHandler
 
@@ -26,6 +30,10 @@ except ImportError:
         return server_active_plugins
 
 from lizmap_server.tools import to_bool
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from osgeo import gdal
 
 
 def plugin_metadata_key(name: str, key: str, ) -> str:
@@ -124,6 +132,11 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 'services': services_available,
                 'plugins': plugins,
             },
+            'environment': {
+                'gdal': gdal.VersionInfo('VERSION_NUM'),
+                'python': sys.version,
+                'qt': Qt.QT_VERSION_STR,
+            }
         }
         self.write(data, context)
 
