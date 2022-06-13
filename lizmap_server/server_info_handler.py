@@ -93,7 +93,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 
         expected_list = (
             'wfsOutputExtension',
-            'cadastre',
+            # 'cadastre', very specific for the French use-case
             'lizmap_server',
             'atlasprint',
             # waiting a little for these ones
