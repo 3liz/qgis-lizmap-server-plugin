@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Refactor a little the code about access control list
+
 ## 1.0.1 - 2022-05-11
 
 * If QGIS 3.24, use the native function from QGIS server API to fetch the feature ID
