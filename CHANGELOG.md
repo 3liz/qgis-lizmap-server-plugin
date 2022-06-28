@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.2 - 2022-06-28
+
 * Refactor a little the code about access control list
 * Fix an issue when the CFG file is updated and already stored in the LRU cache
 
