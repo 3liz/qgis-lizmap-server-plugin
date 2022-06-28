@@ -6,6 +6,7 @@ import json
 import os
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Dict, Tuple, Union
 
 from qgis.core import (
@@ -77,7 +78,6 @@ def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
     return '@@'.join([str(feature.attribute(pk)) for pk in pk_attributes])
 
 
-@lru_cache(maxsize=100)
 def get_lizmap_config(qgis_project_path: str) -> Union[Dict, None]:
     """ Get the lizmap config based on QGIS project path """
 
@@ -96,6 +96,18 @@ def get_lizmap_config(qgis_project_path: str) -> Union[Dict, None]:
         logger.info("Lizmap config does not exist")
         # No Lizmap config
         return None
+
+    last_modified = Path(config_path).stat().st_mtime
+    logger.info("Fetching {} cfg file with last modified timestamp : {}".format(config_path, last_modified))
+    return _get_lizmap_config(config_path, last_modified)
+
+
+@lru_cache(maxsize=100)
+def _get_lizmap_config(config_path: str, last_modified: float) -> Union[Dict, None]:
+    """ Get the lizmap config based on QGIS project path with cache. """
+    # Last modified is only for LRU cache
+    _ = last_modified
+    logger = Logger()
 
     # Get Lizmap config
     with open(config_path, 'r') as cfg_file:
