@@ -26,7 +26,7 @@ class LizmapFilter(QgsServerFilter):
             # Get Lizmap user groups defined in request headers
             groups = get_lizmap_groups(self.iface.requestHandler())
 
-            # If groups is empty, no Lizmap user groups provided by the request
+            # If groups is empty, no Lizmap user groups provided by the request.
             # The request can be evaluated by QGIS Server
             if len(groups) == 0:
                 return
@@ -39,23 +39,24 @@ class LizmapFilter(QgsServerFilter):
                 # The request can be evaluated by QGIS Server
                 return
 
+            cfg_options = cfg.get('options')
             # Check Lizmap config options
-            if 'options' not in cfg or not cfg['options']:
+            if not cfg_options:
                 # Lizmap config has no options
                 logger.warning("Lizmap config has no options")
                 # The request can be evaluated by QGIS Server
                 return
 
+            cfg_acl = cfg_options.get('acl')
+
             # Check project acl option
-            cfg_options = cfg['options']
-            if 'acl' not in cfg_options or not cfg_options['acl']:
+            if not cfg_acl:
                 # No acl defined
                 logger.info("No acl defined in Lizmap config")
                 # The request can be evaluated by QGIS Server
                 return
 
             # Get project acl option
-            cfg_acl = cfg_options['acl']
             logger.info("Acl defined in Lizmap config")
 
             # If one Lizmap user group provided in request headers is
