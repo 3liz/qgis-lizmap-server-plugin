@@ -22,6 +22,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QVariant
 
 from lizmap_server.logger import Logger, profiling
+from lizmap_server.tools import to_bool
 
 # TODO implement LRU cache with this variable
 CACHE_MAX_SIZE = 100
@@ -62,6 +63,7 @@ class FilterByPolygon:
         # Will be filled with the polygon layer
         self.polygon = None
         self.group_field = None
+        self.filter_by_user = False
 
         # Read the configuration
         self._parse()
@@ -69,6 +71,12 @@ class FilterByPolygon:
     def is_filtered(self) -> bool:
         """If the configuration is filtering the given layer."""
         return self.primary_key is not None
+
+    def is_filtered_by_user(self) -> bool:
+        """If the filter by polygon is configured with the "filter by user" flag
+        we must filter by user and not by groups
+        """
+        return self.filter_by_user
 
     def _parse(self) -> None:
         """Read the configuration and fill variables"""
@@ -96,6 +104,9 @@ class FilterByPolygon:
         config = self.config.get("config")
         self.polygon = self.project.mapLayer(config['polygon_layer_id'])
         self.group_field = config.get("group_field")
+
+        # Filter by groups or by user (check the "filter_by_user" flag)
+        self.filter_by_user = to_bool(config.get('filter_by_user'))
 
     def is_valid(self) -> bool:
         """ If the configuration is valid or not."""
@@ -141,10 +152,11 @@ class FilterByPolygon:
         return results
 
     @profiling
-    def subset_sql(self, groups: tuple) -> Tuple[str, str]:
-        """ Get the SQL subset string for the current groups of the user.
+    def subset_sql(self, groups_or_user: tuple) -> Tuple[str, str]:
+        """ Get the SQL subset string for the current groups of the user or the user.
 
-        :param groups: List of groups belongings to the user.
+        :param groups_or_user: List of groups or users belongings to the user
+                               or the user if we need to filter by user.
         :returns: The subset SQL string to use
         """
         if self.filter_mode == 'editing':
@@ -159,9 +171,9 @@ class FilterByPolygon:
         # We need to have a cache for this, valid for the combo polygon layer id & user_groups
         # as it will be done for each WMS or WFS query
         if self.polygon.providerType() == 'postgres':
-            polygon = self._polygon_for_groups_with_sql_query(groups)
+            polygon = self._polygon_for_groups_with_sql_query(groups_or_user)
         else:
-            polygon = self._polygon_for_groups_with_qgis_api(groups)
+            polygon = self._polygon_for_groups_with_qgis_api(groups_or_user)
         # Logger.info("LRU Cache _polygon_for_groups : {}".format(self._polygon_for_groups.cache_info()))
 
         if polygon.isEmpty():
@@ -201,8 +213,8 @@ class FilterByPolygon:
 
     @profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
-    def _polygon_for_groups_with_qgis_api(self, groups: tuple) -> QgsGeometry:
-        """ All features from the polygon layer corresponding to the user groups """
+    def _polygon_for_groups_with_qgis_api(self, groups_or_user: tuple) -> QgsGeometry:
+        """ All features from the polygon layer corresponding to the user groups or the user """
         expression = """
 array_intersect(
     array_foreach(
@@ -210,12 +222,12 @@ array_intersect(
         trim(@element)
     ),
     array_foreach(
-        string_to_array('{groups}'),
+        string_to_array('{groups_or_user}'),
         trim(@element)
     )
 )""".format(
             polygon_field=self.group_field,
-            groups=','.join(groups)
+            groups_or_user=','.join(groups_or_user)
         )
 
         # Create request
@@ -231,8 +243,9 @@ array_intersect(
 
     @profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
-    def _polygon_for_groups_with_sql_query(self, groups: tuple) -> QgsGeometry:
-        """ All features from the polygon layer corresponding to the user groups for a Postgresql layer.
+    def _polygon_for_groups_with_sql_query(self, groups_or_user: tuple) -> QgsGeometry:
+        """ All features from the polygon layer corresponding to the user groups
+        or the user for a PostgreSQL layer.
 
         Only for QGIS >= 3.10
         """
@@ -244,7 +257,7 @@ WITH current_groups AS (
         ARRAY_REMOVE(
             STRING_TO_ARRAY(
                 regexp_replace(
-                    '{groups}', '[^a-zA-Z0-9_-]', ',', 'g'
+                    '{groups_or_user}', '[^a-zA-Z0-9_-]', ',', 'g'
                 ),
                 ','
             ),
@@ -271,13 +284,13 @@ c.user_group && (
 
 """.format(
                 polygon_field=self.group_field,
-                groups=','.join(groups),
+                groups_or_user=','.join(groups_or_user),
                 geom=uri.geometryColumn(),
                 schema=uri.schema(),
                 table=uri.table(),
             )
             Logger.info(
-                "Requesting the database about polygons for the current groups with : \n{}".format(sql))
+                "Requesting the database about polygons for the current groups or user with : \n{}".format(sql))
 
             results = self.sql_query(uri, sql)
             wkb = results[0][1]
@@ -297,7 +310,7 @@ c.user_group && (
             Logger.critical(
                 "The filter_by_polygon._polygon_for_groups_with_sql_query failed when requesting PostGIS.\n"
                 "Using the QGIS API")
-            return self._polygon_for_groups_with_qgis_api(groups)
+            return self._polygon_for_groups_with_qgis_api(groups_or_user)
 
     @profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)

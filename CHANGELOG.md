@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Spatial filter - Add the capability to filter the spatial layers data by matching the polygon layer field values with the user login. The behaviour depends on a new configuration option `filter_by_user` for the spatial filter. It will be compatible with LWC >= 3.5.
+
 ## 1.0.2 - 2022-06-28
 
 * Refactor a little the code about access control list
