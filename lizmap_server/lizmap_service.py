@@ -21,6 +21,7 @@ from lizmap_server.core import (
     get_lizmap_groups,
     get_lizmap_layers_config,
     get_lizmap_override_filter,
+    get_lizmap_user_login,
     is_editing_context,
     write_json_response,
 )
@@ -163,8 +164,17 @@ class LizmapService(QgsService):
                 else:
                     # Get Lizmap user groups provided by the request
                     groups = get_lizmap_groups(self.server_iface.requestHandler())
+
                     # polygon_filter is set, we have a value to filter
-                    sql, polygons = filter_polygon_config.subset_sql(groups)
+                    # pass the tuple of groups or the tuple of the user
+                    # depending on the filter_by_user boolean variable
+                    groups_or_user = groups
+                    if filter_polygon_config.is_filtered_by_user():
+                        user_login = get_lizmap_user_login(self.server_iface.requestHandler())
+                        groups_or_user = tuple([user_login])
+
+                    # Get the subset SQL
+                    sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
                     body = {
                         'status': 'success',
                         'filter': sql,

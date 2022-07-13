@@ -299,7 +299,12 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
                     return NO_FEATURES
 
                 # polygon_filter is set, we have a value to filter
-                polygon_filter, _ = filter_polygon_config.subset_sql(groups)
+                # pass the tuple of groups or the tuple of the user
+                # depending on the filter_by_user boolean variable
+                groups_or_user = groups
+                if filter_polygon_config.is_filtered_by_user():
+                    groups_or_user = tuple([user_login])
+                polygon_filter, _ = filter_polygon_config.subset_sql(groups_or_user)
 
         except Exception as e:
             Logger.log_exception(e)
