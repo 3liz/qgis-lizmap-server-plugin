@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-* Spatial filter - Add the capability to filter the spatial layers data by matching the polygon layer field values with the user login. The behaviour depends on a new configuration option `filter_by_user` for the spatial filter. It will be compatible with LWC >= 3.5.
+## 1.1.0 - 2022-07-25
+
+* Spatial filter - Add the capability to filter spatial layers data by matching the polygon layer field values with the
+  user login instead of groups only. The behaviour depends on a new configuration option `filter_by_user` for the spatial
+  filter. It's compatible with Lizmap Web Client ≥ 3.5. The desktop plugin must be updated as well to version 3.9.0.
 
 ## 1.0.2 - 2022-06-28
 
