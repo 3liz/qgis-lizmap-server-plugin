@@ -157,7 +157,10 @@ def client(request):
             response = QgsBufferServerResponse()
             if project is not None and not os.path.isabs(project):
                 projectpath = self.datapath.join(project)
-                qgsproject  = QgsProject()
+                if Qgis.QGIS_VERSION_INT >= 32601:
+                    qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
+                else:
+                    qgsproject = QgsProject()
                 if not qgsproject.read(projectpath.strpath):
                     raise ValueError("Error reading project '%s':" % projectpath.strpath)
             else:
