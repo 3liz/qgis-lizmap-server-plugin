@@ -84,7 +84,8 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         if not check_environment_variable():
             raise ServiceError("Bad request error", "Invalid request", 404)
 
-        keys = ('version', 'commitNumber', 'commitSha1', 'dateTime')
+        # 'name' is not the folder name in the 'expected_list' variable, it can be different
+        keys = ('name', 'version', 'commitNumber', 'commitSha1', 'dateTime')
         plugins = dict()
         for plugin in plugin_list():
             plugins[plugin] = dict()

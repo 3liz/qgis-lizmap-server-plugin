@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add the plugin name when fetching metadata from QGIS server.
+
 ## 1.1.0 - 2022-07-25
 
 * Spatial filter - Add the capability to filter spatial layers data by matching the polygon layer field values with the
