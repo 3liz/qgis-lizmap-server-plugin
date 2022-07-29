@@ -41,6 +41,9 @@ class FilterByPolygon:
 
         :param config: The filter by polygon configuration as dictionary
         :param layer: The vector layer to filter
+        :param editing: If the filter must be used only for editing
+        :param use_st_relationship: If we can use the ST_Intersects/ST_Contains in the subset SQL string.
+                                    False because at present QGIS Server does not allow it (vs SQL injection)
         """
         self.connection = None
         # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
@@ -187,24 +190,29 @@ class FilterByPolygon:
         )
 
         if self.layer.providerType() == 'postgres':
+            uri = QgsDataSourceUri(self.layer.source())
+            use_st_intersect = False if self.spatial_relationship == 'contains' else True
+            st_relation = self._format_sql_st_relationship(
+                self.layer.sourceCrs(),
+                self.polygon.sourceCrs(),
+                uri.geometryColumn(),
+                polygon,
+                use_st_intersect
+            )
+
+            # If we can use the complexe query with ST_Intersects or ST_Contains
+            # as a subset string for a layer in QGIS Server.
+            # This is not allowed yet to protect from SQL injections.
             if self.use_st_relationship:
-                uri = QgsDataSourceUri(self.layer.source())
-                use_st_intersect = False if self.spatial_relationship == 'contains' else True
-                st_relation = self._format_sql_st_relationship(
-                    self.layer.sourceCrs(),
-                    self.polygon.sourceCrs(),
-                    uri.geometryColumn(),
-                    polygon,
-                    use_st_intersect
-                )
+                return st_relation, ewkt
 
-                if self.use_st_relationship:
-                    return st_relation, ewkt
+            # Build the filter with a list of IDS based on a SQL query
+            # using the spatial relationship WHERE clause.
+            result = self._features_ids_with_sql_query(st_relation), ewkt
 
-                result = self._features_ids_with_sql_query(st_relation), ewkt
-                # Let's try to free the connection
-                self.connection = None
-                return result
+            # Let's try to free the connection
+            self.connection = None
+            return result
 
         # Still here ? So we use the slow method with QGIS API
         subset = self._features_ids_with_qgis_api(polygon)
@@ -357,7 +365,7 @@ c.user_group && (
         """
         uri = QgsDataSourceUri(self.layer.source())
 
-        sql = 'SELECT {pk} FROM {schema}.{table} WHERE {st_intersect}'.format(
+        sql = 'SELECT "{pk}" FROM "{schema}"."{table}" WHERE {st_intersect}'.format(
             pk=self.primary_key,
             schema=uri.schema(),
             table=uri.table(),
