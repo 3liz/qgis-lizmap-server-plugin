@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.1 - 2022-07-29
+
 * Add the plugin name when fetching metadata from QGIS server.
 * Fix an issue when the polygon table has a schema or table name which must be enclosed with double quotes.
 * Fix an issue preventing to query the PostgreSQL database to retrieve the ids to filter. Performance could be severely
