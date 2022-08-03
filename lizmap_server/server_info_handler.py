@@ -2,6 +2,7 @@ __copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+import logging
 import sys
 import warnings
 
@@ -13,7 +14,9 @@ from qgis.PyQt.QtCore import QRegularExpression
 from qgis.server import QgsServerOgcApi, QgsServerOgcApiHandler
 
 from lizmap_server.exception import ServiceError
-from lizmap_server.tools import check_environment_variable
+from lizmap_server.tools import check_environment_variable, to_bool
+
+LOGGER = logging.getLogger('Lizmap')
 
 try:
     # Py-QGIS-Server
@@ -28,8 +31,6 @@ except ImportError:
     def plugin_list() -> list:
         """ To match Py-QGIS-Server API."""
         return server_active_plugins
-
-from lizmap_server.tools import to_bool
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -52,12 +53,17 @@ def plugin_metadata_key(name: str, key: str, ) -> str:
 
 def py_qgis_server_version() -> str:
     """ Return the Py-QGIS-Server version or an empty string. """
+    if not IS_PY_QGIS_SERVER:
+        return 'not used'
+
     # noinspection PyBroadException
     try:
         from pyqgisserver.version import __version__
         return __version__
     except Exception:
-        return ''
+        msg = 'error while fetching py-qgis-server version'
+        LOGGER.error(msg)
+        return msg
 
 
 class ServerInfoHandler(QgsServerOgcApiHandler):
@@ -127,7 +133,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
                     'py_qgis_server': IS_PY_QGIS_SERVER,  # bool
-                    'py_qgis_server_version': py_qgis_server_version,  # str
+                    'py_qgis_server_version': py_qgis_server_version(),  # str
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
                 'services': services_available,

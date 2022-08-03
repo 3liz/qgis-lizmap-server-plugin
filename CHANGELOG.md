@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix an issue to return Py-QGIS-Server version
+
 ## 1.1.1 - 2022-07-29
 
 * Add the plugin name when fetching metadata from QGIS server.
