@@ -162,6 +162,13 @@ class FilterByPolygon:
                                or the user if we need to filter by user.
         :returns: The subset SQL string to use
         """
+        # Disabled, sometimes featureCount is expansive it seems ?
+        # if self.layer.featureCount() == 0:
+        #     # Layer is empty, let's go faster ...
+        #     Logger.info(
+        #         "Layer {} is empty, returning default NO_FEATURES {}".format(self.layer.name(), NO_FEATURES))
+        #     return NO_FEATURES, ''
+
         if self.filter_mode == 'editing':
             if not self.editing:
                 Logger.info(
@@ -180,6 +187,7 @@ class FilterByPolygon:
         # Logger.info("LRU Cache _polygon_for_groups : {}".format(self._polygon_for_groups.cache_info()))
 
         if polygon.isEmpty():
+            Logger.info("The polygon is empty, returning default NO_FEATURES {}".format(NO_FEATURES))
             # Let's try to free the connection
             self.connection = None
             return NO_FEATURES, ''
@@ -332,12 +340,22 @@ c.user_group && (
 
         # Build the spatial index
         index = QgsSpatialIndex()
+        Logger.info(
+            "Building index on {} having CRS {}. The CRS of the polygon is {}".format(
+                self.layer.name(),
+                self.layer.crs().authid(),
+                self.polygon.crs().authid(),
+            ))
         index.addFeatures(self.layer.getFeatures())
 
         # Find candidates, if not already in cache
         transform = QgsCoordinateTransform(self.polygon.crs(), self.layer.crs(), self.project)
         polygons.transform(transform)
         candidates = index.intersects(polygons.boundingBox())
+        if not candidates:
+            Logger.info(
+                "Not features in the index matching the bounding box, return the default value {}".format(NO_FEATURES))
+            return NO_FEATURES
 
         # Check real intersection for the candidates
         unique_ids = []
@@ -352,6 +370,7 @@ c.user_group && (
             else:
                 raise Exception("Spatial relationship unknown")
 
+        Logger.info("Unique ids = {}".format(','.join(unique_ids)))
         return self._format_sql_in(self.primary_key, unique_ids)
 
     @profiling
@@ -383,6 +402,7 @@ c.user_group && (
     def _format_sql_in(cls, primary_key: str, values: Union[list, Tuple]) -> str:
         """Format the SQL IN statement."""
         if not values:
+            Logger.info('No values, returning default NO VALUES {}'.format(NO_FEATURES))
             return NO_FEATURES
 
         cleaned = []
