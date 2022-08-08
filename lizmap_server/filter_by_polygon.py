@@ -370,7 +370,7 @@ c.user_group && (
             else:
                 raise Exception("Spatial relationship unknown")
 
-        Logger.info("Unique ids = {}".format(','.join(unique_ids)))
+        # Logger.info("Unique ids = {}".format(','.join([str(f) for f in unique_ids])))
         return self._format_sql_in(self.primary_key, unique_ids)
 
     @profiling
