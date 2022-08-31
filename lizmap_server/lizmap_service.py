@@ -30,6 +30,7 @@ from lizmap_server.filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
+    FilterType,
 )
 from lizmap_server.logger import Logger, profiling
 from lizmap_server.tools import version
@@ -61,12 +62,6 @@ class LizmapService(QgsService):
         """ Service version
         """
         return "1.0.0"
-
-    # def allowMethod(self, method: QgsServerRequest.Method) -> bool:
-    #     """ Check supported HTTP methods
-    #     """
-    #     return method in (
-    #         QgsServerRequest.GetMethod, QgsServerRequest.PostMethod)
 
     def executeRequest(self, request: QgsServerRequest, response: QgsServerResponse,
                        project: QgsProject) -> None:
@@ -149,7 +144,11 @@ class LizmapService(QgsService):
         try:
             edition_context = is_editing_context(self.server_iface.requestHandler())
             filter_polygon_config = FilterByPolygon(
-                cfg.get("filter_by_polygon"), layer, edition_context, use_st_relationship=False)
+                cfg.get("filter_by_polygon"),
+                layer,
+                edition_context,
+                filter_type=FilterType.PlainSqlQuery,
+            )
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
                     Logger.critical(

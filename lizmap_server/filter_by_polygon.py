@@ -4,6 +4,7 @@ __email__ = 'info@3liz.org'
 
 import binascii
 
+from enum import Enum, auto
 from functools import lru_cache
 from typing import Tuple, Union
 
@@ -33,23 +34,31 @@ NO_FEATURES = '1 = 0'
 ALL_FEATURES = ''
 
 
+# noinspection PyArgumentList
+class FilterType(Enum):
+    QgisExpression = auto()
+    PlainSqlQuery = auto()
+    SafeSqlQuery = auto()
+
+
 class FilterByPolygon:
 
     def __init__(
-            self, config: dict, layer: QgsVectorLayer, editing: bool = False, use_st_relationship: bool = False):
+            self, config: dict, layer: QgsVectorLayer, editing: bool = False,
+            filter_type: FilterType = FilterType.PlainSqlQuery,
+    ):
         """Constructor for the filter by polygon.
 
         :param config: The filter by polygon configuration as dictionary
         :param layer: The vector layer to filter
         :param editing: If the filter must be used only for editing
-        :param use_st_relationship: If we can use the ST_Intersects/ST_Contains in the subset SQL string.
-                                    False because at present QGIS Server does not allow it (vs SQL injection)
+        :param filter_type: If we generate a QGIS expression or a plain SQL with spatial relationship or not.
         """
         self.connection = None
         # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
         # Using this flag will transform or not the ST_Intersect/ST_Contains into an IN by making the query
         # straight to PostGIS.
-        self.use_st_relationship = use_st_relationship
+        self.filter_type = filter_type
         self.config = config
         self.editing = editing
         # noinspection PyArgumentList
@@ -197,9 +206,19 @@ class FilterByPolygon:
             wkt=polygon.asWkt(6 if self.polygon.crs().isGeographic() else 2)
         )
 
+        use_st_intersect = False if self.spatial_relationship == 'contains' else True
+
+        if self.filter_type == FilterType.QgisExpression:
+            qgis_expression = self._format_qgis_expression_relationship(
+                self.layer.sourceCrs(),
+                self.polygon.sourceCrs(),
+                polygon,
+                use_st_intersect
+            )
+            return qgis_expression, ewkt
+
         if self.layer.providerType() == 'postgres':
             uri = QgsDataSourceUri(self.layer.source())
-            use_st_intersect = False if self.spatial_relationship == 'contains' else True
             st_relation = self._format_sql_st_relationship(
                 self.layer.sourceCrs(),
                 self.polygon.sourceCrs(),
@@ -211,7 +230,7 @@ class FilterByPolygon:
             # If we can use the complexe query with ST_Intersects or ST_Contains
             # as a subset string for a layer in QGIS Server.
             # This is not allowed yet to protect from SQL injections.
-            if self.use_st_relationship:
+            if self.filter_type == FilterType.PlainSqlQuery:
                 return st_relation, ewkt
 
             # Build the filter with a list of IDS based on a SQL query
@@ -427,15 +446,57 @@ c.user_group && (
 
         :returns: The subset SQL string.
         """
-        sql = """
-{function}(
-    ST_Transform(ST_GeomFromText('{wkt}', {from_crs}), {to_crs}),
-    "{geom_field}"
-)""".format(
-            function="ST_Intersects" if use_st_intersect else "ST_Contains",
-            geom_field=geom_field,
-            wkt=polygons.asWkt(6 if filtering_crs.isGeographic() else 2),
+        geom = "ST_GeomFromText('{geom}')".format(geom=polygons.asWkt(6 if filtering_crs.isGeographic() else 2))
+        geom = "ST_SetSRID({geom}, {from_crs})".format(
+            geom=geom,
             from_crs=filtering_crs.postgisSrid(),
-            to_crs=filtered_crs.postgisSrid()
+        )
+        if filtering_crs != filtered_crs:
+            geom = "ST_Transform({geom}, {from_crs}, {to_crs})".format(
+                geom=geom,
+                from_crs=filtering_crs.postgisSrid(),
+                to_crs=filtered_crs.postgisSrid(),
+            )
+
+        sql = """
+ST_{function}(
+    {geom},
+    \"{geom_field}\"
+)""".format(
+            function="Intersects" if use_st_intersect else "Contains",
+            geom_field=geom_field,
+            geom=geom,
         )
         return sql
+
+    @classmethod
+    def _format_qgis_expression_relationship(
+            cls,
+            filtered_crs: QgsCoordinateReferenceSystem,
+            filtering_crs: QgsCoordinateReferenceSystem,
+            polygons: QgsGeometry,
+            use_st_intersect: bool,
+    ) -> str:
+        """Build the filter with a QGIS expression.
+
+        :returns: The QGIS expression
+        """
+        geom = "geom_from_wkt('{wkt}')".format(
+            wkt=polygons.asWkt(6 if filtering_crs.isGeographic() else 2)
+        )
+        if filtering_crs != filtered_crs:
+            geom = "transform({geom}, '{from_crs}', '{to_crs}')".format(
+                geom=geom,
+                from_crs=filtering_crs.authid(),
+                to_crs=filtered_crs.authid()
+            )
+
+        expression = """
+{function}(
+    {geom},
+    $geometry
+)""".format(
+            function="intersects" if use_st_intersect else "contains",
+            geom=geom,
+            )
+        return expression

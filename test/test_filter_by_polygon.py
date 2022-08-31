@@ -201,6 +201,34 @@ class TestFilterByPolygon(unittest.TestCase):
         expected = '"code" IN ( \'a\' , \'b\' , \'c\' )'
         self.assertEqual(expected, sql)
 
+    def test_format_qgis_expression(self):
+        """ Test building a QGIS expression. """
+        sql = FilterByPolygon._format_qgis_expression_relationship(
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            QgsCoordinateReferenceSystem("EPSG:4326"),
+            QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
+            use_st_intersect=False,
+        )
+        expected = """
+contains(
+    transform(geom_from_wkt('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 'EPSG:4326', 'EPSG:2154'),
+    $geometry
+)"""
+        self.assertEqual(expected, sql)
+
+        sql = FilterByPolygon._format_qgis_expression_relationship(
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
+            use_st_intersect=False,
+        )
+        expected = """
+contains(
+    geom_from_wkt('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'),
+    $geometry
+)"""
+        self.assertEqual(expected, sql)
+
     def test_subset_string_postgres(self):
         """ Test building a postgresql string for filter by polygon. """
         # ST_Intersect
@@ -213,10 +241,10 @@ class TestFilterByPolygon(unittest.TestCase):
         )
         expected = """
 ST_Intersects(
-    ST_Transform(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))', 4326), 2154),
+    ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 4326, 2154),
     "geom"
 )"""
-        self.assertEqual(expected, sql)
+        self.assertEqual(expected, sql, sql)
 
         # ST_Contains
         sql = FilterByPolygon._format_sql_st_relationship(
@@ -228,7 +256,22 @@ ST_Intersects(
         )
         expected = """
 ST_Contains(
-    ST_Transform(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))', 4326), 2154),
+    ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 4326, 2154),
     "geom"
+)"""
+        self.assertEqual(expected, sql)
+
+        # ST_Contains
+        sql = FilterByPolygon._format_sql_st_relationship(
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            QgsCoordinateReferenceSystem("EPSG:2154"),
+            'geom',
+            QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
+            use_st_intersect=False,
+        )
+        expected = """
+ST_Contains(
+    ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 2154),
+    \"geom\"
 )"""
         self.assertEqual(expected, sql)

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Minor improvement about the filtering by polygon
+* Improvement about the filtering by polygon (use a QGIS expression when possible)
 * Fix an issue to return Py-QGIS-Server version
 
 ## 1.1.1 - 2022-07-29

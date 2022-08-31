@@ -24,6 +24,7 @@ from lizmap_server.filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
+    FilterType,
 )
 from lizmap_server.logger import Logger, profiling
 from lizmap_server.tools import to_bool
@@ -42,26 +43,28 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Fix in QGIS Server https://github.com/qgis/QGIS/pull/40556 3.18.0, 3.16.2, 3.10.13
         if 31013 <= Qgis.QGIS_VERSION_INT < 31099 or 31602 <= Qgis.QGIS_VERSION_INT:
             Logger.info("Lizmap layerFilterExpression")
-            filter_exp = self.get_lizmap_layer_filter(layer)
+            filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.QgisExpression)
             if filter_exp:
                 return filter_exp
 
             return super().layerFilterExpression(layer)
-        else:
-            message = (
-                "Lizmap layerFilterExpression disabled, you should consider upgrading QGIS Server to >= "
-                "3.10.13 or >= 3.16.2")
-            Logger.critical(message)
-            return ALL_FEATURES
 
-    def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
-        """ Return an additional subset string (typically SQL) filter """
-        Logger.info("Lizmap layerFilterSubsetString")
-        filter_exp = self.get_lizmap_layer_filter(layer)
-        if filter_exp:
-            return filter_exp
+        message = (
+            "Lizmap layerFilterExpression disabled, you should consider upgrading QGIS Server to >= "
+            "3.10.13 or >= 3.16.2")
+        Logger.critical(message)
+        return ALL_FEATURES
 
-        return super().layerFilterSubsetString(layer)
+    # def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
+    #     """ Return an additional subset string (typically SQL) filter """
+    #     Logger.info("Lizmap layerFilterSubsetString")
+    #     # We should have a safe SQL query.
+    #     # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
+    #     filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.SafeSqlQuery)
+    #     if filter_exp:
+    #         return filter_exp
+    #
+    #     return super().layerFilterSubsetString(layer)
 
     def layerPermissions(self, layer: QgsMapLayer) -> QgsAccessControlFilter.LayerPermissions:
         """ Return the layer rights """
@@ -192,15 +195,6 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         rights.canInsert = rights.canUpdate = rights.canDelete = False
         return rights
 
-    # def authorizedLayerAttributes(
-    #         self, layer: 'QgsVectorLayer', attributes: 'Iterable[str]') -> 'List[str]':
-    #     """ Return the authorised layer attributes """
-    #     return super().authorizedLayerAttributes(layer, attributes)
-    #
-    # def allowToEdit(self, layer: 'QgsVectorLayer', feature: 'QgsFeature') -> bool:
-    #     """ Are we authorise to modify the following geometry """
-    #     return super().allowToEdit(layer, feature)
-
     def cacheKey(self) -> str:
         """ The key used to cache documents """
         default_cache_key = super().cacheKey()
@@ -253,7 +247,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         return default_cache_key
 
     @profiling
-    def get_lizmap_layer_filter(self, layer: QgsVectorLayer) -> str:
+    def get_lizmap_layer_filter(self, layer: QgsVectorLayer, filter_type: FilterType) -> str:
         """ Get lizmap layer filter based on login filter """
 
         # Check first the headers to avoid unnecessary config file reading
@@ -289,7 +283,11 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         try:
             edition_context = is_editing_context(self.iface.requestHandler())
             filter_polygon_config = FilterByPolygon(
-                cfg.get("filter_by_polygon"), layer, edition_context, use_st_relationship=False)
+                cfg.get("filter_by_polygon"),
+                layer,
+                edition_context,
+                filter_type=filter_type,
+            )
             polygon_filter = ALL_FEATURES
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
