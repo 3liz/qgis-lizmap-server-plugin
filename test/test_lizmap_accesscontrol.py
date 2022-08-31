@@ -156,8 +156,8 @@ def test_group_visibility(client):
     assert len(layers) == 1
 
 
-def test_filter_by_polygon(client):
-    """ Test the filter by polygon access right. """
+def test_filter_by_polygon_wfs_getfeature(client):
+    """ Test the filter by polygon access right with WFS GetFeature. """
     # Check the layer itself about the number of features
     file_path = Path(__file__).parent.joinpath(
         'data', 'test_filter_layer_data_by_polygon_for_groups', 'bakeries.shp')

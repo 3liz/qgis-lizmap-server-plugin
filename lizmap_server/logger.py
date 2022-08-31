@@ -14,6 +14,7 @@ from qgis.core import Qgis, QgsMessageLog
 from lizmap_server.tools import to_bool
 
 PLUGIN = 'Lizmap'
+DEBUG = True
 
 
 # noinspection PyTypeChecker
@@ -98,7 +99,10 @@ def log_output_value(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
-        Logger.info("{} output is {} for parameter {}".format(func.__name__, result, str(args)))
+        if DEBUG:
+            Logger.info("{} output is {} for parameter {}".format(func.__name__, result, str(args)))
+        else:
+            Logger.info("{} output is {}… for parameter {}".format(func.__name__, result[0:200], str(args)))
         return result
 
     return wrapper
