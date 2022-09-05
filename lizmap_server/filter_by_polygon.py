@@ -71,6 +71,7 @@ class FilterByPolygon:
         self.primary_key = None
         self.filter_mode = None
         self.spatial_relationship = None
+        self.use_centroid = None
 
         # Will be filled with the polygon layer
         self.polygon = None
@@ -108,6 +109,7 @@ class FilterByPolygon:
                 self.primary_key = layer.get('primary_key')
                 self.filter_mode = layer.get('filter_mode')
                 self.spatial_relationship = layer.get('spatial_relationship')
+                self.use_centroid = layer.get('use_centroid', False)
                 break
 
         if self.primary_key is None:
@@ -213,7 +215,8 @@ class FilterByPolygon:
                 self.layer.sourceCrs(),
                 self.polygon.sourceCrs(),
                 polygon,
-                use_st_intersect
+                use_st_intersect,
+                self.use_centroid,
             )
             return qgis_expression, ewkt
 
@@ -224,7 +227,8 @@ class FilterByPolygon:
                 self.polygon.sourceCrs(),
                 uri.geometryColumn(),
                 polygon,
-                use_st_intersect
+                use_st_intersect,
+                self.use_centroid,
             )
 
             # If we can use the complexe query with ST_Intersects or ST_Contains
@@ -441,6 +445,7 @@ c.user_group && (
             geom_field: str,
             polygons: QgsGeometry,
             use_st_intersect: bool,
+            use_centroid: bool,
     ) -> str:
         """If layer is of type PostgreSQL, use a simple ST_Intersects/ST_Contains.
 
@@ -458,10 +463,15 @@ c.user_group && (
                 to_crs=filtered_crs.postgisSrid(),
             )
 
+        if use_centroid:
+            geom_field = "ST_Centroid(\"{geom_field}\")".format(geom_field=geom_field)
+        else:
+            geom_field = "\"{geom_field}\"".format(geom_field=geom_field)
+
         sql = """
 ST_{function}(
     {geom},
-    \"{geom_field}\"
+    {geom_field}
 )""".format(
             function="Intersects" if use_st_intersect else "Contains",
             geom_field=geom_field,
@@ -476,6 +486,7 @@ ST_{function}(
             filtering_crs: QgsCoordinateReferenceSystem,
             polygons: QgsGeometry,
             use_st_intersect: bool,
+            use_centroid: bool,
     ) -> str:
         """Build the filter with a QGIS expression.
 
@@ -491,12 +502,18 @@ ST_{function}(
                 to_crs=filtered_crs.authid()
             )
 
+        if use_centroid:
+            current_geometry = "centroid($geometry)"
+        else:
+            current_geometry = "$geometry"
+
         expression = """
 {function}(
     {geom},
-    $geometry
+    {current_geometry}
 )""".format(
             function="intersects" if use_st_intersect else "contains",
             geom=geom,
+            current_geometry=current_geometry,
             )
         return expression

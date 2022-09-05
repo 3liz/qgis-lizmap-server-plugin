@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Improvement about the filtering by polygon (use a QGIS expression when possible)
+* Add a new option to use the centroid for the filtering by polygon. Available in the 3.10.0 version of desktop plugin.
 * Fix an issue to return Py-QGIS-Server version
 
 ## 1.1.1 - 2022-07-29

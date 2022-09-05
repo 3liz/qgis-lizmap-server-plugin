@@ -208,11 +208,12 @@ class TestFilterByPolygon(unittest.TestCase):
             QgsCoordinateReferenceSystem("EPSG:4326"),
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=False,
+            use_centroid=True,
         )
         expected = """
 contains(
     transform(geom_from_wkt('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 'EPSG:4326', 'EPSG:2154'),
-    $geometry
+    centroid($geometry)
 )"""
         self.assertEqual(expected, sql)
 
@@ -221,11 +222,12 @@ contains(
             QgsCoordinateReferenceSystem("EPSG:2154"),
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=False,
+            use_centroid=True,
         )
         expected = """
 contains(
     geom_from_wkt('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'),
-    $geometry
+    centroid($geometry)
 )"""
         self.assertEqual(expected, sql)
 
@@ -238,11 +240,12 @@ contains(
             'geom',
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=True,
+            use_centroid=True,
         )
         expected = """
 ST_Intersects(
     ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 4326, 2154),
-    "geom"
+    ST_Centroid("geom")
 )"""
         self.assertEqual(expected, sql, sql)
 
@@ -253,6 +256,7 @@ ST_Intersects(
             'geom',
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=False,
+            use_centroid=False,
         )
         expected = """
 ST_Contains(
@@ -268,10 +272,11 @@ ST_Contains(
             'geom',
             QgsGeometry.fromWkt('POLYGON((0 0,0 5,5 5,5 0,0 0))'),
             use_st_intersect=False,
+            use_centroid=True,
         )
         expected = """
 ST_Contains(
     ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 2154),
-    \"geom\"
+    ST_Centroid(\"geom\")
 )"""
         self.assertEqual(expected, sql)
