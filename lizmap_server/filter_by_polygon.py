@@ -457,9 +457,8 @@ c.user_group && (
             from_crs=filtering_crs.postgisSrid(),
         )
         if filtering_crs != filtered_crs:
-            geom = "ST_Transform({geom}, {from_crs}, {to_crs})".format(
+            geom = "ST_Transform({geom}, {to_crs})".format(
                 geom=geom,
-                from_crs=filtering_crs.postgisSrid(),
                 to_crs=filtered_crs.postgisSrid(),
             )
 

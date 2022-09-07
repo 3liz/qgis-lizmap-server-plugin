@@ -244,7 +244,7 @@ contains(
         )
         expected = """
 ST_Intersects(
-    ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 4326, 2154),
+    ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 2154),
     ST_Centroid("geom")
 )"""
         self.assertEqual(expected, sql, sql)
@@ -260,7 +260,7 @@ ST_Intersects(
         )
         expected = """
 ST_Contains(
-    ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 4326, 2154),
+    ST_Transform(ST_SetSRID(ST_GeomFromText('Polygon ((0 0, 0 5, 5 5, 5 0, 0 0))'), 4326), 2154),
     "geom"
 )"""
         self.assertEqual(expected, sql)
