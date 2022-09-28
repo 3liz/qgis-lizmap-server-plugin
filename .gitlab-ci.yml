@@ -57,12 +57,16 @@ package-zip:
       qgis-plugin-ci
       package ${VERSION}
       --plugin-repo-url https://packages.3liz.org/pub/${FACTORY_PRODUCT_NAME}-qgis-plugin/${STATUS}/
+    # For infraV2 infraV3
+    - cp ${FACTORY_PRODUCT_NAME}.${VERSION}.zip lizmap_server.${CI_COMMIT_REF_NAME}.zip
   tags:
     - infrav3-plain
   artifacts:
     untracked: true
     expose_as: 'QGIS package'
     paths:
+      # For infraV2 infraV3
+      - ${FACTORY_PRODUCT_NAME}.${CI_COMMIT_REF_NAME}.zip
       - ${FACTORY_PRODUCT_NAME}.${VERSION}.zip
       - plugins.xml
 
