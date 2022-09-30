@@ -71,17 +71,24 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Get default layer rights
         rights = super().layerPermissions(layer)
 
+        request_handler = self.iface.requestHandler()
+
         # Get Lizmap user groups provided by the request
-        groups = get_lizmap_groups(self.iface.requestHandler())
+        groups = get_lizmap_groups(request_handler)
 
         # Set lizmap variables
-        user_login = get_lizmap_user_login(self.iface.requestHandler())
+        user_login = get_lizmap_user_login(request_handler)
         project = QgsProject.instance()
         custom_var = project.customVariables()
         if custom_var.get('lizmap_user', None) != user_login:
             custom_var['lizmap_user'] = user_login
             custom_var['lizmap_user_groups'] = list(groups)  # QGIS can't store a tuple
             project.setCustomVariables(custom_var)
+
+        # Try to override filter expression cache
+        is_wfs = request_handler.parameter('service').upper() == 'WFS'
+        if is_wfs and request_handler.parameter('request') == 'getfeature':
+            self.iface.accessControls().resolveFilterFeatures([layer])
 
         # If groups is empty, no Lizmap user groups provided by the request
         # The default layer rights is applied
