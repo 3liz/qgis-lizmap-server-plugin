@@ -4,7 +4,10 @@
 
 * Improvement about the filtering by polygon (use a QGIS expression when possible)
 * Add a new option to use the centroid for the filtering by polygon. Available in the 3.10.0 version of desktop plugin.
+* Fix an issue when fetching information from `metadata.txt` in QGIS Server plugins
 * Fix an issue to return Py-QGIS-Server version
+* Overpass a bug from QGIS Server about a cache in WFS requests, a fix needs to be done in QGIS Server core
+* All plugins versions (stable and unstable) are now available https://packages.3liz.org/pub/server-plugins-repository/
 
 ## 1.1.1 - 2022-07-29
 

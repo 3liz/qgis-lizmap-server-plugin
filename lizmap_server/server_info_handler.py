@@ -40,15 +40,21 @@ with warnings.catch_warnings():
 def plugin_metadata_key(name: str, key: str, ) -> str:
     """ Return the version for a given plugin. """
     unknown = 'unknown'
+    # it seems configparser is transforming all keys as lowercase...
     if IS_PY_QGIS_SERVER:
         metadata = plugin_metadata(name)
-        return metadata['general'].get(key, unknown)
+        value = metadata['general'].get(key, None)
+        if value:
+            return value
+        return metadata['general'].get(key.lower(), unknown)
     else:
         value = pluginMetadata(name, key)
-        if value in ("__error__", ""):
-            return unknown
-        else:
+        if value not in ("__error__", ""):
             return value
+        value = pluginMetadata(name.lower(), key)
+        if value not in ("__error__", ""):
+            return value
+        return unknown
 
 
 def py_qgis_server_version() -> str:
