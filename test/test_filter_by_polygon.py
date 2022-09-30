@@ -168,7 +168,7 @@ class TestFilterByPolygon(unittest.TestCase):
 
         groups = ('admins',)
         subset, ewkt = config.subset_sql(groups)
-        self.assertEqual('', subset)
+        self.assertEqual('1 = 1', subset)
         self.assertEqual('', ewkt)
 
         config = FilterByPolygon(json, points, editing=True)
