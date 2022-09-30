@@ -37,34 +37,34 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         self.iface = server_iface
 
-    def layerFilterExpression(self, layer: QgsVectorLayer) -> str:
-        """ Return an additional expression filter """
-        # Disabling Lizmap layer filter expression for QGIS Server <= 3.16.1 and <= 3.10.12
-        # Fix in QGIS Server https://github.com/qgis/QGIS/pull/40556 3.18.0, 3.16.2, 3.10.13
-        if 31013 <= Qgis.QGIS_VERSION_INT < 31099 or 31602 <= Qgis.QGIS_VERSION_INT:
-            Logger.info("Lizmap layerFilterExpression")
-            filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.QgisExpression)
-            if filter_exp:
-                return filter_exp
-
-            return super().layerFilterExpression(layer)
-
-        message = (
-            "Lizmap layerFilterExpression disabled, you should consider upgrading QGIS Server to >= "
-            "3.10.13 or >= 3.16.2")
-        Logger.critical(message)
-        return ALL_FEATURES
-
-    # def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
-    #     """ Return an additional subset string (typically SQL) filter """
-    #     Logger.info("Lizmap layerFilterSubsetString")
-    #     # We should have a safe SQL query.
-    #     # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
-    #     filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.SafeSqlQuery)
-    #     if filter_exp:
-    #         return filter_exp
+    # def layerFilterExpression(self, layer: QgsVectorLayer) -> str:
+    #     """ Return an additional expression filter """
+    #     # Disabling Lizmap layer filter expression for QGIS Server <= 3.16.1 and <= 3.10.12
+    #     # Fix in QGIS Server https://github.com/qgis/QGIS/pull/40556 3.18.0, 3.16.2, 3.10.13
+    #     if 31013 <= Qgis.QGIS_VERSION_INT < 31099 or 31602 <= Qgis.QGIS_VERSION_INT:
+    #         Logger.info("Lizmap layerFilterExpression")
+    #         filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.QgisExpression)
+    #         if filter_exp:
+    #             return filter_exp
     #
-    #     return super().layerFilterSubsetString(layer)
+    #         return super().layerFilterExpression(layer)
+    #
+    #     message = (
+    #         "Lizmap layerFilterExpression disabled, you should consider upgrading QGIS Server to >= "
+    #         "3.10.13 or >= 3.16.2")
+    #     Logger.critical(message)
+    #     return ALL_FEATURES
+
+    def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
+        """ Return an additional subset string (typically SQL) filter """
+        Logger.info("Lizmap layerFilterSubsetString")
+        # We should have a safe SQL query.
+        # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
+        filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.SafeSqlQuery)
+        if filter_exp:
+            return filter_exp
+
+        return super().layerFilterSubsetString(layer)
 
     def layerPermissions(self, layer: QgsMapLayer) -> QgsAccessControlFilter.LayerPermissions:
         """ Return the layer rights """

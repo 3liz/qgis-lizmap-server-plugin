@@ -31,7 +31,7 @@ CACHE_MAX_SIZE = 100
 # 1 = 0 results in a "false" in OGR/PostGIS
 # ET : I didn't find a proper false value in OGR
 NO_FEATURES = '1 = 0'
-ALL_FEATURES = '1 = 1'
+ALL_FEATURES = ''
 
 
 # noinspection PyArgumentList
