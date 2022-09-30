@@ -97,7 +97,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
             raise ServiceError("Bad request error", "Invalid request", 404)
 
         # 'name' is not the folder name in the 'expected_list' variable, it can be different
-        keys = ('name', 'version', 'commitNumber', 'commitSha1', 'dateTime')
+        keys = ('name', 'version', 'commitNumber', 'commitSha1', 'dateTime', 'repository')
         plugins = dict()
         for plugin in plugin_list():
             plugins[plugin] = dict()
