@@ -3,7 +3,6 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 from qgis.core import (
-    Qgis,
     QgsExpression,
     QgsMapLayer,
     QgsProject,
