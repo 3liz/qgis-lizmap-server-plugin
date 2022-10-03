@@ -58,7 +58,8 @@ package-zip:
       package ${VERSION}
       --plugin-repo-url https://packages.3liz.org/pub/${FACTORY_PRODUCT_NAME}-qgis-plugin/${STATUS}/
     # For infraV2 infraV3
-    - cp ${FACTORY_PRODUCT_NAME}.${VERSION}.zip lizmap_server.${CI_COMMIT_REF_NAME}.zip
+    # On a tag, the zip will be the existing already
+    - cp ${FACTORY_PRODUCT_NAME}.${VERSION}.zip lizmap_server.${CI_COMMIT_REF_NAME}.zip || true
   tags:
     - infrav3-plain
   artifacts:
