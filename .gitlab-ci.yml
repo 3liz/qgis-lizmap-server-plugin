@@ -7,10 +7,11 @@ stages:
 - test
 - build
 - package-infra
+- qgis-plugin
+- qgis-repository-edit
+- qgis-repository-push
 - deploy
 - release
-- edit-repository
-- push-repository
 
 qgis-server:
   stage: test
@@ -75,7 +76,7 @@ push-zip-fetch-repo:
   dependencies:
     - version
     - package-zip
-  stage: deploy
+  stage: qgis-plugin
   script:
     # Upload into the plugin directory
     - upload_to_packages_server ${FACTORY_PRODUCT_NAME}.${VERSION}.zip pub/${FACTORY_PRODUCT_NAME}-qgis-plugin/${STATUS}/
@@ -94,7 +95,7 @@ push-zip-fetch-repo:
       - tmp_repository/*.xml
 
 edit-repository:
-  stage: edit-repository
+  stage: qgis-repository-edit
   dependencies:
     - package-zip
     - push-zip-fetch-repo
@@ -111,7 +112,7 @@ edit-repository:
       - tmp_repository/*.xml
 
 push-repository:
-  stage: push-repository
+  stage: qgis-repository-push
   dependencies:
     - version
     - edit-repository

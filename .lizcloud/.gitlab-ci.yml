@@ -52,45 +52,18 @@ release:infrav3:
   tags:
     - infrav3-dind
 
-build:infrav2:
-  stage: package-infra
-  script:
-    - make -C .lizcloud -f fabric.mk package
-  environment:
-    name: snap
-  only:
-    refs:
-      - tags
-      - master
-  tags:
-    - fabric
-
 deploy:infrav2:
   stage: deploy
-  script:
-    - sudo -u fabric fab snap deploy:$FACTORY_PACKAGE_NAME,force=true
   dependencies:
-    - build:infrav2
+    - push-repository
+  script:
+    - update-snap-qgis-plugins
   environment:
     name: snap
   only:
     refs:
       - tags
       - master
-  tags:
-    - fabric
-
-release:infrav2:
-  stage: release
-  script:
-    - sudo -u fabric fab prod release:$FACTORY_PACKAGE_NAME
-  environment:
-    name: production
-  dependencies:
-    - build:infrav2
-  when: manual
-  only:
-    - tags
   tags:
     - fabric
 
