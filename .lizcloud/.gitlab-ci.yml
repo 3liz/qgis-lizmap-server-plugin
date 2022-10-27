@@ -16,7 +16,7 @@
   variables:
     CI_ARCHIVE: ${FACTORY_PRODUCT_NAME}.${VERSION}.zip
 
-deploy_snap:
+deploy_snap:infrav3:
   extends: .infrav3-package   
   stage: deploy
   environment:
@@ -24,7 +24,7 @@ deploy_snap:
   variables:
     CI_STAGING: snapshot
 
-release_prod:
+release_prod:infrav3:
   extends: .infrav3-package   
   stage: release
   environment:
