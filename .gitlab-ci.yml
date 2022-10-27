@@ -1,7 +1,5 @@
 variables:
   FACTORY_PRODUCT_NAME: lizmap_server
-  FACTORY_PACKAGE_NAME: lizmap_server_qgis_plugin
-  FACTORY_PACKAGE_TYPE: plugin
 
 stages:
 - test

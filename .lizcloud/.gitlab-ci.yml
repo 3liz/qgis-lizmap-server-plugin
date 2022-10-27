@@ -4,53 +4,36 @@
 # For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
 
 
-variables:
-  FACTORY_MANIFEST: ".lizcloud/factory.manifest"
 
-build:infrav3:
-  stage: package-infra
-  script:
-    - make -C .lizcloud -f factory.mk package
-  environment:
-    name: snap
-  artifacts:
-    paths:
-      - ".lizcloud/factory.manifest"
-  only:
-    refs:
-      - tags
-      - master
-  tags:
-    - infrav3-dind
-
-deploy:infrav3:
-  stage: deploy
-  script:
-    - $FACTORY_SCRIPTS/deploy-package $FACTORY_PACKAGE_NAME
+.infrav3-package:
   dependencies:
-    - build:infrav3
+    - version
+    - package-zip
+  script:
+    - $FACTORY_SCRIPTS/make-package-$CI_STAGING qgis_lizmap_server ${VERSION} ${FACTORY_PRODUCT_NAME} qgis-plugin
+  tags:
+    - infrav3
+  variables:
+    CI_ARCHIVE: ${FACTORY_PRODUCT_NAME}.${VERSION}.zip
+
+deploy_snap:
+  extends: .infrav3-package   
+  stage: deploy
   environment:
     name: snap
-  only:
-    refs:
-      - tags
-      - master
-  tags:
-    - infrav3-dind
+  variables:
+    CI_STAGING: snapshot
 
-release:infrav3:
+release_prod:
+  extends: .infrav3-package   
   stage: release
-  script:
-    - $FACTORY_SCRIPTS/release-package $FACTORY_PACKAGE_NAME
   environment:
     name: production
-  dependencies:
-    - build:infrav3
-  when: manual
   only:
     - tags
-  tags:
-    - infrav3-dind
+  variables:
+    CI_STAGING: release
+
 
 deploy:infrav2:
   stage: deploy
