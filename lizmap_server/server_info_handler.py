@@ -149,11 +149,19 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         else:
             commit_id = ''
 
+        # noinspection PyBroadException
+        try:
+            # Format the tag according to QGIS git repository
+            tag = 'final-{}'.format(qgis_version_split[0].replace('.', '_'))
+        except Exception:
+            tag = ""
+
         py_qgis_server_metadata = py_qgis_server_info()
         data = {
             'qgis_server': {
                 'metadata': {
                     'version': qgis_version_split[0],  # 3.16.0
+                    'tag': tag,  # final-3_16_0
                     'name': qgis_version_split[1],  # Hannover
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
