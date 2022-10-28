@@ -51,6 +51,7 @@ jobs:
         qgis_version: [
           "3.16",
           "3.22",
+          "3.28",
           "nightly-release",
         ]
     # container: 3liz/qgis-platform:${{ matrix.qgis_version }}
@@ -99,13 +100,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-
-      - uses: actions/cache@v3.0.9
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/packaging.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          cache: "pip"
+          cache-dependency-path: "requirements/packaging.txt"
 
       - name: Install Python requirements
         run: pip install -r requirements/packaging.txt

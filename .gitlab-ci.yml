@@ -18,6 +18,7 @@ qgis-server:
       - QGIS_VERSION: [
         "3.16",
         "3.22",
+        "3.28",
         "nightly-release",
       ]
   script:
