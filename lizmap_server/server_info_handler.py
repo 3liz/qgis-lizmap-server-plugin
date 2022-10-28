@@ -62,7 +62,7 @@ PyQgisServer = NamedTuple(
         ('version', str),
         ('build_id', Union[int, None]),
         ('commit_id', Union[int, None]),
-        ('is_stable_release', bool)
+        ('is_stable', bool)
     ]
 )
 
@@ -72,9 +72,9 @@ def py_qgis_server_info() -> PyQgisServer:
     version = 'not used'
     build_id = None
     commit_id = None
-    status = False
+    is_stable = False
     if not IS_PY_QGIS_SERVER:
-        return PyQgisServer(version, build_id, commit_id, status)
+        return PyQgisServer(version, build_id, commit_id, is_stable)
 
     # noinspection PyBroadException
     try:
@@ -82,12 +82,12 @@ def py_qgis_server_info() -> PyQgisServer:
         version = __version__
         build_id = __manifest__.get('buildid')
         commit_id = __manifest__.get('commitid')
-        status = any(x in version for x in ("pre", "alpha", "beta", "rc"))
-        return PyQgisServer(version, build_id, commit_id, status)
+        is_stable = not any(x in version for x in ("pre", "alpha", "beta", "rc"))
+        return PyQgisServer(version, build_id, commit_id, is_stable)
     except Exception:
         msg = 'error while fetching py-qgis-server version'
         LOGGER.error(msg)
-        return PyQgisServer(msg, build_id, commit_id, status)
+        return PyQgisServer(msg, build_id, commit_id, is_stable)
 
 
 class ServerInfoHandler(QgsServerOgcApiHandler):
@@ -165,7 +165,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'version': py_qgis_server_metadata.version,
                     'build_id': py_qgis_server_metadata.build_id,
                     'commit_id': py_qgis_server_metadata.commit_id,
-                    'stable_release': py_qgis_server_metadata.is_stable_release,
+                    'stable_release': py_qgis_server_metadata.is_stable,
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
                 'services': services_available,
