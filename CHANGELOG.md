@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add more metadata in the JSON about Py-QGIS-Server
+
 ## 1.2.0 - 2022-10-03
 
 * Improvement about the filtering by polygon (use a QGIS expression when possible)

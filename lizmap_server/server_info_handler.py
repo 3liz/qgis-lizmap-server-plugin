@@ -6,7 +6,7 @@ import logging
 import sys
 import warnings
 
-from typing import Union
+from typing import NamedTuple, Union
 
 from qgis.core import Qgis
 from qgis.PyQt import Qt
@@ -57,19 +57,37 @@ def plugin_metadata_key(name: str, key: str, ) -> str:
         return unknown
 
 
-def py_qgis_server_version() -> str:
+PyQgisServer = NamedTuple(
+    "PyQgisServer", [
+        ('version', str),
+        ('build_id', Union[int, None]),
+        ('commit_id', Union[int, None]),
+        ('is_stable_release', bool)
+    ]
+)
+
+
+def py_qgis_server_info() -> PyQgisServer:
     """ Return the Py-QGIS-Server version or an empty string. """
+    version = 'not used'
+    build_id = None
+    commit_id = None
+    status = False
     if not IS_PY_QGIS_SERVER:
-        return 'not used'
+        return PyQgisServer(version, build_id, commit_id, status)
 
     # noinspection PyBroadException
     try:
-        from pyqgisserver.version import __version__
-        return __version__
+        from pyqgisserver.version import __manifest__, __version__
+        version = __version__
+        build_id = __manifest__.get('buildid')
+        commit_id = __manifest__.get('commitid')
+        status = any(x in version for x in ("pre", "alpha", "beta", "rc"))
+        return PyQgisServer(version, build_id, commit_id, status)
     except Exception:
         msg = 'error while fetching py-qgis-server version'
         LOGGER.error(msg)
-        return msg
+        return PyQgisServer(msg, build_id, commit_id, status)
 
 
 class ServerInfoHandler(QgsServerOgcApiHandler):
@@ -109,7 +127,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
             # 'cadastre', very specific for the French use-case
             'lizmap_server',
             'atlasprint',
-            # waiting a little for these ones
+            # waiting a little for these one
             # 'tilesForServer',
             # 'DataPlotly',
         )
@@ -131,6 +149,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         else:
             commit_id = ''
 
+        py_qgis_server_metadata = py_qgis_server_info()
         data = {
             'qgis_server': {
                 'metadata': {
@@ -138,8 +157,15 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'name': qgis_version_split[1],  # Hannover
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
-                    'py_qgis_server': IS_PY_QGIS_SERVER,  # bool
-                    'py_qgis_server_version': py_qgis_server_version(),  # str
+                    'py_qgis_server': IS_PY_QGIS_SERVER,  # bool, # deprecated
+                    'py_qgis_server_version': py_qgis_server_metadata.version,  # str, deprecated
+                },
+                'py_qgis_server': {
+                    'found': IS_PY_QGIS_SERVER,
+                    'version': py_qgis_server_metadata.version,
+                    'build_id': py_qgis_server_metadata.build_id,
+                    'commit_id': py_qgis_server_metadata.commit_id,
+                    'stable_release': py_qgis_server_metadata.is_stable_release,
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
                 'services': services_available,
