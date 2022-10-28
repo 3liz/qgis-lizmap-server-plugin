@@ -119,5 +119,62 @@ push-repository:
   tags:
     - fabric
 
-# Infra v2/v3 build
-include: '/.lizcloud/.gitlab-ci.yml'
+# Dev for infra-V2 and infra-V3
+# For snap, artifact available : lizmap_server.master.zip
+# For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
+
+.infrav3-package:
+  dependencies:
+    - version
+    - package-zip
+  script:
+    - $FACTORY_SCRIPTS/make-package-$CI_STAGING qgis_lizmap_server ${VERSION} ${FACTORY_PRODUCT_NAME} qgis-plugin
+  tags:
+    - infrav3
+  variables:
+    CI_ARCHIVE: ${FACTORY_PRODUCT_NAME}.${VERSION}.zip
+
+deploy_snap:infrav3:
+  extends: .infrav3-package
+  stage: deploy
+  environment:
+    name: snap
+  variables:
+    CI_STAGING: snapshot
+
+release_prod:infrav3:
+  extends: .infrav3-package
+  stage: release
+  environment:
+    name: production
+  only:
+    - tags
+  variables:
+    CI_STAGING: release
+
+
+deploy:infrav2:
+  stage: deploy
+  dependencies:
+    - push-repository
+  script:
+    - update-snap-qgis-plugins
+  environment:
+    name: snap
+  only:
+    refs:
+      - tags
+      - master
+  tags:
+    - fabric
+
+tickets:
+  stage: release
+  only:
+    - tags
+  image:
+    name: $REGISTRY_URI/infra/ci-tools:latest
+  script:
+    - create_ticket.py
+  tags:
+    - factory-plain
