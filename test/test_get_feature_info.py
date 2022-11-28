@@ -56,7 +56,7 @@ def test_no_get_feature_info_default_popup(client):
  <Layer name="{LAYER_DEFAULT_POPUP}"/>
 </GetFeatureInfoResponse>
 '''
-    diff = xml_diff.diff_texts(expected, rv.content.decode('utf-8'))
+    diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
 
@@ -81,7 +81,7 @@ def test_single_get_feature_info_default_popup(client):
  </Layer>
 </GetFeatureInfoResponse>
 '''
-    diff = xml_diff.diff_texts(expected, rv.content.decode('utf-8'))
+    diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
 
@@ -107,7 +107,7 @@ def test_single_get_feature_info_default_popup_user(client):
  </Layer>
 </GetFeatureInfoResponse>
 '''
-    diff = xml_diff.diff_texts(expected, rv.content.decode('utf-8'))
+    diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
 
@@ -133,7 +133,7 @@ def test_single_get_feature_info_qgis_popup(client):
  </Layer>
 </GetFeatureInfoResponse>
 '''
-    diff = xml_diff.diff_texts(expected, rv.content.decode('utf-8'))
+    diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
 
