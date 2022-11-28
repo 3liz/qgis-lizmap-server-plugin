@@ -1,5 +1,6 @@
 variables:
   FACTORY_PRODUCT_NAME: lizmap_server
+  FACTORY_PACKAGE_TYPE: plugin
 
 stages:
 - test
