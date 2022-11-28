@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.2.1 - 2022-11-28
+
 * Add more metadata in the JSON about Py-QGIS-Server and QGIS Server
 
 ## 1.2.0 - 2022-10-03
