@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Review the metadata and the warning when the plugin is installed on QGIS desktop
+
 ## 1.2.1 - 2022-11-28
 
 * Add more metadata in the JSON about Py-QGIS-Server and QGIS Server

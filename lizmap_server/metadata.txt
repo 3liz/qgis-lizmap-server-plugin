@@ -4,12 +4,12 @@ qgisMinimumVersion=3.10
 qgisMaximumVersion=3.99
 author=3Liz
 email=info@3liz.com
-description=Only used on a QGIS server. Publish and share your QGIS maps on the Web via Lizmap Web Client, by 3liz.com
-about=With a few clicks, it's possible to publish and share your QGIS projects on the Web via Lizmap Web Client, by 3liz.com. QGIS Server is used in the background so all the symbology is kept. The edition forms in QGIS are also available. Demo : https://demo.lizmap.com and documentation : https://docs.lizmap.com and hosting solutions https://lizmap.com
+description=Designed only for QGIS server. For QGIS Desktop, install the other plugin called "Lizmap".
+about=This plugin is designed for QGIS server only. For more detailed information about Lizmap, install the other plugin called "Lizmap".
 category=Web
 tags=online,server,web,webgis,webservice,webmapping,mobile,publication,wms,wfs,wps,internet,cloud
 
-homepage=https://docs.lizmap.com
+homepage=https://docs.lizmap.com/current/fr/install/pre_requirements.html#lizmap-qgis-server-plugin
 tracker=https://github.com/3liz/qgis-lizmap-server-plugin/issues
 repository=https://github.com/3liz/qgis-lizmap-server-plugin
 
