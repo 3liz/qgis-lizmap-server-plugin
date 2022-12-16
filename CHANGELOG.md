@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Review the metadata and the warning when the plugin is installed on QGIS desktop
+* Review the JSON metadata about Py-QGIS-Server when used with Lizmap Web Client 3.6
 
 ## 1.2.1 - 2022-11-28
 

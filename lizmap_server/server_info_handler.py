@@ -165,15 +165,16 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'name': qgis_version_split[1],  # Hannover
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
-                    'py_qgis_server': IS_PY_QGIS_SERVER,  # bool, # deprecated
-                    'py_qgis_server_version': py_qgis_server_metadata.version,  # str, deprecated
+                    'py_qgis_server': IS_PY_QGIS_SERVER,  # bool, # deprecated since 28/10/2022
+                    'py_qgis_server_version': py_qgis_server_metadata.version,  # str, deprecated since 28/10/2022
                 },
                 'py_qgis_server': {
                     'found': IS_PY_QGIS_SERVER,
                     'version': py_qgis_server_metadata.version,
                     'build_id': py_qgis_server_metadata.build_id,
                     'commit_id': py_qgis_server_metadata.commit_id,
-                    'stable_release': py_qgis_server_metadata.is_stable,
+                    'stable_release': py_qgis_server_metadata.is_stable,  # bool, deprecated since 16/12/2022
+                    'stable': py_qgis_server_metadata.is_stable,
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
                 'services': services_available,
