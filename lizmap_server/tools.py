@@ -51,9 +51,10 @@ def check_environment_variable() -> bool:
     """ Check the server configuration. """
     if not to_bool(os.environ.get('QGIS_SERVER_LIZMAP_REVEAL_SETTINGS', ''), default_value=False):
         QgsMessageLog.logMessage(
-            'Please read the documentation how to enable the Lizmap API on QGIS server side '
+            'The Lizmap API is currently not enabled. Please read the documentation how to enable the Lizmap API '
+            'on QGIS server side '
             'https://docs.lizmap.com/current/en/install/pre_requirements.html#lizmap-server-plugin '
-            'An environment variable must be enabled to have Lizmap Web Client ≥ 3.5.',
+            'An environment variable must be enabled to have Lizmap Web Client ≥ 3.5 working.',
             "Lizmap",
             Qgis.Critical
         )
