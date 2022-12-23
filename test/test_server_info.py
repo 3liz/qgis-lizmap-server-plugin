@@ -22,6 +22,7 @@ def test_lizmap_server_info(client):
 
     json_content = json.loads(rv.content.decode('utf-8'))
     assert 'qgis_server' in json_content
+    assert len(json_content['fonts']) >= 1
 
     # Remove the security environment variable, the query mustn't work
     del os.environ[key]

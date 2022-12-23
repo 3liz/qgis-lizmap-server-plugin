@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Return the list of fonts installed on the server. It's useful for QGIS layouts.
+
 ## 1.2.2 - 2022-12-16
 
 * Review the metadata and the warning when the plugin is installed on QGIS desktop
