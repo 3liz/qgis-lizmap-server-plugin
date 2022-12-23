@@ -11,6 +11,7 @@ from typing import NamedTuple, Union
 from qgis.core import Qgis
 from qgis.PyQt import Qt
 from qgis.PyQt.QtCore import QRegularExpression
+from qgis.PyQt.QtGui import QFontDatabase
 from qgis.server import QgsServerOgcApi, QgsServerOgcApiHandler
 
 from lizmap_server.exception import ServiceError
@@ -180,6 +181,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 'services': services_available,
                 'plugins': plugins,
             },
+            'fonts': QFontDatabase().families(),
             'environment': {
                 'gdal': gdal.VersionInfo('VERSION_NUM'),
                 'python': sys.version,
