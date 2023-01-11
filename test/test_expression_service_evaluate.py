@@ -159,6 +159,60 @@ def test_request_without_features(client):
     assert b['results'][0]['b'] == ['test1']
 
 
+def test_layer_field_aggregates(client):
+    """ Get the distinct values of the NAME_1 field """
+    # Project
+    project_file = "france_parts.qgs"
+
+    # Test expression
+    expressions = {
+        'distinct_values': """
+            to_json(
+                array_distinct(
+                    aggregate(
+                        layer:='france_parts',
+                        aggregate:='array_agg',
+                        expression:=\\"NAME_1\\",
+                        order_by:=@element
+                    )
+                )
+            )
+        """,
+        'min_area': """
+            aggregate(
+                layer:='france_parts',
+                aggregate:='min',
+                expression:=\\"Area_sqkm\\"
+            )
+        """,
+    }
+
+    query_string = '?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={'
+    query_expressions = []
+    for key, expression in expressions.items():
+        query_expression = quote(expression.replace('\n', ' '), safe='')
+        query_expressions.append(f'"{key}":"{query_expression}"')
+    query_string += ', '.join(query_expressions)
+    query_string += '}'
+    headers = {'X-Lizmap-User-Groups': 'test1', 'X-Lizmap-User': 'Bretagne'}
+    request = client.get(query_string, project_file, headers)
+
+    assert request.status_code == 200
+    assert request.headers.get('Content-Type', '').find('application/json') == 0
+
+    data = json.loads(request.content.decode('utf-8'))
+    assert 'status' in data
+    assert data['status'] == 'success'
+    assert 'results' in data
+    assert len(data['results']) == 1
+
+    assert 'distinct_values' in data['results'][0]
+    assert data['results'][0]['distinct_values'] == '["Basse-Normandie","Bretagne","Pays de la Loire","Centre"]'
+
+    assert 'min_area' in data['results'][0]
+    assert data['results'][0]['min_area'] == 17876.8
+
+
 def test_request_with_features(client):
     """  Test Expression Evaluate request with Feature or Features parameter
     """
