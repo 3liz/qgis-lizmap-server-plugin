@@ -23,7 +23,15 @@ try:
     # Py-QGIS-Server
     # noinspection PyUnresolvedReferences
     from pyqgisserver.plugins import plugin_list, plugin_metadata
-    IS_PY_QGIS_SERVER = True
+    if len(plugin_list() == 0):
+        # Lizmap server is currently executed but the list of plugin itself returned by Py-QGIS-Server is currently
+        # empty.
+        # Therefore, the administrator has installed Py-QGIS-Server, but he is not using it.
+        # We fall back on native QGIS server API.
+        # https://github.com/3liz/lizmap-web-client/issues/3437
+        IS_PY_QGIS_SERVER = False
+    else:
+        IS_PY_QGIS_SERVER = True
 except ImportError:
     # FCGI and others
     from qgis.utils import pluginMetadata, server_active_plugins
