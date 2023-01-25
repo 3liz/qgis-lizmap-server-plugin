@@ -14,11 +14,11 @@ from qgis.PyQt.QtCore import QRegularExpression
 from qgis.PyQt.QtGui import QFontDatabase
 from qgis.server import QgsServerOgcApi, QgsServerOgcApiHandler
 
-from lizmap_server.exception import ServiceError
-from lizmap_server.tools import check_environment_variable, to_bool
-
 # FCGI or others
 from qgis.utils import pluginMetadata, server_active_plugins
+
+from lizmap_server.exception import ServiceError
+from lizmap_server.tools import check_environment_variable, to_bool
 
 try:
     # Py-QGIS-Server
