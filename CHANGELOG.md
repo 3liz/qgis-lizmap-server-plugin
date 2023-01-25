@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Return the list of fonts installed on the server. It's useful for QGIS layouts.
+* Check if Py-QGIS-Server is really used on the server before returning server metadata
 
 ## 1.2.2 - 2022-12-16
 
