@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix regression from the previous version about Py-QGIS-Server
+
 ## 1.3.0 - 2023-01-25
 
 * Return the list of fonts installed on the server. It's useful for QGIS layouts.
