@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.3.1 - 2023-01-25
+
 * Fix regression from the previous version about Py-QGIS-Server
 
 ## 1.3.0 - 2023-01-25

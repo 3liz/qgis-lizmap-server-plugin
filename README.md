@@ -58,6 +58,18 @@ on the QGIS server side.
         * FEATURES=
         * FORM_SCOPE=
 
+### Tests
+
+```bash
+make tests
+```
+
+Manually running a local QGIS server :
+
+```commandline
+QGIS_PLUGINPATH=/home/etienne/dev/qgis/server_plugin_git/lizmap_server/ QGIS_SERVER_LOG_FILE=/tmp/bob.txt QGIS_SERVER_LOG_LEVEL=0 QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=True REQUEST_URI=/lizmap/server.json /usr/lib/cgi-bin/qgis_mapserv.fcgi
+```
+
 ### License
 
 Version: MPL 2.0/GPL 2.0/LGPL 2.1
