@@ -1,5 +1,4 @@
-[![QGIS.org](https://img.shields.io/badge/QGIS.org-published-green)](https://plugins.qgis.org/plugins/atlasprint/)
-## [![logo](lizmap_server/resources/icons/icon.png "3Liz")][3liz]Lizmap QGIS Server Plugin
+# [![logo](lizmap_server/resources/icons/icon.png "3Liz")][3liz]Lizmap QGIS Server Plugin
 
 [![QGIS.org](https://img.shields.io/badge/QGIS.org-published-green)](https://plugins.qgis.org/plugins/lizmap_server/)
 [![Tests 🎳](https://github.com/3liz/qgis-lizmap-server-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/3liz/qgis-lizmap-server-plugin/actions/workflows/ci.yml)
