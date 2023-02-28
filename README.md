@@ -3,20 +3,27 @@
 [![QGIS.org](https://img.shields.io/badge/QGIS.org-published-green)](https://plugins.qgis.org/plugins/lizmap_server/)
 [![Tests 🎳](https://github.com/3liz/qgis-lizmap-server-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/3liz/qgis-lizmap-server-plugin/actions/workflows/ci.yml)
 
-* Latest release link: https://github.com/3liz/qgis-lizmap-server-plugin/releases
-* The `master` branch can be found on https://packages.3liz.org/ after each commits with a stable link.
-* All published versions are available [plugins.qgis.org](https://plugins.qgis.org/plugins/lizmap_server/).
-* Do not use the link provided by GitHub by default in the top right corner.
+## Download
 
-Publication plugin for Lizmap Web Application, by 3LIZ.
+### Stable
+
+* All published versions are available [plugins.qgis.org](https://plugins.qgis.org/plugins/lizmap_server/).
+* We **highly** recommend to use [qgis-plugin-manager](https://pypi.org/project/qgis-plugin-manager/) to download and install.
+    * `qgis-plugin-manager install 'Lizmap server'`
+    * and then **follow** the documentation about the **environment variable** for **security** in the 
+      [Lizmap documentation](https://docs.lizmap.com/current/en/install/pre_requirements.html#installation).
+* Latest release link with the full changelog from the [release page](https://github.com/3liz/qgis-lizmap-server-plugin/releases)
+
+**Remember** that the plugin **must** be updated with each release of Lizmap Web Client with its latest version available.
+
+### Unstable
+
+* The `master` branch can be found on https://packages.3liz.org/ after each commits with a stable link.
+* Do not use the link provided by GitHub by default in the top right corner.
 
 You can find help and news by subscribing to the mailing list: https://lists.osgeo.org/mailman/listinfo/lizmap.
 
 For more detailed information, check the [Lizmap Web Client](https://github.com/3liz/lizmap-web-client/) GitHub repository.
-
-### Installation of the Lizmap plugin
-
-We recommend to use [qgis-plugin-manager](https://pypi.org/project/qgis-plugin-manager/)
 
 #### Lizmap server API
 
