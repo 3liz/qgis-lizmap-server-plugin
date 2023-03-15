@@ -164,7 +164,10 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 
         for expected in expected_list:
             if expected not in plugins.keys():
-                plugins[expected] = {'version': 'not found'}
+                plugins[expected] = {
+                    'version': 'not found',
+                    'name': expected,
+                }
 
         qgis_version_split = Qgis.QGIS_VERSION.split('-')
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Always provide a name with the version 'not found' when fetching the list of plugin
+
 ## 1.3.1 - 2023-01-25
 
 * Fix regression from the previous version about Py-QGIS-Server
