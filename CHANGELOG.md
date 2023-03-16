@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 1.3.2 - 2023-03-16
+## 2.7.0 - 2023-03-16
 
 * Always provide a name with the version 'not found' when fetching the list of plugin
 
