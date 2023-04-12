@@ -142,12 +142,22 @@ class LizmapService(QgsService):
             return
 
         try:
+            filter_type_param = params.get('FILTER_TYPE', '').upper()
+            if filter_type_param == 'SQL':
+                filter_type = FilterType.PlainSqlQuery
+            elif filter_type_param == 'SAFESQL':
+                filter_type = FilterType.SafeSqlQuery
+            elif filter_type_param == 'EXPRESSION':
+                filter_type = FilterType.QgisExpression
+            else:
+                filter_type = FilterType.PlainSqlQuery
+
             edition_context = is_editing_context(self.server_iface.requestHandler())
             filter_polygon_config = FilterByPolygon(
                 cfg.get("filter_by_polygon"),
                 layer,
                 edition_context,
-                filter_type=FilterType.PlainSqlQuery,
+                filter_type=filter_type,
             )
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
