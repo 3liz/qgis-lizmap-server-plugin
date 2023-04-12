@@ -61,7 +61,7 @@ def test_lizmap_getserversettings(client):
 
 
 def test_lizmap_service_filter_polygon_with_user(client):
-    """  Test get polygon filter with the Lizmap service with a user. """
+    """  Test get polygon filter with the Lizmap service with a user as SQL or QGIS expression. """
     project_file = "test_filter_layer_data_by_polygon_for_groups.qgs"
 
     qs = (
@@ -70,7 +70,8 @@ def test_lizmap_service_filter_polygon_with_user(client):
         "REQUEST=GETSUBSETSTRING&"
         "MAP=france_parts.qgs&"
         "LAYER=shop_bakery&"
-        "LIZMAP_USER_GROUPS=montferrier-sur-lez"
+        # "FILTER_TYPE=SQL&" SQL must be the default value when not provided
+        "LIZMAP_USER_GROUPS=montferrier-sur-lez&"
     )
     rv = client.get(qs, project_file)
     assert rv.status_code == 200
@@ -79,7 +80,19 @@ def test_lizmap_service_filter_polygon_with_user(client):
 
     b = json.loads(rv.content.decode('utf-8'))
 
+    # SQL as output, the default format
     assert b['filter'] == '"id" IN ( 68 )'
+    assert b['status'] == 'success'
+    assert b['polygons'].startswith('SRID=3857;MultiPolygon')
+
+    # QGIS expression
+    qs += 'FILTER_TYPE=expression&'
+    rv = client.get(qs, project_file)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    b = json.loads(rv.content.decode('utf-8'))
+    # geom_from_wkt is a QGIS expression subset
+    assert 'geom_from_wkt' in b['filter']
     assert b['status'] == 'success'
     assert b['polygons'].startswith('SRID=3857;MultiPolygon')
 
