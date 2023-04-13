@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.7.1 - 2023-04-13
+
 * Add `FILTER_TYPE` to the `GETSUBSETSTRING` request with different values : `SQL` default value, `SAFESQL` or `EXPRESSION`
 
 ## 2.7.0 - 2023-03-16
