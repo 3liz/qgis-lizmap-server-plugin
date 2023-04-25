@@ -2,10 +2,24 @@ import json
 
 from urllib.parse import quote
 
-__copyright__ = 'Copyright 2019, 3Liz'
+__copyright__ = 'Copyright 2023, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
-__revision__ = '$Format:%H$'
+
+
+def _build_query_string(params: dict) -> str:
+    """ Build a query parameter from a dictionary. """
+    query_string = '?'
+    for k, v in params.items():
+        query_string += f'{k}={v}&'
+    return query_string
+
+
+def _check_request(result, content_type: str = 'application/json', http_code=200) -> dict:
+    """ Check the output and return the content. """
+    assert result.status_code == http_code
+    assert result.headers.get('Content-Type', '').find(content_type) == 0
+    return json.loads(result.content.decode('utf-8'))
 
 
 def test_layer_error(client):
@@ -38,6 +52,41 @@ def test_filter_error(client):
     assert rv.headers.get('Content-Type', '').find('application/json') == 0
 
 
+def test_comment_space_carriage_return(client):
+    """ Test an GetFeatureWithFormScope with some human formatting. """
+    project_file = "test_filter_layer_data_by_polygon_for_groups.qgs"
+    # An empty line, a QGIS comment, some indentation
+    expression = """
+\"name\" = 'Mairie de '||
+
+attributes(
+    -- with QGIS expression comment
+    get_feature('polygons', 'id', current_value('polygon_id'))
+)['name']"""
+
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'townhalls_EPSG2154',
+        'FILTER': quote(expression, safe=''),
+        'FORM_FEATURE': json.dumps({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [102.0, 0.5]
+            },
+            "properties": {"polygon_id": 4}})
+    }
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
+
+    assert b['type'] == 'FeatureCollection'
+    assert len(b['features']) == 1
+    assert b['features'][0]['type'] == 'Feature'
+    assert b['features'][0]['properties']['name'] == 'Mairie de Lattes'
+
+
 def test_formfeature_error(client):
     """  Test Expression GetFeatureFormScope request with Form_Feature parameter error
     """
@@ -51,7 +100,7 @@ def test_formfeature_error(client):
     assert rv.status_code == 400
     assert rv.headers.get('Content-Type', '').find('application/json') == 0
 
-    # Make a request without well formed form_feature
+    # Make a request without well-formed form_feature
     qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=france_parts"
     qs += "&FILTER=%s" % (
         quote("NAME_1 = current_value('prop0')", safe=''))
@@ -60,7 +109,7 @@ def test_formfeature_error(client):
     assert rv.status_code == 400
     assert rv.headers.get('Content-Type', '').find('application/json') == 0
 
-    # Make a request without well formed form_feature
+    # Make a request without well-formed form_feature
     qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=france_parts"
     qs += "&FILTER=%s" % (
         quote("NAME_1 = current_value('prop0')", safe=''))
