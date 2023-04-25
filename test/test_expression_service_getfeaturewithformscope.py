@@ -1,53 +1,34 @@
 import json
 
+from test.utils import _build_query_string, _check_request
 from urllib.parse import quote
 
 __copyright__ = 'Copyright 2023, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
-
-def _build_query_string(params: dict) -> str:
-    """ Build a query parameter from a dictionary. """
-    query_string = '?'
-    for k, v in params.items():
-        query_string += f'{k}={v}&'
-    return query_string
+PROJECT_FILE = 'france_parts.qgs'
 
 
-def _check_request(result, content_type: str = 'application/json', http_code=200) -> dict:
-    """ Check the output and return the content. """
-    assert result.status_code == http_code
-    assert result.headers.get('Content-Type', '').find(content_type) == 0
-    return json.loads(result.content.decode('utf-8'))
-
-
-def test_layer_error(client):
-    """  Test Expression GetFeatureFormScope request with Layer parameter error
-    """
-    projectfile = "france_parts.qgs"
-
-    # Make a request without layer
+def test_layer_error_without_layer(client):
+    """ Test Expression GetFeatureFormScope without layer. """
     qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    rv = client.get(qs, PROJECT_FILE)
+    _check_request(rv, http_code=400)
 
-    # Make a request with an unknown layer
+
+def test_layer_error_with_unknown_layer(client):
+    """ Test Expression GetFeatureFormScope with unknown layer. """
     qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=UNKNOWN_LAYER"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    rv = client.get(qs, PROJECT_FILE)
+    _check_request(rv, http_code=400)
 
 
-def test_filter_error(client):
+def test_filter_error_without_filter(client):
     """  Test Expression GetFeatureFormScope request with Filter parameter error
     """
-    projectfile = "france_parts.qgs"
-
-    # Make a request without filter
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    rv = client.get(qs, projectfile)
+    rv = client.get(qs, PROJECT_FILE)
     assert rv.status_code == 400
     assert rv.headers.get('Content-Type', '').find('application/json') == 0
 
