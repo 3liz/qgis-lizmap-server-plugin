@@ -243,3 +243,54 @@ def test_request(client):
     assert b['features'][0]['geometry'] is not None
     assert 'type' in b['features'][0]['geometry']
     assert b['features'][0]['geometry']['type'] == 'MultiPolygon'
+
+
+def test_request_get_feature_without_named_parameters(client):
+    """ Test request GetFeatureWithFormScope, with default order in expressions. """
+    project_file = "test_filter_layer_data_by_polygon_for_groups.qgs"
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'townhalls_EPSG2154',
+        'FILTER': quote(
+            "\"name\" = 'Mairie de '|| attributes(get_feature('polygons', 'id', current_value('polygon_id')))['name']",
+            safe=''),
+        'FORM_FEATURE': json.dumps(
+            {
+                "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"polygon_id": 4}
+            }
+        )}
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
+    assert b['type'] == 'FeatureCollection'
+    assert len(b['features']) == 1
+    assert b['features'][0]['type'] == 'Feature'
+    assert b['features'][0]['properties']['name'] == 'Mairie de Lattes'
+
+
+def test_request_get_feature_with_named_parameters(client):
+    """ Test request GetFeatureWithFormScope, with default order in expressions. """
+    project_file = "test_filter_layer_data_by_polygon_for_groups.qgs"
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'townhalls_EPSG2154',
+        'FILTER': quote(
+            "\"name\" = 'Mairie de '|| attributes(get_feature"
+            "(layer:='polygons', attribute:='id', value:=current_value('polygon_id')))['name']",
+            safe=''),
+        'FORM_FEATURE': json.dumps(
+            {
+                "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"polygon_id": 4}
+            }
+        )}
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
+    assert b['type'] == 'FeatureCollection'
+    assert len(b['features']) == 1
+    assert b['features'][0]['type'] == 'Feature'
+    assert b['features'][0]['properties']['name'] == 'Mairie de Lattes'
