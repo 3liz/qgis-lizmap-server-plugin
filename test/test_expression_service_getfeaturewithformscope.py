@@ -104,18 +104,25 @@ def test_formfeature_error(client):
 def test_request(client):
     """  Test Expression GetFeatureFormScope request
     """
-    projectfile = "france_parts.qgs"
+    project_file = "france_parts.qgs"
 
     # Make a request
-    qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&FILTER=%s" % (
-        quote("NAME_1 = current_value('prop0')", safe=''))
-    qs += "&FORM_FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"Bretagne\"}}"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'france_parts',
+        'FILTER': quote(
+            "NAME_1 = current_value('prop0')",
+            safe=''),
+        'FORM_FEATURE': json.dumps(
+            {
+                "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"prop0": "Bretagne"}
+            }
+        )}
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
 
     assert 'type' in b
     assert b['type'] == 'FeatureCollection'
@@ -137,16 +144,23 @@ def test_request(client):
     assert b['features'][0]['id'] == 'france_parts.1'  # should be 4
 
     # Make a request with geometry
-    qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&FILTER=%s" % (
-        quote("NAME_1 = current_value('prop0')", safe=''))
-    qs += "&FORM_FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"Bretagne\"}}"
-    qs += "&WITH_GEOMETRY=True"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'france_parts',
+        'FILTER': quote(
+            "NAME_1 = current_value('prop0')",
+            safe=''),
+        'FORM_FEATURE': json.dumps(
+            {
+                "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"prop0": "Bretagne"}
+            }
+        ),
+        'WITH_GEOMETRY': 'True'}
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
 
     assert 'type' in b
     assert b['type'] == 'FeatureCollection'
@@ -167,16 +181,23 @@ def test_request(client):
     assert b['features'][0]['geometry']['type'] == 'MultiPolygon'
 
     # Make a request with fields
-    qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&FILTER=%s" % (
-        quote("NAME_1 = current_value('prop0')", safe=''))
-    qs += "&FORM_FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"Bretagne\"}}"
-    qs += "&FIELDS=ISO,NAME_1"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'france_parts',
+        'FILTER': quote(
+            "NAME_1 = current_value('prop0')",
+            safe=''),
+        'FORM_FEATURE': json.dumps(
+            {
+                "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                "properties": {"prop0": "Bretagne"}
+            }
+        ),
+        'FIELDS': 'ISO,NAME_1'}
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
 
     assert 'type' in b
     assert b['type'] == 'FeatureCollection'
@@ -196,16 +217,22 @@ def test_request(client):
     assert b['features'][0]['geometry'] is None
 
     # Make a request with spatial filter
-    qs = "?SERVICE=EXPRESSION&REQUEST=GetFeatureWithFormScope&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&FILTER=%s" % (
-        quote("intersects($geometry, @current_geometry)", safe=''))
-    qs += "&FORM_FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [-3.0, 48.0]}, \"properties\": {\"prop0\": \"Bretagne\"}}"
-    qs += "&WITH_GEOMETRY=True"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    qs = {
+        'SERVICE': 'EXPRESSION',
+        'REQUEST': 'GetFeatureWithFormScope',
+        'MAP': project_file,
+        'LAYER': 'france_parts',
+        'FILTER': quote(
+            "intersects($geometry, @current_geometry)",
+            safe=''),
+        'FORM_FEATURE': json.dumps(
+            {
+                "type": "Feature", "geometry": {"type": "Point", "coordinates": [-3.0, 48.0]},
+                "properties": {"prop0": "Bretagne"}
+            }
+        )}
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv)
 
     assert 'type' in b
     assert b['type'] == 'FeatureCollection'
