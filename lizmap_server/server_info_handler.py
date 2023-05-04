@@ -169,7 +169,9 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'name': expected,
                 }
 
-        qgis_version_split = Qgis.QGIS_VERSION.split('-')
+        # 3.28 : Firenze
+        # 3.30 : 's-Hertogenbosch
+        human_version, human_name = Qgis.QGIS_VERSION.split('-', 1)
 
         services_available = []
         expected_services = ('WMS', 'WFS', 'WCS', 'WMTS', 'ATLAS', 'CADASTRE', 'EXPRESSION', 'LIZMAP')
@@ -185,16 +187,16 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         # noinspection PyBroadException
         try:
             # Format the tag according to QGIS git repository
-            tag = 'final-{}'.format(qgis_version_split[0].replace('.', '_'))
+            tag = 'final-{}'.format(human_version.replace('.', '_'))  # final-3_16_0
         except Exception:
             tag = ""
 
         data = {
             'qgis_server': {
                 'metadata': {
-                    'version': qgis_version_split[0],  # 3.16.0
+                    'version': human_version,  # 3.16.0
                     'tag': tag,  # final-3_16_0
-                    'name': qgis_version_split[1],  # Hannover
+                    'name': human_name,  # Hannover
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
                     'py_qgis_server': PY_QGIS_SERVER_INSTALLED,  # bool, # deprecated since 28/10/2022

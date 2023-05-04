@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix the QGIS server name with QGIS 3.30 `'s-Hertogenbosch`
+
 ## 2.7.1 - 2023-04-13
 
 * Add `FILTER_TYPE` to the `GETSUBSETSTRING` request with different values : `SQL` default value, `SAFESQL` or `EXPRESSION`

@@ -20,6 +20,7 @@ SRCDIR=$(shell realpath .)
 
 tests:
 	@mkdir -p $$(pwd)/.local $(LOCAL_HOME)/.cache
+	@echo Do not forget to run docker pull $(QGIS_IMAGE) from time to time
 	@docker run --rm --name qgis-server-lizmap-test-$(FLAVOR)-$(COMMITID) -w /src/test/ \
 		-u $(BECOME_USER) \
 		-v $(SRCDIR):/src \
