@@ -633,7 +633,7 @@ class ExpressionService(QgsService):
                         parent_feature),
                     400)
 
-            if ('type' not in geojson) or geojson['type'] != 'Feature':
+            if geojson.get('type') != 'Feature':
                 raise ExpressionServiceError(
                     "Bad request error", (
                         "Invalid 'GetFeatureWithFormScope' REQUEST: PARENT_FEATURE '{}' are not well formed: type "
@@ -651,15 +651,7 @@ class ExpressionService(QgsService):
                 parent_feature_fields,
                 QTextCodec.codecForName("UTF-8"))
 
-            # features not well formed
-            if not parent_feature_list:
-                raise ExpressionServiceError(
-                    "Bad request error", (
-                        "Invalid PARENT_FEATURE for 'GetFeatureWithFormScope': not GeoJSON feature provided\n"
-                        "{}").format(parent_feature),
-                    400)
-
-            if len(parent_feature_list) != 1:
+            if not parent_feature_list or len(parent_feature_list) != 1:
                 raise ExpressionServiceError(
                     "Bad request error", (
                         "Invalid PARENT_FEATURE for 'GetFeatureWithFormScope': not GeoJSON feature provided\n"
