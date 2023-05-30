@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.7.2 - 2023-05-30
+
 * Fix the QGIS server name with QGIS 3.30 `'s-Hertogenbosch`
 
 ## 2.7.1 - 2023-04-13
