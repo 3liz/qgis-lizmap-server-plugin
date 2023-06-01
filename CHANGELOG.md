@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Add support for the "Attribute Editor Relation" when generating the tooltip. It needs Lizmap Web Client 3.7.0.
+
 ## 2.7.2 - 2023-05-30
 
 * Fix the QGIS server name with QGIS 3.30 `'s-Hertogenbosch`
