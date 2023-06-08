@@ -3,11 +3,13 @@ __date__ = '2022-10-27'
 __license__ = "GPL version 3"
 __copyright__ = 'Copyright 2022, Gis3w'
 
+# File adapted by @rldhont, 3Liz
+
 import json
-from qgis.core import (
-    QgsProject,
-)
+
+from qgis.core import QgsProject
 from qgis.server import QgsServerFilter, QgsServerProjectUtils
+
 from lizmap_server.logger import Logger, exception_handler
 
 
@@ -31,7 +33,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if params.get('SERVICE', '').upper() != 'WMS':
             return
 
-        if params.get('REQUEST', '').upper() != 'GETLEGENDGRAPHIC':
+        if params.get('REQUEST', '').upper() not in ('GETLEGENDGRAPHIC', 'GETLEGENDGRAPHICS'):
             return
 
         if params.get('FORMAT', '').upper() != 'APPLICATION/JSON':
@@ -103,7 +105,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     json_data).encode('utf8'))
         except Exception as ex:
             logger.warning(
-                'Error getting layer "{}" when setting up legend graphic for json output when configuring OWS call: {}'.format(layer_id, str(ex)))
+                'Error getting layer "{}" when setting up legend graphic for json output when configuring '
+                'OWS call: {}'.format(layer_id, str(ex)))
         finally:
             if layer and style and current_style and style != current_style:
                 layer.styleManager().setCurrentStyle(current_style)
