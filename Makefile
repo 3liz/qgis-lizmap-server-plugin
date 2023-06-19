@@ -28,5 +28,5 @@ tests:
 		-v $(LOCAL_HOME)/.cache:/.cache \
 		-e PIP_CACHE_DIR=/.cache \
 		-e QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE \
-		-e PYTEST_ADDOPTS="$(TEST_OPTS)" \
+		-e PYTEST_ADDOPTS="$(TEST_OPTS) --assert=plain" \
 		$(QGIS_IMAGE) ./run-tests.sh

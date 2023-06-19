@@ -46,7 +46,9 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if ',' in layer_id:
             return
 
-        qgs_project = QgsProject.instance()
+        # noinspection PyArgumentList
+        qgs_project: QgsProject = QgsProject.instance()
+        # noinspection PyArgumentList
         use_ids = QgsServerProjectUtils.wmsUseLayerIds(qgs_project)
 
         style = params.get('STYLES', '')
@@ -76,6 +78,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
             if renderer.type() in ("categorizedSymbol", "ruleBased", "graduatedSymbol"):
                 body = handler.body()
+                # noinspection PyTypeChecker
                 json_data = json.loads(bytes(body))
                 categories = {item.label(): {'ruleKey': item.ruleKey(), 'checked': renderer.legendSymbolItemChecked(
                     item.ruleKey())} for item in renderer.legendSymbolItems()}
@@ -90,7 +93,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         category = categories[symbol['title']]
                         symbol['ruleKey'] = category['ruleKey']
                         symbol['checked'] = category['checked']
-                    except Exception:
+                    except (IndexError, KeyError):
                         pass
 
                     new_symbols.append(symbol)
@@ -104,7 +107,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 handler.appendBody(json.dumps(
                     json_data).encode('utf8'))
         except Exception as ex:
-            logger.warning(
+            logger.critical(
                 'Error getting layer "{}" when setting up legend graphic for json output when configuring '
                 'OWS call: {}'.format(layer_id, str(ex)))
         finally:

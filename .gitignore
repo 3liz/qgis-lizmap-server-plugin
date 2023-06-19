@@ -1,31 +1,16 @@
-*.orig
-*.rej
-*~
-*.o
-*.swp
-*.pyc
-*.DS_Store
-
-lizmap.cfg
-
 # IDE
 .idea/
 .vscode/
 
-*.egg-info
-*.code-workspace
-
 # Python
 .venv/
-
-build/
-build2/
-dist/
+venv/
 
 .local
 .cache
 .pytest_cache
 __output__
+__pycache__
 
 *.qgz
 
@@ -33,9 +18,8 @@ __output__
 lizmap_server.*.zip
 plugins.xml
 
-unittest.qgs
-lizmap/test/data/*.gpkg-shm
-lizmap/test/data/*.gpkg-wal
-test/server/data/*.gpkg-shm
-test/server/data/*.gpkg-wal
-lizmap/test/data/lizmap_3_3.qgs.cfg.back
+test/data/*.gpkg-shm
+test/data/*.gpkg-wal
+test/data/*.qgs~
+test/data/*.qgz~
+test/data/*_attachments.zip
