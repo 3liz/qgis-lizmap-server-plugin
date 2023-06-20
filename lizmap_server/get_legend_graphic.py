@@ -8,9 +8,10 @@ __copyright__ = 'Copyright 2022, Gis3w'
 import json
 
 from qgis.core import QgsProject
-from qgis.server import QgsServerFilter, QgsServerProjectUtils
+from qgis.server import QgsServerFilter
 
 from lizmap_server.logger import Logger, exception_handler
+from lizmap_server.core import find_vector_layer
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
@@ -40,16 +41,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
             return
 
         # Only support request for simple layer
-        layer_id = params.get('LAYER', '')
-        if layer_id == '':
+        layer_name = params.get('LAYER', '')
+        if layer_name == '':
             return
-        if ',' in layer_id:
+        if ',' in layer_name:
             return
 
         # noinspection PyArgumentList
-        qgs_project: QgsProject = QgsProject.instance()
-        # noinspection PyArgumentList
-        use_ids = QgsServerProjectUtils.wmsUseLayerIds(qgs_project)
+        project: QgsProject = QgsProject.instance()
 
         style = params.get('STYLES', '')
 
@@ -57,18 +56,12 @@ class GetLegendGraphicFilter(QgsServerFilter):
             style = params.get('STYLE', '')
 
         current_style = ''
-        layer = None
+        layer = find_vector_layer(layer_name, project)
+        if not layer:
+            logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
+            return
 
         try:
-            if use_ids:
-                layer = qgs_project.mapLayer(layer_id)
-            else:
-                layers = qgs_project.mapLayersByName(layer_id)
-                if layers:
-                    layer = layers[0]
-                else:
-                    return
-
             current_style = layer.styleManager().currentStyle()
 
             if current_style and style and style != current_style:
@@ -109,7 +102,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         except Exception as ex:
             logger.critical(
                 'Error getting layer "{}" when setting up legend graphic for json output when configuring '
-                'OWS call: {}'.format(layer_id, str(ex)))
+                'OWS call: {}'.format(layer_name, str(ex)))
         finally:
             if layer and style and current_style and style != current_style:
                 layer.styleManager().setCurrentStyle(current_style)
