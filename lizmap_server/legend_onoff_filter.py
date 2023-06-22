@@ -5,7 +5,7 @@ __copyright__ = 'Copyright 2022, Gis3w'
 
 # File adapted by @rldhont, 3Liz
 
-from qgis.server import QgsServerFilter
+from qgis.server import QgsServerFilter, QgsServerInterface
 from qgis.core import QgsProject, QgsMapLayerStyle
 
 from lizmap_server.logger import Logger, exception_handler
@@ -19,6 +19,11 @@ class LegendOnOffFilter(QgsServerFilter):
     LEGEND_OFF=<layer_id>:<rule_key>,<rule_key>;<layer_id>:<rule_key>,<rule_key>
 
     """
+
+    def __init__(self, server_interface: QgsServerInterface):
+        super().__init__(server_interface)
+        self.style_map = None
+        self.renderers_config = None
 
     def _setup_legend(self, qs, onoff):
 
@@ -64,7 +69,8 @@ class LegendOnOffFilter(QgsServerFilter):
 
             except Exception as ex:
                 logger.warning(
-                    'Error setting legend {} for layer "{}" when configuring OWS call: {}'.format('ON' if onoff else 'OFF', layer_name, ex))
+                    'Error setting legend {} for layer "{}" when configuring OWS call: {}'.format(
+                        'ON' if onoff else 'OFF', layer_name, ex))
                 continue
 
     @exception_handler
@@ -93,6 +99,7 @@ class LegendOnOffFilter(QgsServerFilter):
         if len(layers) == 0:
             layers = [params['LAYER']] if 'LAYER' in params and params['LAYER'] else []
 
+        # noinspection PyBroadException
         try:
             self.style_map = dict(zip(layers, styles))
         except Exception:
@@ -136,5 +143,6 @@ class LegendOnOffFilter(QgsServerFilter):
 
             except Exception as ex:
                 logger.warning(
-                            'Error restoring renderer after legend ON/OFF for layer "{}" when configuring OWS call: {}'.format(layer_name, ex))
+                    'Error restoring renderer after legend ON/OFF for layer "{}" when configuring OWS call: {}'.format(
+                        layer_name, ex))
                 continue
