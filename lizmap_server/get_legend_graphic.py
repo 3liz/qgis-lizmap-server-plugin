@@ -10,8 +10,8 @@ import json
 from qgis.core import QgsProject
 from qgis.server import QgsServerFilter
 
-from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.core import find_vector_layer
+from lizmap_server.logger import Logger, exception_handler
 
 
 class GetLegendGraphicFilter(QgsServerFilter):

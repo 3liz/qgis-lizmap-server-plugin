@@ -5,11 +5,11 @@ __copyright__ = 'Copyright 2022, Gis3w'
 
 # File adapted by @rldhont, 3Liz
 
+from qgis.core import QgsMapLayerStyle, QgsProject
 from qgis.server import QgsServerFilter, QgsServerInterface
-from qgis.core import QgsProject, QgsMapLayerStyle
 
-from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.core import find_vector_layer
+from lizmap_server.logger import Logger, exception_handler
 
 
 class LegendOnOffFilter(QgsServerFilter):
