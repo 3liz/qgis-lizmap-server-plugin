@@ -69,12 +69,18 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
             renderer = layer.renderer()
 
-            if renderer.type() in ("categorizedSymbol", "ruleBased", "graduatedSymbol"):
+            # From QGIS source code :
+            # https://github.com/qgis/QGIS/blob/71499aacf431d3ac244c9b75c3d345bdc53572fb/src/core/symbology/qgsrendererregistry.cpp#L33
+            if renderer.type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
                 body = handler.body()
                 # noinspection PyTypeChecker
                 json_data = json.loads(bytes(body))
-                categories = {item.label(): {'ruleKey': item.ruleKey(), 'checked': renderer.legendSymbolItemChecked(
-                    item.ruleKey())} for item in renderer.legendSymbolItems()}
+                categories = {
+                    item.label(): {
+                        'ruleKey': item.ruleKey(),
+                        'checked': renderer.legendSymbolItemChecked(item.ruleKey())
+                    } for item in renderer.legendSymbolItems()
+                }
 
                 symbols = json_data['nodes'][0]['symbols'] if 'symbols' in json_data['nodes'][0] else json_data['nodes']
 

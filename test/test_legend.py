@@ -58,3 +58,19 @@ def test_categorized_symbole(client):
     assert symbols[0]['checked']
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'categorized'
+
+
+def test_simple_rule_based(client):
+    """ Test rule based layer, simple conversion from categorized. """
+    qs = dict(BASE_QUERY)
+    qs['LAYER'] = 'rule_based'
+    rv = client.get(_build_query_string(qs), PROJECT)
+    b = _check_request(rv)
+    symbols = b['nodes'][0]['symbols']
+
+    assert len(symbols) == 5, symbols
+    assert symbols[0]['title'] == 'Basse-Normandie'
+    assert symbols[0]['ruleKey'] == '{1e75ef9b-1c18-46c1-b7f7-b16efc5bb791}', symbols[0]['ruleKey']
+    assert symbols[0]['checked']
+    assert b['title'] == ''
+    assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']
