@@ -78,7 +78,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 categories = {
                     item.label(): {
                         'ruleKey': item.ruleKey(),
-                        'checked': renderer.legendSymbolItemChecked(item.ruleKey())
+                        'checked': renderer.legendSymbolItemChecked(item.ruleKey()),
+                        'parentRuleKey': item.parentRuleKey(),
                     } for item in renderer.legendSymbolItems()
                 }
 
@@ -92,6 +93,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         category = categories[symbol['title']]
                         symbol['ruleKey'] = category['ruleKey']
                         symbol['checked'] = category['checked']
+                        symbol['parentRuleKey'] = category['parentRuleKey']
                     except (IndexError, KeyError):
                         pass
 
