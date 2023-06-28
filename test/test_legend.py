@@ -40,11 +40,11 @@ def test_categorized_symbole(client):
     #     'nodes': [
     #         {
     #             'symbols': [
-    #                 {'icon': 'ICON', 'title': 'Basse-Normandie', 'ruleKey': '0', 'checked': True},
-    #                 {'icon': 'ICON', 'title': 'Bretagne', 'ruleKey': '1', 'checked': True},
-    #                 {'icon': 'ICON', 'title': 'Centre', 'ruleKey': '2', 'checked': True},
-    #                 {'icon': 'ICON', 'title': 'Pays de la Loire', 'ruleKey': '3', 'checked': True},
-    #                 {'icon': 'ICON', 'title': '', 'ruleKey': '4', 'checked': True}
+    #                 {'icon': 'ICON', 'title': 'Basse-Normandie', 'ruleKey': '0', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': 'Bretagne', 'ruleKey': '1', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': 'Centre', 'ruleKey': '2', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': 'Pays de la Loire', 'ruleKey': '3', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': '', 'ruleKey': '4', 'checked': True, 'parentRuleKey': ''}
     #             ],
     #             'title': 'categorized',
     #             'type': 'layer'
@@ -56,6 +56,7 @@ def test_categorized_symbole(client):
     assert symbols[0]['title'] == 'Basse-Normandie'
     assert symbols[0]['ruleKey'] == '0'
     assert symbols[0]['checked']
+    assert symbols[0]['parentRuleKey'] == ''
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'categorized'
 
@@ -72,5 +73,6 @@ def test_simple_rule_based(client):
     assert symbols[0]['title'] == 'Basse-Normandie'
     assert symbols[0]['ruleKey'] == '{1e75ef9b-1c18-46c1-b7f7-b16efc5bb791}', symbols[0]['ruleKey']
     assert symbols[0]['checked']
+    assert symbols[0]['parentRuleKey'] == '{9322759d-05f9-48ac-8947-3137d44d1832}'
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']
