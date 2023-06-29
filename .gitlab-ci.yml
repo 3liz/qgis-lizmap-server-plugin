@@ -38,6 +38,9 @@ flake:
 
 version:
   stage: test
+  only:
+    - tags
+    - master
   image:
     name: $REGISTRY_URI/infra/ci-tools:latest
   script:
@@ -49,6 +52,9 @@ version:
       dotenv: build.env
 
 package-zip:
+  only:
+    - tags
+    - master
   dependencies:
     - version
   stage: build
@@ -73,6 +79,9 @@ package-zip:
       - plugins.xml
 
 push-zip-fetch-repo:
+  only:
+    - tags
+    - master
   dependencies:
     - version
     - package-zip
@@ -95,6 +104,9 @@ push-zip-fetch-repo:
       - tmp_repository/*.xml
 
 edit-repository:
+  only:
+    - tags
+    - master
   stage: qgis-repository-edit
   dependencies:
     - package-zip
@@ -112,6 +124,9 @@ edit-repository:
       - tmp_repository/*.xml
 
 push-repository:
+  only:
+    - tags
+    - master
   stage: qgis-repository-push
   dependencies:
     - version
@@ -126,6 +141,9 @@ push-repository:
 # For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
 
 .infrav3-package:
+  only:
+    - tags
+    - master
   dependencies:
     - version
     - package-zip
@@ -137,6 +155,9 @@ push-repository:
     CI_ARCHIVE: ${FACTORY_PRODUCT_NAME}.${VERSION}.zip
 
 deploy_snap:infrav3:
+  only:
+    - tags
+    - master
   extends: .infrav3-package
   stage: deploy
   environment:
