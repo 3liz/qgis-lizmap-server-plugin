@@ -96,10 +96,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         symbol['ruleKey'] = category['ruleKey']
                         symbol['checked'] = category['checked']
                         symbol['parentRuleKey'] = category['parentRuleKey']
+
+                        # TODO remove when QGIS 3.28 will be the minimum version
+                        # https://github.com/qgis/QGIS/pull/53738 3.34, 3.32.1, 3.28.10
                         if 'scaleMaxDenom' not in symbol and category['scaleMaxDenom'] > 0:
                             symbol['scaleMaxDenom'] = category['scaleMaxDenom']
                         if 'scaleMinDenom' not in symbol and category['scaleMinDenom'] > 0:
                             symbol['scaleMinDenom'] = category['scaleMinDenom']
+
                     except (IndexError, KeyError):
                         pass
 
