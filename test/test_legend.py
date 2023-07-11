@@ -2,6 +2,8 @@ import logging
 
 from test.utils import _build_query_string, _check_request
 
+from qgis.core import Qgis
+
 LOGGER = logging.getLogger('server')
 
 __copyright__ = 'Copyright 2023, 3Liz'
@@ -76,5 +78,7 @@ def test_simple_rule_based(client):
     assert symbols[0]['parentRuleKey'] == '{9322759d-05f9-48ac-8947-3137d44d1832}', symbols[0]['parentRuleKey']
     assert 'scaleMaxDenom' not in symbols[0], symbols[0]['scaleMaxDenom']
     assert 'scaleMinDenom' not in symbols[0], symbols[0]['scaleMinDenom']
+    expected = ['"NAME_1" = \'Basse-Normandie\'', True] if Qgis.QGIS_VERSION_INT >= 32600 else ''
+    assert symbols[0]['expression'] == expected, symbols[0]['expression']
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']
