@@ -7,7 +7,7 @@ __copyright__ = 'Copyright 2022, Gis3w'
 
 import json
 
-from qgis.core import QgsProject
+from qgis.core import Qgis, QgsProject
 from qgis.server import QgsServerFilter
 
 from lizmap_server.core import find_vector_layer
@@ -82,6 +82,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         'parentRuleKey': item.parentRuleKey(),
                         'scaleMaxDenom': item.scaleMaxDenom(),
                         'scaleMinDenom': item.scaleMinDenom(),
+                        # TODO simplify when QGIS 3.28 will be the minimum version
+                        'expression': renderer.legendKeyToExpression(item.ruleKey(), layer) if Qgis.QGIS_VERSION_INT > 32600 else '',
                     } for item in renderer.legendSymbolItems()
                 }
 
@@ -104,6 +106,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         if 'scaleMinDenom' not in symbol and category['scaleMinDenom'] > 0:
                             symbol['scaleMinDenom'] = category['scaleMinDenom']
 
+                        symbol['expression'] = category['expression']
                     except (IndexError, KeyError):
                         pass
 
