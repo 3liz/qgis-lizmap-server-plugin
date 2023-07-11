@@ -75,17 +75,28 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 body = handler.body()
                 # noinspection PyTypeChecker
                 json_data = json.loads(bytes(body))
-                categories = {
-                    item.label(): {
+                categories = {}
+                for item in renderer.legendSymbolItems():
+
+                    expression = ''
+                    # TODO simplify when QGIS 3.26 will be the minimum version
+                    if Qgis.QGIS_VERSION_INT >= 32600:
+                        expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
+                        if not result:
+                            Logger.warning(
+                                f"The expression in the project {project.homePath()}, layer {layer.name()} has not "
+                                f"been generated correctly, setting the expression to an empty string"
+                            )
+                            expression = ''
+
+                    categories[item.label()] = {
                         'ruleKey': item.ruleKey(),
                         'checked': renderer.legendSymbolItemChecked(item.ruleKey()),
                         'parentRuleKey': item.parentRuleKey(),
                         'scaleMaxDenom': item.scaleMaxDenom(),
                         'scaleMinDenom': item.scaleMinDenom(),
-                        # TODO simplify when QGIS 3.28 will be the minimum version
-                        'expression': renderer.legendKeyToExpression(item.ruleKey(), layer) if Qgis.QGIS_VERSION_INT > 32600 else '',
-                    } for item in renderer.legendSymbolItems()
-                }
+                        'expression': expression,
+                    }
 
                 symbols = json_data['nodes'][0]['symbols'] if 'symbols' in json_data['nodes'][0] else json_data['nodes']
 
