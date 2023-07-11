@@ -74,5 +74,7 @@ def test_simple_rule_based(client):
     assert symbols[0]['ruleKey'] == '{1e75ef9b-1c18-46c1-b7f7-b16efc5bb791}', symbols[0]['ruleKey']
     assert symbols[0]['checked']
     assert symbols[0]['parentRuleKey'] == '{9322759d-05f9-48ac-8947-3137d44d1832}'
+    assert 'scaleMaxDenom' not in symbols[0], symbols[0]['scaleMaxDenom']
+    assert 'scaleMinDenom' not in symbols[0], symbols[0]['scaleMinDenom']
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']

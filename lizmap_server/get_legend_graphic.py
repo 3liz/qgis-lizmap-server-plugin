@@ -80,6 +80,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         'ruleKey': item.ruleKey(),
                         'checked': renderer.legendSymbolItemChecked(item.ruleKey()),
                         'parentRuleKey': item.parentRuleKey(),
+                        'scaleMaxDenom': item.scaleMaxDenom(),
+                        'scaleMinDenom': item.scaleMinDenom(),
                     } for item in renderer.legendSymbolItems()
                 }
 
@@ -94,6 +96,10 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         symbol['ruleKey'] = category['ruleKey']
                         symbol['checked'] = category['checked']
                         symbol['parentRuleKey'] = category['parentRuleKey']
+                        if 'scaleMaxDenom' not in symbol and category['scaleMaxDenom'] > 0:
+                            symbol['scaleMaxDenom'] = category['scaleMaxDenom']
+                        if 'scaleMinDenom' not in symbol and category['scaleMinDenom'] > 0:
+                            symbol['scaleMinDenom'] = category['scaleMinDenom']
                     except (IndexError, KeyError):
                         pass
 
