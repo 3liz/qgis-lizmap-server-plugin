@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-* Add support for the "Attribute Editor Relation" when generating the tooltip. It needs Lizmap Web Client 3.7.0.
+* Fix concatenate with number in aggregate in the drag&drop layout popup, contribution from @ghtmtt
+* For Lizmap Web Client 3.7.0 minimum
+  * Add support for the "Attribute Editor Relation" when generating the tooltip
+  * Add new filter for the GetLegendGraphic request
+  * Add new parameter `PARENT_FEATURE` when evaluating expression
 
 ## 2.7.2 - 2023-05-30
 
