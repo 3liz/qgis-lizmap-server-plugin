@@ -518,6 +518,7 @@ class ExpressionService(QgsService):
             FILTER=An expression to filter layer
             FORM_FEATURE={"type": "Feature", "geometry": {}, "properties": {}}
             // optionals
+            PARENT_FEATURE={"type": "Feature", "geometry": {}, "properties": {}}
             FIELDS=list of requested field separated by comma
             WITH_GEOMETRY=False
         """
@@ -609,12 +610,65 @@ class ExpressionService(QgsService):
         # Get the form feature
         form_feat = form_feature_list[0]
 
+        # get parent feature
+        parent_feature = params.get('PARENT_FEATURE', '')
+        parent_feat = None
+        if parent_feature:
+            # Check parent feature
+            try:
+                geojson = json.loads(parent_feature)
+            except Exception:
+                logger.critical(
+                    "JSON loads form feature '{}' exception:\n{}".format(parent_feature, traceback.format_exc()))
+                raise ExpressionServiceError(
+                    "Bad request error",
+                    "Invalid 'GetFeatureWithFormScope' REQUEST: PARENT_FEATURE '{}' are not well formed".format(
+                        parent_feature),
+                    400)
+
+            if not geojson or not isinstance(geojson, dict):
+                raise ExpressionServiceError(
+                    "Bad request error",
+                    "Invalid 'GetFeatureWithFormScope' REQUEST: PARENT_FEATURE '{}' are not well formed".format(
+                        parent_feature),
+                    400)
+
+            if geojson.get('type') != 'Feature':
+                raise ExpressionServiceError(
+                    "Bad request error", (
+                        "Invalid 'GetFeatureWithFormScope' REQUEST: PARENT_FEATURE '{}' are not well formed: type "
+                        "not defined or not Feature.").format(parent_feature),
+                    400)
+
+            # try to load parent feature
+            # read fields
+            parent_feature_fields = QgsJsonUtils.stringToFields(
+                parent_feature,
+                QTextCodec.codecForName("UTF-8"))
+            # read features
+            parent_feature_list = QgsJsonUtils.stringToFeatureList(
+                parent_feature,
+                parent_feature_fields,
+                QTextCodec.codecForName("UTF-8"))
+
+            if not parent_feature_list or len(parent_feature_list) != 1:
+                raise ExpressionServiceError(
+                    "Bad request error", (
+                        "Invalid PARENT_FEATURE for 'GetFeatureWithFormScope': not GeoJSON feature provided\n"
+                        "{}").format(parent_feature),
+                    400)
+
+            # Get the form feature
+            parent_feat = parent_feature_list[0]
+
         # create expression context
         exp_context = QgsExpressionContext()
         exp_context.appendScope(QgsExpressionContextUtils.globalScope())
         exp_context.appendScope(QgsExpressionContextUtils.projectScope(project))
         exp_context.appendScope(QgsExpressionContextUtils.layerScope(layer))
         exp_context.appendScope(QgsExpressionContextUtils.formScope(form_feat))
+        if parent_feat:
+            exp_context.appendScope(QgsExpressionContextUtils.parentFormScope(parent_feat))
 
         # create distance area context
         da = QgsDistanceArea()
