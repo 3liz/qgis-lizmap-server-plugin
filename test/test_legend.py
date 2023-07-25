@@ -20,7 +20,7 @@ BASE_QUERY = {
 }
 
 
-def test_unique_symbole(client):
+def test_unique_symbol(client):
     """ Test unique symbol for layer. """
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'unique_symbol'
@@ -31,7 +31,7 @@ def test_unique_symbole(client):
     assert len(b['nodes']) == 1, b
 
 
-def test_categorized_symbole(client):
+def test_categorized_symbol(client):
     """ Test categorized symbol for layer. """
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'categorized'
@@ -55,12 +55,12 @@ def test_categorized_symbole(client):
     #     'title': ''
     # }
     assert len(symbols) == 5, symbols
-    assert symbols[0]['title'] == 'Basse-Normandie'
-    assert symbols[0]['ruleKey'] == '0'
+    assert symbols[0]['title'] == 'Basse-Normandie', symbols[0]['title']
+    assert symbols[0]['ruleKey'] == '0', symbols[0]['ruleKey']
     assert symbols[0]['checked']
     assert symbols[0]['parentRuleKey'] == ''
     assert b['title'] == ''
-    assert b['nodes'][0]['title'] == 'categorized'
+    assert b['nodes'][0]['title'] == 'categorized', b['nodes'][0]['title']
 
 
 def test_simple_rule_based(client):
@@ -72,7 +72,7 @@ def test_simple_rule_based(client):
     symbols = b['nodes'][0]['symbols']
 
     assert len(symbols) == 5, symbols
-    assert symbols[0]['title'] == 'Basse-Normandie'
+    assert symbols[0]['title'] == 'Basse-Normandie', symbols[0]['title']
     assert symbols[0]['ruleKey'] == '{1e75ef9b-1c18-46c1-b7f7-b16efc5bb791}', symbols[0]['ruleKey']
     assert symbols[0]['checked']
     assert symbols[0]['parentRuleKey'] == '{9322759d-05f9-48ac-8947-3137d44d1832}', symbols[0]['parentRuleKey']
@@ -82,3 +82,58 @@ def test_simple_rule_based(client):
     assert symbols[0]['expression'] == expected, symbols[0]['expression']
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']
+
+
+def test_categorized_symbol_feature_count(client):
+    """ Test categorized symbol for layer. """
+    qs = dict(BASE_QUERY)
+    qs['LAYER'] = 'categorized'
+    qs['SHOWFEATURECOUNT'] = 'True'
+    rv = client.get(_build_query_string(qs), PROJECT)
+    b = _check_request(rv)
+    symbols = b['nodes'][0]['symbols']
+    # expected = {
+    #     'nodes': [
+    #         {
+    #             'symbols': [
+    #                 {'icon': 'ICON', 'title': 'Basse-Normandie', 'ruleKey': '0', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': 'Bretagne', 'ruleKey': '1', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': 'Centre', 'ruleKey': '2', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': 'Pays de la Loire', 'ruleKey': '3', 'checked': True, 'parentRuleKey': ''},
+    #                 {'icon': 'ICON', 'title': '', 'ruleKey': '4', 'checked': True, 'parentRuleKey': ''}
+    #             ],
+    #             'title': 'categorized',
+    #             'type': 'layer'
+    #         }
+    #     ],
+    #     'title': ''
+    # }
+    assert len(symbols) == 5, symbols
+    assert symbols[0]['title'] == 'Basse-Normandie [1]', symbols[0]['title']
+    assert symbols[0]['ruleKey'] == '0', symbols[0]['ruleKey']
+    assert symbols[0]['checked']
+    assert symbols[0]['parentRuleKey'] == ''
+    assert b['title'] == ''
+    assert b['nodes'][0]['title'] == 'categorized [4]', b['nodes'][0]['title']
+
+
+def test_simple_rule_based_feature_count(client):
+    """ Test rule based layer, simple conversion from categorized. """
+    qs = dict(BASE_QUERY)
+    qs['LAYER'] = 'rule_based'
+    qs['SHOWFEATURECOUNT'] = 'True'
+    rv = client.get(_build_query_string(qs), PROJECT)
+    b = _check_request(rv)
+    symbols = b['nodes'][0]['symbols']
+
+    assert len(symbols) == 5, symbols
+    assert symbols[0]['title'] == 'Basse-Normandie [1]', symbols[0]['title']
+    assert symbols[0]['ruleKey'] == '{1e75ef9b-1c18-46c1-b7f7-b16efc5bb791}', symbols[0]['ruleKey']
+    assert symbols[0]['checked']
+    assert symbols[0]['parentRuleKey'] == '{9322759d-05f9-48ac-8947-3137d44d1832}', symbols[0]['parentRuleKey']
+    assert 'scaleMaxDenom' not in symbols[0], symbols[0]['scaleMaxDenom']
+    assert 'scaleMinDenom' not in symbols[0], symbols[0]['scaleMinDenom']
+    expected = '"NAME_1" = \'Basse-Normandie\'' if Qgis.QGIS_VERSION_INT >= 32600 else ''
+    assert symbols[0]['expression'] == expected, symbols[0]['expression']
+    assert b['title'] == ''
+    assert b['nodes'][0]['title'] == 'rule_based [4]', b['nodes'][0]['title']

@@ -6,12 +6,14 @@ __copyright__ = 'Copyright 2022, Gis3w'
 # File adapted by @rldhont, 3Liz
 
 import json
+import re
 
-from qgis.core import Qgis, QgsProject
+from qgis.core import Qgis, QgsDataSourceUri, QgsProject
 from qgis.server import QgsServerFilter
 
 from lizmap_server.core import find_vector_layer
 from lizmap_server.logger import Logger, exception_handler
+from lizmap_server.tools import to_bool
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
@@ -55,6 +57,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if not style:
             style = params.get('STYLE', '')
 
+        show_feature_count = to_bool(params.get('SHOWFEATURECOUNT'), default_value=False)
+
         current_style = ''
         layer = find_vector_layer(layer_name, project)
         if not layer:
@@ -67,6 +71,13 @@ class GetLegendGraphicFilter(QgsServerFilter):
             if current_style and style and style != current_style:
                 layer.styleManager().setCurrentStyle(style)
 
+            # Force count symbol features
+            # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
+            if show_feature_count:
+                counter = layer.countSymbolFeatures()
+                if counter:
+                    counter.waitForFinished()
+
             renderer = layer.renderer()
 
             # From QGIS source code :
@@ -77,6 +88,17 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 json_data = json.loads(bytes(body))
                 categories = {}
                 for item in renderer.legendSymbolItems():
+
+                    # Calculate title if show_feature_count is activated
+                    # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
+                    title = item.label()
+                    if show_feature_count:
+                        estimated_count = QgsDataSourceUri(layer.dataProvider().dataSourceUri()).useEstimatedMetadata()
+                        count = layer.featureCount(item.ruleKey())
+                        title += ' [{}{}]'.format(
+                            "≈" if estimated_count else "",
+                            count if count != -1 else "N/A",
+                        )
 
                     expression = ''
                     # TODO simplify when QGIS 3.26 will be the minimum version
@@ -96,6 +118,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         'scaleMaxDenom': item.scaleMaxDenom(),
                         'scaleMinDenom': item.scaleMinDenom(),
                         'expression': expression,
+                        'title': title,
                     }
 
                 symbols = json_data['nodes'][0]['symbols'] if 'symbols' in json_data['nodes'][0] else json_data['nodes']
@@ -104,8 +127,15 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
                 for idx in range(len(symbols)):
                     symbol = symbols[idx]
+                    symbol_label = symbol['title']
+                    if show_feature_count:
+                        match_label = re.match(r"(.*) \[≈?(?:\d|N/A)\]", symbol_label)
+                        if match_label:
+                            symbol_label = match_label.group(1)
+                        else:
+                            logger.info("GetLegendGraphic JSON: symbol label does not match '(.*) \\[≈?(?:\\d|N/A)\\]' '{}'".format(symbol['title']))
                     try:
-                        category = categories[symbol['title']]
+                        category = categories[symbol_label]
                         symbol['ruleKey'] = category['ruleKey']
                         symbol['checked'] = category['checked']
                         symbol['parentRuleKey'] = category['parentRuleKey']
@@ -118,6 +148,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
                             symbol['scaleMinDenom'] = category['scaleMinDenom']
 
                         symbol['expression'] = category['expression']
+                        if symbol['title'] != category['title']:
+                            symbol['title'] = category['title']
                     except (IndexError, KeyError):
                         pass
 
