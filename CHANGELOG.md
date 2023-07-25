@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.8.0 - 2023-07-25
+
 * Fix concatenate with number in aggregate in the drag&drop layout popup, contribution from @ghtmtt
 * For Lizmap Web Client 3.7.0 minimum
   * Add support for the "Attribute Editor Relation" when generating the tooltip
