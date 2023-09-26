@@ -32,7 +32,8 @@ def test_no_lizmap_config(client):
     assert len(layers) == 2
 
     # Make a request with LIZMAP_USER_GROUPS with 1 group
-    qs = "?SERVICE=WMS&REQUEST=GetCapabilities&MAP=france_parts.qgs&LIZMAP_USER_GROUPS=test1"
+    # With some different cases in the group
+    qs = "?SERVICE=WMS&REQUEST=GetCapabilities&MAP=france_parts.qgs&Lizma_User_grOUPS=test1"
     rv = client.get(qs, projectfile)
     assert rv.status_code == 200
 
