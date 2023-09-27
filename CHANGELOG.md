@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.8.1 - 2023-09-27
+
+* Support the "text widget" from QGIS 3.30 in the tooltip, contribution from @ghtmtt
+* Move the fonts from the server into the JSON metadata
+
 ## 2.8.0 - 2023-07-25
 
 * Fix concatenate with number in aggregate in the drag&drop layout popup, contribution from @ghtmtt
