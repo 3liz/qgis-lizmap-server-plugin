@@ -30,16 +30,19 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4.1.1
-
-      - uses: actions/cache@v3.3.2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/dev.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+#
+#      - uses: actions/cache@v3.3.1
+#        with:
+#          path: ~/.cache/pip
+#          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/dev.txt') }}
+#          restore-keys: |
+#            ${{ runner.os }}-pip-
 
       - name: Install Python requirements
         run: pip install -r requirements/dev.txt
+
+      - name: Pip freeze
+        run: pip freeze
 
       - name: Run flake8
         run: flake8

@@ -28,7 +28,7 @@ def test_unique_symbol(client):
     b = _check_request(rv)
     #  {'nodes': [{'icon': 'ICON', 'title': 'unique_symbol', 'type': 'layer'}], 'title': ''}
     assert b['title'] == ''
-    assert len(b['nodes']) == 1, b
+    assert len(b['nod']) == 1, b
 
 
 def test_categorized_symbol(client):
