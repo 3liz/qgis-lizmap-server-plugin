@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.8.2 - 2024-01-15
+
+* Fix evaluating the QGIS Drag&Drop form in a popup request when the geometry is needed, contribution from @ghtmtt
+
 ## 2.8.1 - 2023-09-27
 
 * Support the "text widget" from QGIS 3.30 in the tooltip, contribution from @ghtmtt
