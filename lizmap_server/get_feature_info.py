@@ -20,7 +20,7 @@ from qgis.core import (
     QgsFeatureRequest,
     QgsProject,
 )
-from qgis.server import QgsServerFilter
+from qgis.server import QgsServerFilter, QgsServerProjectUtils
 
 from lizmap_server.core import find_vector_layer, server_feature_id_expression
 from lizmap_server.logger import Logger, exception_handler
@@ -200,6 +200,9 @@ class GetFeatureInfoFilter(QgsServerFilter):
         exp_context.appendScope(QgsExpressionContextUtils.globalScope())
         exp_context.appendScope(QgsExpressionContextUtils.projectScope(project))
 
+        # retrieve geometry from getFeatureInfo project server properties
+        geometry_result = QgsServerProjectUtils.wmsFeatureInfoAddWktGeometry(project)
+
         # noinspection PyBroadException
         try:
             for result in features:
@@ -211,6 +214,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 expression = server_feature_id_expression(result.feature_id, result.layer.dataProvider())
                 if expression:
                     expression_request = QgsFeatureRequest(QgsExpression(expression))
+                    if not geometry_result:
+                        expression_request.setFlags(QgsFeatureRequest.NoGeometry)
                     feature = QgsFeature()
                     result.layer.getFeatures(expression_request).nextFeature(feature)
                 else:
