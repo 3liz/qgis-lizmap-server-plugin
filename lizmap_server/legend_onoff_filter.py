@@ -25,14 +25,12 @@ class LegendOnOffFilter(QgsServerFilter):
         self.style_map = None
         self.renderers_config = None
 
-    def _setup_legend(self, qs, onoff):
+    def _setup_legend(self, qs: str, onoff: bool, project: QgsProject):
 
         if not qs or ':' not in qs:
             return
 
         logger = Logger()
-        # noinspection PyArgumentList
-        project: QgsProject = QgsProject.instance()
 
         for legend_layer in qs.split(';'):
             layer_name, key_list = legend_layer.split(':')
@@ -45,7 +43,9 @@ class LegendOnOffFilter(QgsServerFilter):
 
             layer = find_vector_layer(layer_name, project)
             if not layer:
-                logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
+                logger.warning(
+                    "LegendOnOFF::RequestReady : Skipping the layer '{}' because it's not a vector layer".format(
+                        layer_name))
                 continue
 
             try:
@@ -105,10 +105,19 @@ class LegendOnOffFilter(QgsServerFilter):
         except Exception:
             self.style_map = {}
 
+        # noinspection PyArgumentList
+        project: QgsProject = QgsProject.instance()
+        logger.warning(
+            'LegendOnOFF::requestReady : project instance : {} \n against MAP = {}'.format(
+                project.fileName(),
+                params.get('MAP', ''),
+            )
+        )
+
         if 'LEGEND_ON' in params:
-            self._setup_legend(params['LEGEND_ON'], True)
+            self._setup_legend(params['LEGEND_ON'], True, project)
         if 'LEGEND_OFF' in params:
-            self._setup_legend(params['LEGEND_OFF'], False)
+            self._setup_legend(params['LEGEND_OFF'], False, project)
 
     @exception_handler
     def responseComplete(self):
@@ -124,14 +133,23 @@ class LegendOnOffFilter(QgsServerFilter):
         if len(self.renderers_config) == 0:
             return
 
+        params = handler.parameterMap()
+
         # noinspection PyArgumentList
         project: QgsProject = QgsProject.instance()
+        logger.warning(
+            'LegendOnOFF::responseComplete : project instance : {}  \n against MAP = {}'.format(
+                project.fileName(),
+                params.get('MAP', '')
+            ))
 
         for layer_name, renderer_config in self.renderers_config.items():
             layer = find_vector_layer(layer_name, project)
             if not layer:
-                logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
+                logger.warning(
+                    "ResponseComplete : Skipping the layer '{}' because it's not a vector layer".format(layer_name))
                 continue
+
             try:
                 config = self.renderers_config[layer_name]
 
