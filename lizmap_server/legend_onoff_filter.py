@@ -67,13 +67,13 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
         # check short name
         if layer.shortName() in style_map:
-            style = style_map[layer.name()]
+            style = style_map[layer.shortName()]
         # check layer name
         elif layer.name() in style_map:
             style = style_map[layer.name()]
         # check layer id
         elif layer.id() in style_map:
-            style = style_map[layer.name()]
+            style = style_map[layer.id()]
 
         sm.setCurrentStyle(style)
 
