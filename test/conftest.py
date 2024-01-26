@@ -150,22 +150,39 @@ def client(request):
         def getprojectpath(self, name: str) -> str:
             return self.datapath.join(name)
 
-        def get(self, query: str, project: str=None, headers: Dict[str, str]={}) -> OWSResponse:
+        def get_project(self, name: str) -> QgsProject:
+            projectpath = self.getprojectpath(name)
+            if Qgis.QGIS_VERSION_INT >= 32601:
+                qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
+            else:
+                qgsproject = QgsProject()
+            if not qgsproject.read(projectpath.strpath):
+                raise ValueError("Error reading project '%s':" % projectpath.strpath)
+            return qgsproject
+
+        def get(self, query: str, project: str = None, headers: Dict[str, str] = None) -> OWSResponse:
             """ Return server response from query
             """
-            request  = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
+            if headers is None:
+                headers = {}
+            server_request = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
             response = QgsBufferServerResponse()
             if project is not None and not os.path.isabs(project):
-                projectpath = self.datapath.join(project)
-                if Qgis.QGIS_VERSION_INT >= 32601:
-                    qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
-                else:
-                    qgsproject = QgsProject()
-                if not qgsproject.read(projectpath.strpath):
-                    raise ValueError("Error reading project '%s':" % projectpath.strpath)
+                qgsproject = self.get_project(project)
             else:
                 qgsproject = None
-            self.server.handleRequest(request, response, project=qgsproject)
+            self.server.handleRequest(server_request, response, project=qgsproject)
+            return OWSResponse(response)
+
+        def get_with_project(self, query: str, project: QgsProject, headers: Dict[str, str] = None) -> OWSResponse:
+            """ Return server response from query
+            """
+            if headers is None:
+                headers = {}
+
+            server_request = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
+            response = QgsBufferServerResponse()
+            self.server.handleRequest(server_request, response, project=project)
             return OWSResponse(response)
 
     return _Client()
