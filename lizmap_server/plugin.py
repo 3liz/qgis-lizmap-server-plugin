@@ -7,7 +7,7 @@ from qgis.server import QgsServerInterface, QgsServerOgcApi
 from lizmap_server.expression_service import ExpressionService
 from lizmap_server.get_feature_info import GetFeatureInfoFilter
 from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
-from lizmap_server.legend_onoff_filter import LegendOnOffFilter
+from lizmap_server.legend_onoff_filter import LegendOnOffAccessControl, LegendOnOffFilter
 from lizmap_server.lizmap_accesscontrol import LizmapAccessControlFilter
 from lizmap_server.lizmap_filter import LizmapFilter
 from lizmap_server.lizmap_service import LizmapService
@@ -90,3 +90,10 @@ class LizmapServer:
             self.logger.critical('Error loading filter "legend on/off" : {}'.format(e))
             raise
         self.logger.info('Filter "legend on/off" loaded')
+
+        try:
+            server_iface.registerAccessControl(LegendOnOffAccessControl(self.server_iface), 175)
+        except Exception as e:
+            self.logger.critical('Error loading access control "legend on/off" : {}'.format(e))
+            raise
+        self.logger.info('Access control "legend on/off" loaded')

@@ -150,22 +150,34 @@ def client(request):
         def getprojectpath(self, name: str) -> str:
             return self.datapath.join(name)
 
+        def getproject(self, name: str) -> QgsProject:
+            projectpath = self.getprojectpath(name)
+            if Qgis.QGIS_VERSION_INT >= 32601:
+                qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
+            else:
+                qgsproject = QgsProject()
+            if not qgsproject.read(projectpath.strpath):
+                raise ValueError("Error reading project '%s':" % projectpath.strpath)
+            return qgsproject
+
         def get(self, query: str, project: str=None, headers: Dict[str, str]={}) -> OWSResponse:
             """ Return server response from query
             """
             request  = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
             response = QgsBufferServerResponse()
             if project is not None and not os.path.isabs(project):
-                projectpath = self.datapath.join(project)
-                if Qgis.QGIS_VERSION_INT >= 32601:
-                    qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
-                else:
-                    qgsproject = QgsProject()
-                if not qgsproject.read(projectpath.strpath):
-                    raise ValueError("Error reading project '%s':" % projectpath.strpath)
+                qgsproject = self.getproject(project)
             else:
                 qgsproject = None
             self.server.handleRequest(request, response, project=qgsproject)
+            return OWSResponse(response)
+
+        def getWithProject(self, query: str, project: QgsProject, headers: Dict[str, str]={}) -> OWSResponse:
+            """ Return server response from query
+            """
+            request  = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
+            response = QgsBufferServerResponse()
+            self.server.handleRequest(request, response, project=project)
             return OWSResponse(response)
 
     return _Client()
