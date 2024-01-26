@@ -7,7 +7,10 @@ from qgis.server import QgsServerInterface, QgsServerOgcApi
 from lizmap_server.expression_service import ExpressionService
 from lizmap_server.get_feature_info import GetFeatureInfoFilter
 from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
-from lizmap_server.legend_onoff_filter import LegendOnOffAccessControl, LegendOnOffFilter
+from lizmap_server.legend_onoff_filter import (
+    LegendOnOffAccessControl,
+    LegendOnOffFilter,
+)
 from lizmap_server.lizmap_accesscontrol import LizmapAccessControlFilter
 from lizmap_server.lizmap_filter import LizmapFilter
 from lizmap_server.lizmap_service import LizmapService

@@ -6,7 +6,11 @@ __copyright__ = 'Copyright 2022, Gis3w'
 # File adapted by @rldhont, 3Liz
 
 from qgis.core import QgsMapLayer, QgsProject
-from qgis.server import QgsServerFilter, QgsAccessControlFilter, QgsServerInterface
+from qgis.server import (
+    QgsAccessControlFilter,
+    QgsServerFilter,
+    QgsServerInterface,
+)
 
 from lizmap_server.core import find_vector_layer
 from lizmap_server.logger import Logger, exception_handler
@@ -19,7 +23,8 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
         self.iface = server_interface
 
-    def _setup_legend(self, layer, qs, onoff):
+    @staticmethod
+    def _setup_legend(layer: QgsMapLayer, qs: str, onoff: bool):
         for legend_layer in qs.split(';'):
             layer_name, key_list = legend_layer.split(':')
             # not empty
@@ -91,7 +96,8 @@ class LegendOnOffFilter(QgsServerFilter):
     def __init__(self, server_interface: QgsServerInterface):
         super().__init__(server_interface)
 
-    def _reset_legend(self, qs: str, project: QgsProject):
+    @staticmethod
+    def _reset_legend(qs: str, project: QgsProject):
         if not qs or ':' not in qs:
             return
 
