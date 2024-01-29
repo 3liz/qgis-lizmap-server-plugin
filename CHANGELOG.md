@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.8.3 - 2024-01-29
+
+* Fix issue about the project used when evaluating a `GetMap` request with new features from LWC 3.7
+
 ## 2.8.2 - 2024-01-15
 
 * Fix evaluating the QGIS Drag&Drop form in a popup request when the geometry is needed, contribution from @ghtmtt
