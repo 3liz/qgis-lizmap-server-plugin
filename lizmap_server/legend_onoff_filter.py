@@ -31,7 +31,7 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             if layer_name == '' or key_list == '':
                 continue
             # for the layer
-            if layer_name != layer.shortName() and layer_name != layer.name() and layer_name != layer.id():
+            if layer_name not in (layer.shortName(), layer.name(), layer.id()):
                 continue
 
             for key in key_list.split(','):
@@ -46,15 +46,15 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
             return rights
 
-        styles = params['STYLES'].split(',') if 'STYLES' in params and params['STYLES'] else []
+        styles = params.get('STYLES', '').split(',')
 
         if len(styles) == 0:
-            styles = [params['STYLE']] if 'STYLE' in params and params['STYLE'] else []
+            styles = params.get('STYLE', [])
 
-        layers = params['LAYERS'].split(',') if 'LAYERS' in params and params['LAYERS'] else []
+        layers = params.get('LAYERS', '').split(',')
 
         if len(layers) == 0:
-            layers = [params['LAYER']] if 'LAYER' in params and params['LAYER'] else []
+            layers = params.get('LAYER', [])
 
         # noinspection PyBroadException
         try:

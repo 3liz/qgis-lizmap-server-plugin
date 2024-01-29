@@ -12,20 +12,20 @@ stages:
 - deploy
 - release
 
-#qgis-server:
-#  stage: test
-#  parallel:
-#    matrix:
-#      - QGIS_VERSION: [
-#        "3.16",
-#        "3.22",
-#        "3.28",
-#        "nightly-release",
-#      ]
-#  script:
-#    - make tests FLAVOR=${QGIS_VERSION}
-#  tags:
-#    - infrav3
+qgis-server:
+  stage: test
+  parallel:
+    matrix:
+      - QGIS_VERSION: [
+        "3.16",
+        "3.22",
+        "3.28",
+        "nightly-release",
+      ]
+  script:
+    - make tests FLAVOR=${QGIS_VERSION}
+  tags:
+    - infrav3
 
 flake:
   stage: test
