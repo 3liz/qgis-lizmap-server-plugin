@@ -202,6 +202,7 @@ class TestServerCore(unittest.TestCase):
     def test_edit_xml_get_feature_info_with_maptip(self):
         """ Test to edit a GetFeatureInfo xml with maptip. """
         string = '''<GetFeatureInfoResponse>
+         <BoundingBox minx="0" maxy="1" maxx="1" CRS="EPSG:2154" miny="0"/>
          <Layer name="qgis_popup">
           <Feature id="1">
            <Attribute name="OBJECTID" value="2662"/>
@@ -219,6 +220,7 @@ class TestServerCore(unittest.TestCase):
         response = GetFeatureInfoFilter.append_maptip(string, "qgis_popup", 1, "<b>foo</b>")
 
         expected = '''<GetFeatureInfoResponse>
+         <BoundingBox minx="0" maxy="1" maxx="1" CRS="EPSG:2154" miny="0"/>
          <Layer name="qgis_popup">
           <Feature id="1">
            <Attribute name="OBJECTID" value="2662" />
