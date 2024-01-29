@@ -50,6 +50,11 @@ class GetFeatureInfoFilter(QgsServerFilter):
         """ Edit the XML GetFeatureInfo by adding a maptip for a given layer and feature ID. """
         root = ET.fromstring(string)
         for layer in root:
+
+            if layer.tag.upper() != 'LAYER':
+                # The XML can be <BoundingBox />
+                continue
+
             if layer.attrib['name'] != layer_name:
                 continue
 
