@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.8.4 - 2024-01-31
+
+* GetFeatureInfo - Fix a possible Python error if the item is not a `Layer` item, it can return the correct popup content
+
 ## 2.8.3 - 2024-01-29
 
 * Fix issue about the project used when evaluating a `GetMap` request with new features from LWC 3.7
