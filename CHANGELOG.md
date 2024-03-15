@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.8.5 - 2024-03-15
+
+* GetLegendGraphic - Fix if the feature count is enabled and the count is equal or greater than 10
+
 ## 2.8.4 - 2024-01-31
 
 * GetFeatureInfo - Fix a possible Python error if the item is not a `Layer` item, it can return the correct popup content
