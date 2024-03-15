@@ -129,11 +129,11 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     symbol = symbols[idx]
                     symbol_label = symbol['title']
                     if show_feature_count:
-                        match_label = re.match(r"(.*) \[≈?(?:\d|N/A)\]", symbol_label)
+                        match_label = re.match(r"(.*) \[≈?(?:\d+|N/A)\]", symbol_label)
                         if match_label:
                             symbol_label = match_label.group(1)
                         else:
-                            logger.info("GetLegendGraphic JSON: symbol label does not match '(.*) \\[≈?(?:\\d|N/A)\\]' '{}'".format(symbol['title']))
+                            logger.info("GetLegendGraphic JSON: symbol label does not match '(.*) \\[≈?(?:\\d+|N/A)\\]' '{}'".format(symbol['title']))
                     try:
                         category = categories[symbol_label]
                         symbol['ruleKey'] = category['ruleKey']
