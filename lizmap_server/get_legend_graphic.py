@@ -8,6 +8,8 @@ __copyright__ = 'Copyright 2022, Gis3w'
 import json
 import re
 
+from typing import Optional
+
 from qgis.core import Qgis, QgsDataSourceUri, QgsProject
 from qgis.server import QgsServerFilter
 
@@ -20,6 +22,13 @@ class GetLegendGraphicFilter(QgsServerFilter):
     """add ruleKey to GetLegendGraphic for categorized and rule-based
     only works for single LAYER and STYLE(S) and json format.
     """
+
+    FEATURE_COUNT_REGEXP = r"(.*) \[≈?(?:\d+|N/A)\]"
+
+    @classmethod
+    def match_label_feature_count(cls, symbol_label: str) -> Optional[re.Match]:
+        """Regexp for extracting the feature count from the label. """
+        return re.match(cls.FEATURE_COUNT_REGEXP, symbol_label)
 
     @exception_handler
     def responseComplete(self):
@@ -129,11 +138,13 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     symbol = symbols[idx]
                     symbol_label = symbol['title']
                     if show_feature_count:
-                        match_label = re.match(r"(.*) \[≈?(?:\d+|N/A)\]", symbol_label)
+                        match_label = self.match_label_feature_count(symbol_label)
                         if match_label:
                             symbol_label = match_label.group(1)
                         else:
-                            logger.info("GetLegendGraphic JSON: symbol label does not match '(.*) \\[≈?(?:\\d+|N/A)\\]' '{}'".format(symbol['title']))
+                            logger.info(
+                                "GetLegendGraphic JSON: symbol label does not match '{}' '{}'".format(
+                                    self.FEATURE_COUNT_REGEXP, symbol['title']))
                     try:
                         category = categories[symbol_label]
                         symbol['ruleKey'] = category['ruleKey']
