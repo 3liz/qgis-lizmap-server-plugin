@@ -1,6 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
 
+from qgis.core import Qgis
 from xmldiff import main as xml_diff
 
 LOGGER = logging.getLogger('server')
@@ -52,10 +53,12 @@ def test_no_get_feature_info_default_popup(client):
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
     assert rv.headers.get('Content-Type', '').find('text/xml') == 0
-    expected = f'''<GetFeatureInfoResponse>
- <Layer name="{LAYER_DEFAULT_POPUP}"/>
-</GetFeatureInfoResponse>
-'''
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    expected = f'''
+    <GetFeatureInfoResponse>
+        <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}/>
+    </GetFeatureInfoResponse>
+    '''
     diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
@@ -66,21 +69,23 @@ def test_single_get_feature_info_default_popup(client):
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
     assert rv.headers.get('Content-Type', '').find('text/xml') == 0
-    expected = f'''<GetFeatureInfoResponse>
- <Layer name="{LAYER_DEFAULT_POPUP}">
-  <Feature id="1">
-   <Attribute name="OBJECTID" value="2662"/>
-   <Attribute name="NAME_0" value="France"/>
-   <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
-   <Attribute name="Region" value="Bretagne"/>
-   <Attribute name="Shape_Leng" value="18.39336934850"/>
-   <Attribute name="Shape_Area" value="3.30646936365"/>
-   <Attribute name="lwc_user" value="No user provided"/>
-   <Attribute name="lwc_groups" value="No user groups provided"/>
-  </Feature>
- </Layer>
-</GetFeatureInfoResponse>
-'''
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    expected = f'''
+    <GetFeatureInfoResponse>
+        <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}>
+            <Feature id="1">
+                <Attribute name="OBJECTID" value="2662"/>
+                <Attribute name="NAME_0" value="France"/>
+                <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
+                <Attribute name="Region" value="Bretagne"/>
+                <Attribute name="Shape_Leng" value="18.39336934850"/>
+                <Attribute name="Shape_Area" value="3.30646936365"/>
+                <Attribute name="lwc_user" value="No user provided"/>
+                <Attribute name="lwc_groups" value="No user groups provided"/>
+            </Feature>
+        </Layer>
+    </GetFeatureInfoResponse>
+    '''
     diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
@@ -92,21 +97,23 @@ def test_single_get_feature_info_default_popup_user(client):
     rv = client.get(qs, PROJECT, headers)
     assert rv.status_code == 200
     assert rv.headers.get('Content-Type', '').find('text/xml') == 0
-    expected = f'''<GetFeatureInfoResponse>
- <Layer name="{LAYER_DEFAULT_POPUP}">
-  <Feature id="1">
-   <Attribute name="OBJECTID" value="2662"/>
-   <Attribute name="NAME_0" value="France"/>
-   <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
-   <Attribute name="Region" value="Bretagne"/>
-   <Attribute name="Shape_Leng" value="18.39336934850"/>
-   <Attribute name="Shape_Area" value="3.30646936365"/>
-   <Attribute name="lwc_user" value="Bretagne"/>
-   <Attribute name="lwc_groups" value="test1"/>
-  </Feature>
- </Layer>
-</GetFeatureInfoResponse>
-'''
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    expected = f'''
+    <GetFeatureInfoResponse>
+        <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}>
+            <Feature id="1">
+                <Attribute name="OBJECTID" value="2662"/>
+                <Attribute name="NAME_0" value="France"/>
+                <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
+                <Attribute name="Region" value="Bretagne"/>
+                <Attribute name="Shape_Leng" value="18.39336934850"/>
+                <Attribute name="Shape_Area" value="3.30646936365"/>
+                <Attribute name="lwc_user" value="Bretagne"/>
+                <Attribute name="lwc_groups" value="test1"/>
+            </Feature>
+        </Layer>
+    </GetFeatureInfoResponse>
+    '''
     diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
@@ -118,21 +125,24 @@ def test_single_get_feature_info_qgis_popup(client):
     assert rv.status_code == 200
     assert rv.headers.get('Content-Type', '').find('text/xml') == 0
 
+    title_attribute = f'title="{LAYER_QGIS_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+
     # Note the line <TH>maptip</TH>
-    expected = f'''<GetFeatureInfoResponse>
- <Layer name="{LAYER_QGIS_POPUP}">
-  <Feature id="1">
-   <Attribute name="OBJECTID" value="2662"/>
-   <Attribute name="NAME_0" value="France"/>
-   <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
-   <Attribute name="Region" value="Bretagne"/>
-   <Attribute name="Shape_Leng" value="18.39336934850"/>
-   <Attribute name="Shape_Area" value="3.30646936365"/>
-   <Attribute name="maptip" value="&lt;p>France&lt;/p>"/>
-  </Feature>
- </Layer>
-</GetFeatureInfoResponse>
-'''
+    expected = f'''
+    <GetFeatureInfoResponse>
+        <Layer name="{LAYER_QGIS_POPUP}" {title_attribute}>
+            <Feature id="1">
+                <Attribute name="OBJECTID" value="2662"/>
+                <Attribute name="NAME_0" value="France"/>
+                <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
+                <Attribute name="Region" value="Bretagne"/>
+                <Attribute name="Shape_Leng" value="18.39336934850"/>
+                <Attribute name="Shape_Area" value="3.30646936365"/>
+                <Attribute name="maptip" value="&lt;p>France&lt;/p>"/>
+            </Feature>
+        </Layer>
+    </GetFeatureInfoResponse>
+    '''
     diff = xml_diff.diff_texts(expected, rv.content)
     assert diff == [], diff
 
@@ -156,17 +166,20 @@ def test_single_get_feature_info_form_popup(client):
     xml_lines = ET.tostring(root, encoding='utf8', method='xml').decode("utf-8").split('\n')
     xml_string = '\n'.join(xml_lines[1:])
 
-    expected = f'''<GetFeatureInfoResponse>
-     <Layer name="{LAYER_QGIS_FORM}">
-      <Feature id="1">
-       <Attribute name="OBJECTID" value="2662"/>
-       <Attribute name="NAME_0" value="France"/>
-       <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
-       <Attribute name="Region" value="Bretagne"/>
-       <Attribute name="Shape_Leng" value="18.39336934850"/>
-       <Attribute name="Shape_Area" value="3.30646936365"/>
-      </Feature>
-     </Layer>
+    title_attribute = f'title="{LAYER_QGIS_FORM}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+
+    expected = f'''
+    <GetFeatureInfoResponse>
+        <Layer name="{LAYER_QGIS_FORM}" {title_attribute}>
+            <Feature id="1">
+                <Attribute name="OBJECTID" value="2662"/>
+                <Attribute name="NAME_0" value="France"/>
+                <Attribute name="VARNAME_1" value="Bretaa|Brittany"/>
+                <Attribute name="Region" value="Bretagne"/>
+                <Attribute name="Shape_Leng" value="18.39336934850"/>
+                <Attribute name="Shape_Area" value="3.30646936365"/>
+            </Feature>
+        </Layer>
     </GetFeatureInfoResponse>
     '''
     diff = xml_diff.diff_texts(expected, xml_string.strip())

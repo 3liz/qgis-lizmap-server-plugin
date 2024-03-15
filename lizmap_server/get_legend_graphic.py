@@ -7,6 +7,7 @@ __copyright__ = 'Copyright 2022, Gis3w'
 
 import json
 import re
+
 from typing import Optional
 
 from qgis.core import Qgis, QgsDataSourceUri, QgsProject
