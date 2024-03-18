@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.8.6 - 2024-03-18
+
+* GetFeatureInfo - Since QGIS 3.36, when reading a QGS file with an empty string, the variable is not returned
+
 ## 2.8.5 - 2024-03-15
 
 * GetLegendGraphic - Fix if the feature count is enabled and the count is equal or greater than 10
