@@ -265,18 +265,6 @@ class Tooltip:
         return text
 
     @staticmethod
-    def _generate_text_label(label: str, expression: str):
-        text = '''
-                    <p><strong>{0}</strong>
-                    <div class="field">{1}</div>
-                    </p>
-                    '''.format(
-            label,
-            expression
-        )
-        return text
-
-    @staticmethod
     def _generate_value_map(widget_config: Union[list, dict], name: str):
         def escape_value(value: str) -> str:
             """Change ' to ’ for the HStore function. """
@@ -382,7 +370,7 @@ class Tooltip:
             name
         )
 
-        filter_exp = widget_config['FilterExpression'].strip()
+        filter_exp = widget_config.get('FilterExpression', '').strip()
         if filter_exp:
             # replace @current_geometry only available in form by geometry(@parent) for aggregate
             filter_exp = filter_exp.replace('@current_geometry', 'geometry(@parent)')
@@ -402,6 +390,18 @@ class Tooltip:
                                 expression
                             )
         return field_view
+
+    @staticmethod
+    def _generate_text_label(label: str, expression: str):
+        text = '''
+                    <p><strong>{0}</strong>
+                    <div class="field">{1}</div>
+                    </p>
+                    '''.format(
+            label,
+            expression
+        )
+        return text
 
     @staticmethod
     def css() -> str:
