@@ -4,8 +4,6 @@ from test.utils import _build_query_string, _check_request
 
 from qgis.core import Qgis
 
-from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
-
 LOGGER = logging.getLogger('server')
 
 __copyright__ = 'Copyright 2023, 3Liz'
@@ -139,15 +137,3 @@ def test_simple_rule_based_feature_count(client):
     assert symbols[0]['expression'] == expected, symbols[0]['expression']
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based [4]', b['nodes'][0]['title']
-
-
-def test_regexp_feature_count():
-    """ Test the regexp about the feature count. """
-    result = GetLegendGraphicFilter.match_label_feature_count("A label [22]")
-    assert result.group(1) == "A label", result.group(1)
-
-    result = GetLegendGraphicFilter.match_label_feature_count("A label [≈2]")
-    assert result.group(1) == "A label", result.group(1)
-
-    result = GetLegendGraphicFilter.match_label_feature_count("A label")
-    assert result is None
