@@ -63,14 +63,14 @@ class TestLegend(unittest.TestCase):
         self.assertEqual(3, len(list(result.keys())))
 
         for symbol in result.values():
-            self.assertGreaterEqual(len(symbol['ruleKey']), 1)
-            self.assertTrue(symbol['checked'])
-            self.assertGreaterEqual(len(symbol['parentRuleKey']), 1)
-            self.assertEqual(0, symbol['scaleMaxDenom'])
-            self.assertEqual(0, symbol['scaleMinDenom'])
+            self.assertGreaterEqual(len(symbol.ruleKey), 1)
+            self.assertTrue(symbol.checked)
+            self.assertGreaterEqual(len(symbol.parentRuleKey), 1)
+            self.assertEqual(0, symbol.scaleMaxDenom)
+            self.assertEqual(0, symbol.scaleMinDenom)
             if Qgis.QGIS_VERSION_INT >= 32800:
                 # I'm not sure since when, just looking at CI results
-                self.assertEqual('TRUE', symbol['expression'])
+                self.assertEqual('TRUE', symbol.expression)
             else:
-                self.assertEqual('', symbol['expression'])
-            self.assertIn(symbol['title'], ('rule-1', 'same-label', 'rule-2'))
+                self.assertEqual('', symbol.expression)
+            self.assertIn(symbol.title, ('rule-1', 'same-label', 'rule-2'))
