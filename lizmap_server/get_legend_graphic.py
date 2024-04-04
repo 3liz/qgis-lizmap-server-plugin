@@ -10,7 +10,7 @@ import re
 
 from typing import Optional
 
-from qgis.core import Qgis, QgsDataSourceUri, QgsProject
+from qgis.core import Qgis, QgsProject, QgsVectorLayer
 from qgis.server import QgsServerFilter
 
 from lizmap_server.core import find_vector_layer
@@ -19,8 +19,8 @@ from lizmap_server.tools import to_bool
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
-    """add ruleKey to GetLegendGraphic for categorized and rule-based
-    only works for single LAYER and STYLE(S) and json format.
+    """ Add "ruleKey" to GetLegendGraphic for categorized and rule-based
+    only works for single LAYER and STYLE(S) and JSON format.
     """
 
     FEATURE_COUNT_REGEXP = r"(.*) \[≈?(?:\d+|N/A)\]"
@@ -87,52 +87,20 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 if counter:
                     counter.waitForFinished()
 
-            renderer = layer.renderer()
-
             # From QGIS source code :
             # https://github.com/qgis/QGIS/blob/71499aacf431d3ac244c9b75c3d345bdc53572fb/src/core/symbology/qgsrendererregistry.cpp#L33
-            if renderer.type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
+            if layer.renderer().type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
                 body = handler.body()
                 # noinspection PyTypeChecker
                 json_data = json.loads(bytes(body))
-                categories = {}
-                for item in renderer.legendSymbolItems():
 
-                    # Calculate title if show_feature_count is activated
-                    # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
-                    title = item.label()
-                    if show_feature_count:
-                        estimated_count = QgsDataSourceUri(layer.dataProvider().dataSourceUri()).useEstimatedMetadata()
-                        count = layer.featureCount(item.ruleKey())
-                        title += ' [{}{}]'.format(
-                            "≈" if estimated_count else "",
-                            count if count != -1 else "N/A",
-                        )
-
-                    expression = ''
-                    # TODO simplify when QGIS 3.26 will be the minimum version
-                    if Qgis.QGIS_VERSION_INT >= 32600:
-                        expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
-                        if not result:
-                            Logger.warning(
-                                f"The expression in the project {project.homePath()}, layer {layer.name()} has not "
-                                f"been generated correctly, setting the expression to an empty string"
-                            )
-                            expression = ''
-
-                    categories[item.label()] = {
-                        'ruleKey': item.ruleKey(),
-                        'checked': renderer.legendSymbolItemChecked(item.ruleKey()),
-                        'parentRuleKey': item.parentRuleKey(),
-                        'scaleMaxDenom': item.scaleMaxDenom(),
-                        'scaleMinDenom': item.scaleMinDenom(),
-                        'expression': expression,
-                        'title': title,
-                    }
-
-                symbols = json_data['nodes'][0]['symbols'] if 'symbols' in json_data['nodes'][0] else json_data['nodes']
+                symbols = json_data['nodes'][0].get('symbols')
+                if not symbols:
+                    symbols = json_data['nodes']
 
                 new_symbols = []
+
+                categories = self._extract_categories(layer, show_feature_count, project.homePath())
 
                 for idx in range(len(symbols)):
                     symbol = symbols[idx]
@@ -172,8 +140,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     json_data['nodes'] = new_symbols
 
                 handler.clearBody()
-                handler.appendBody(json.dumps(
-                    json_data).encode('utf8'))
+                handler.appendBody(json.dumps(json_data).encode('utf8'))
         except Exception as ex:
             logger.critical(
                 'Error getting layer "{}" when setting up legend graphic for json output when configuring '
@@ -181,3 +148,50 @@ class GetLegendGraphicFilter(QgsServerFilter):
         finally:
             if layer and style and current_style and style != current_style:
                 layer.styleManager().setCurrentStyle(current_style)
+
+    @classmethod
+    def _extract_categories(
+            cls, layer: QgsVectorLayer, show_feature_count: bool = False, project_path: str = "") -> dict:
+        """ Extract categories from the layer legend. """
+        renderer = layer.renderer()
+        categories = {}
+        for item in renderer.legendSymbolItems():
+
+            # Calculate title if show_feature_count is activated
+            # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
+            title = item.label()
+            if show_feature_count:
+                estimated_count = layer.dataProvider().uri().useEstimatedMetadata()
+                count = layer.featureCount(item.ruleKey())
+                title += ' [{}{}]'.format(
+                    "≈" if estimated_count else "",
+                    count if count != -1 else "N/A",
+                )
+
+            expression = ''
+            # TODO simplify when QGIS 3.26 will be the minimum version
+            if Qgis.QGIS_VERSION_INT >= 32600:
+                expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
+                if not result:
+                    Logger.warning(
+                        f"The expression in the project {project_path}, layer {layer.name()} has not "
+                        f"been generated correctly, setting the expression to an empty string"
+                    )
+                    expression = ''
+
+            if item.label() in categories.keys():
+                Logger.warning(
+                    f"The label key '{item.label()}' is not unique, expect the legend to be broken in the project "
+                    f"{project_path}, layer {layer.name()}."
+                )
+
+            categories[item.label()] = {
+                'ruleKey': item.ruleKey(),
+                'checked': renderer.legendSymbolItemChecked(item.ruleKey()),
+                'parentRuleKey': item.parentRuleKey(),
+                'scaleMaxDenom': item.scaleMaxDenom(),
+                'scaleMinDenom': item.scaleMinDenom(),
+                'expression': expression,
+                'title': title,
+            }
+        return categories
