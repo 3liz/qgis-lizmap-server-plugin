@@ -3,11 +3,12 @@ __date__ = '2022-10-27'
 __license__ = "GPL version 3"
 __copyright__ = 'Copyright 2022, Gis3w'
 
-# File adapted by @rldhont, 3Liz
+# File adapted by @rldhont and @Gustry, 3Liz
 
 import json
 import re
 
+from collections import namedtuple
 from typing import Optional
 
 from qgis.core import Qgis, QgsProject, QgsVectorLayer
@@ -16,6 +17,10 @@ from qgis.server import QgsServerFilter
 from lizmap_server.core import find_vector_layer
 from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.tools import to_bool
+
+Category = namedtuple(
+    'Category',
+    ['ruleKey', 'checked', 'parentRuleKey', 'scaleMaxDenom', 'scaleMinDenom', 'expression', 'title'])
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
@@ -115,20 +120,20 @@ class GetLegendGraphicFilter(QgsServerFilter):
                                     self.FEATURE_COUNT_REGEXP, symbol['title']))
                     try:
                         category = categories[symbol_label]
-                        symbol['ruleKey'] = category['ruleKey']
-                        symbol['checked'] = category['checked']
-                        symbol['parentRuleKey'] = category['parentRuleKey']
+                        symbol['ruleKey'] = category.ruleKey
+                        symbol['checked'] = category.checked
+                        symbol['parentRuleKey'] = category.parentRuleKey
 
                         # TODO remove when QGIS 3.28 will be the minimum version
                         # https://github.com/qgis/QGIS/pull/53738 3.34, 3.32.1, 3.28.10
-                        if 'scaleMaxDenom' not in symbol and category['scaleMaxDenom'] > 0:
-                            symbol['scaleMaxDenom'] = category['scaleMaxDenom']
-                        if 'scaleMinDenom' not in symbol and category['scaleMinDenom'] > 0:
-                            symbol['scaleMinDenom'] = category['scaleMinDenom']
+                        if 'scaleMaxDenom' not in symbol and category.scaleMaxDenom > 0:
+                            symbol['scaleMaxDenom'] = category.scaleMaxDenom
+                        if 'scaleMinDenom' not in symbol and category.scaleMinDenom > 0:
+                            symbol['scaleMinDenom'] = category.scaleMinDenom
 
-                        symbol['expression'] = category['expression']
-                        if symbol['title'] != category['title']:
-                            symbol['title'] = category['title']
+                        symbol['expression'] = category.expression
+                        if symbol['title'] != category.title:
+                            symbol['title'] = category.title
                     except (IndexError, KeyError):
                         pass
 
@@ -151,8 +156,10 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
     @classmethod
     def _extract_categories(
-            cls, layer: QgsVectorLayer, show_feature_count: bool = False, project_path: str = "") -> dict:
+            cls, layer: QgsVectorLayer, show_feature_count: bool = False, project_path: str = ""
+    ) -> dict:
         """ Extract categories from the layer legend. """
+        # TODO Annotations QGIS 3.22 [str, Category]
         renderer = layer.renderer()
         categories = {}
         for item in renderer.legendSymbolItems():
@@ -174,7 +181,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
                 if not result:
                     Logger.warning(
-                        f"The expression in the project {project_path}, layer {layer.name()} has not "
+                        f"The expression in the project '{project_path}', layer '{layer.name()}' has not "
                         f"been generated correctly, setting the expression to an empty string"
                     )
                     expression = ''
@@ -182,16 +189,16 @@ class GetLegendGraphicFilter(QgsServerFilter):
             if item.label() in categories.keys():
                 Logger.warning(
                     f"The label key '{item.label()}' is not unique, expect the legend to be broken in the project "
-                    f"{project_path}, layer {layer.name()}."
+                    f"'{project_path}', layer '{layer.name()}'."
                 )
 
-            categories[item.label()] = {
-                'ruleKey': item.ruleKey(),
-                'checked': renderer.legendSymbolItemChecked(item.ruleKey()),
-                'parentRuleKey': item.parentRuleKey(),
-                'scaleMaxDenom': item.scaleMaxDenom(),
-                'scaleMinDenom': item.scaleMinDenom(),
-                'expression': expression,
-                'title': title,
-            }
+            categories[item.label()] = Category(
+                ruleKey=item.ruleKey(),
+                checked=renderer.legendSymbolItemChecked(item.ruleKey()),
+                parentRuleKey=item.parentRuleKey(),
+                scaleMaxDenom=item.scaleMaxDenom(),
+                scaleMinDenom=item.scaleMinDenom(),
+                expression=expression,
+                title=title,
+            )
         return categories
