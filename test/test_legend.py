@@ -11,6 +11,7 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 PROJECT = "legend.qgs"
+PROJECT_INVALID = "legend_invalid.qgs"
 
 BASE_QUERY = {
     'SERVICE': 'WMS',
@@ -29,6 +30,9 @@ def test_unique_symbol(client):
     #  {'nodes': [{'icon': 'ICON', 'title': 'unique_symbol', 'type': 'layer'}], 'title': ''}
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
+    assert b['nodes'][0]['title'] == 'unique_symbol'
+    assert 'icon' in b['nodes'][0]
+    assert 'symbols' not in b['nodes'][0]
 
 
 def test_categorized_symbol(client):
@@ -37,6 +41,10 @@ def test_categorized_symbol(client):
     qs['LAYER'] = 'categorized'
     rv = client.get(_build_query_string(qs), PROJECT)
     b = _check_request(rv)
+    assert b['nodes'][0]['title'] == 'categorized'
+    assert 'icon' not in b['nodes'][0]
+    assert 'symbols' in b['nodes'][0]
+
     symbols = b['nodes'][0]['symbols']
     # expected = {
     #     'nodes': [
@@ -69,6 +77,10 @@ def test_simple_rule_based(client):
     qs['LAYER'] = 'rule_based'
     rv = client.get(_build_query_string(qs), PROJECT)
     b = _check_request(rv)
+    assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']
+    assert 'icon' not in b['nodes'][0]
+    assert 'symbols' in b['nodes'][0]
+
     symbols = b['nodes'][0]['symbols']
 
     assert len(symbols) == 5, symbols
@@ -91,6 +103,10 @@ def test_categorized_symbol_feature_count(client):
     qs['SHOWFEATURECOUNT'] = 'True'
     rv = client.get(_build_query_string(qs), PROJECT)
     b = _check_request(rv)
+    assert b['nodes'][0]['title'].startswith('categorized'), b['nodes'][0]['title']
+    assert 'icon' not in b['nodes'][0]
+    assert 'symbols' in b['nodes'][0]
+
     symbols = b['nodes'][0]['symbols']
     # expected = {
     #     'nodes': [
@@ -124,6 +140,10 @@ def test_simple_rule_based_feature_count(client):
     qs['SHOWFEATURECOUNT'] = 'True'
     rv = client.get(_build_query_string(qs), PROJECT)
     b = _check_request(rv)
+    assert b['nodes'][0]['title'].startswith('rule_based'), b['nodes'][0]['title']
+    assert 'icon' not in b['nodes'][0]
+    assert 'symbols' in b['nodes'][0]
+
     symbols = b['nodes'][0]['symbols']
 
     assert len(symbols) == 5, symbols
@@ -137,3 +157,57 @@ def test_simple_rule_based_feature_count(client):
     assert symbols[0]['expression'] == expected, symbols[0]['expression']
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based [4]', b['nodes'][0]['title']
+
+def test_invalid_layer(client):
+    """ Test unique symbol for layer. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT_INVALID
+    qs['LAYER'] = 'unique_symbol'
+    rv = client.get(_build_query_string(qs), PROJECT_INVALID)
+    b = _check_request(rv)
+    #  {'nodes': [{'icon': 'ICON', 'title': 'unique_symbol', 'type': 'layer'}], 'title': ''}
+    assert b['title'] == ''
+    assert len(b['nodes']) == 1, b
+    assert b['nodes'][0]['title'] == 'unique_symbol'
+    assert 'icon' in b['nodes'][0]
+    assert 'symbols' not in b['nodes'][0]
+
+    """ Test categorized symbol for layer. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT_INVALID
+    qs['LAYER'] = 'categorized'
+    rv = client.get(_build_query_string(qs), PROJECT_INVALID)
+    b = _check_request(rv)
+    #  {'nodes': [{'icon': 'ICON', 'title': 'categorized', 'type': 'layer'}], 'title': ''}
+    assert b['title'] == ''
+    assert len(b['nodes']) == 1, b
+    assert b['nodes'][0]['title'] == 'categorized'
+    assert 'icon' in b['nodes'][0]
+    assert 'symbols' not in b['nodes'][0]
+
+    """ Test rule based layer, simple conversion from categorized. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT_INVALID
+    qs['LAYER'] = 'rule_based'
+    rv = client.get(_build_query_string(qs), PROJECT_INVALID)
+    b = _check_request(rv)
+    #  {'nodes': [{'icon': 'ICON', 'title': 'categorized', 'type': 'layer'}], 'title': ''}
+    assert b['title'] == ''
+    assert len(b['nodes']) == 1, b
+    assert b['nodes'][0]['title'] == 'rule_based'
+    assert 'icon' in b['nodes'][0]
+    assert 'symbols' not in b['nodes'][0]
+
+    """ Test categorized symbol for layer with SHOW FEATURE COUNT. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT_INVALID
+    qs['LAYER'] = 'categorized'
+    qs['SHOWFEATURECOUNT'] = 'True'
+    rv = client.get(_build_query_string(qs), PROJECT_INVALID)
+    b = _check_request(rv)
+    #  {'nodes': [{'icon': 'ICON', 'title': 'categorized', 'type': 'layer'}], 'title': ''}
+    assert b['title'] == ''
+    assert len(b['nodes']) == 1, b
+    assert b['nodes'][0]['title'] == 'categorized'
+    assert 'icon' in b['nodes'][0]
+    assert 'symbols' not in b['nodes'][0]

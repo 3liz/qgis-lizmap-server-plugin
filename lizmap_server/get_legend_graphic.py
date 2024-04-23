@@ -12,6 +12,8 @@ from collections import namedtuple
 from typing import Optional
 
 from qgis.core import Qgis, QgsProject, QgsVectorLayer
+from qgis.PyQt.QtCore import QBuffer, QIODevice
+from qgis.PyQt.QtGui import QImage
 from qgis.server import QgsServerFilter
 
 from lizmap_server.core import find_vector_layer
@@ -77,6 +79,23 @@ class GetLegendGraphicFilter(QgsServerFilter):
         layer = find_vector_layer(layer_name, project)
         if not layer:
             logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
+            return
+
+        if not layer.isValid():
+            buffer = QBuffer()
+            buffer.open(QIODevice.WriteOnly)
+            qp = QImage(":/images/themes/default/mIconWarning.svg")
+            qp.save(buffer, "PNG")
+            json_data = {
+                'title': '',
+                'nodes': [{
+                    'type': 'layer',
+                    'title': layer_name,
+                    'icon': str(buffer.data().toBase64().data()),
+                }]
+            }
+            handler.clearBody()
+            handler.appendBody(json.dumps(json_data).encode('utf8'))
             return
 
         try:
