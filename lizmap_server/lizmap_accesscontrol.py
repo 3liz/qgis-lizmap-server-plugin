@@ -65,14 +65,27 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Get default layer rights
         rights = super().layerPermissions(layer)
 
+        # Get layer name
+        layer_name = layer.name()
+
+        # Get Project
+        project = QgsProject.instance()
+
+        # Get request handler
         request_handler = self.iface.requestHandler()
+
+        # Discard invalid layers for other services than WMS
+        if not layer.isValid() and request_handler.parameter('service').upper() != 'WMS':
+            Logger.info(f"layerPermission: Layer {layer_name} is invalid in {project.fileName()}!")
+            rights.canRead = False
+            rights.canInsert = rights.canUpdate = rights.canDelete = False
+            return rights
 
         # Get Lizmap user groups provided by the request
         groups = get_lizmap_groups(request_handler)
 
         # Set lizmap variables
         user_login = get_lizmap_user_login(request_handler)
-        project = QgsProject.instance()
         custom_var = project.customVariables()
         if custom_var.get('lizmap_user', None) != user_login:
             custom_var['lizmap_user'] = user_login
@@ -100,9 +113,6 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         if not cfg_layers:
             # Default layer rights applied
             return rights
-
-        # Get layer name
-        layer_name = layer.name()
 
         # Check lizmap edition config
         layer_id = layer.id()
