@@ -158,6 +158,7 @@ def test_simple_rule_based_feature_count(client):
     assert b['title'] == ''
     assert b['nodes'][0]['title'] == 'rule_based [4]', b['nodes'][0]['title']
 
+
 def test_invalid_layer(client):
     """ Test unique symbol for layer. """
     qs = dict(BASE_QUERY)
