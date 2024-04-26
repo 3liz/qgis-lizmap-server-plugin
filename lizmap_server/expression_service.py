@@ -14,12 +14,13 @@ from qgis.core import (
     QgsExpressionContextUtils,
     QgsFeature,
     QgsFeatureRequest,
+    QgsField,
     QgsFields,
     QgsJsonExporter,
     QgsJsonUtils,
     QgsProject,
 )
-from qgis.PyQt.QtCore import QTextCodec
+from qgis.PyQt.QtCore import QTextCodec, QVariant
 from qgis.server import (
     QgsRequestHandler,
     QgsServerRequest,
@@ -343,7 +344,10 @@ class ExpressionService(QgsService):
             or
             FEATURES=[{"type": "Feature", "geometry": {}, "properties": {}}, {"type": "Feature", "geometry": {},
             "properties": {}}]
+            or
+            FEATURES=ALL to get Replace expression texts for all features of the layer
             FORM_SCOPE=boolean to add formScope based on provided features
+            FORMAT=GeoJSON to get response as GeoJSON
         """
         logger = Logger()
         layer_name = params.get('LAYER', '')
@@ -431,39 +435,43 @@ class ExpressionService(QgsService):
             return
 
         # Check features
-        try:
-            geojson = json.loads(features)
-        except Exception:
-            logger.critical(
-                "JSON loads features '{}' exception:\n{}".format(features, traceback.format_exc()))
-            raise ExpressionServiceError(
-                "Bad request error",
-                "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
-                400)
+        if features.upper() == 'ALL':
+            feature_fields = layer.fields()
+            feature_list = layer.getFeatures()
+        else:
+            try:
+                geojson = json.loads(features)
+            except Exception:
+                logger.critical(
+                    "JSON loads features '{}' exception:\n{}".format(features, traceback.format_exc()))
+                raise ExpressionServiceError(
+                    "Bad request error",
+                    "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
+                    400)
 
-        if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
-            raise ExpressionServiceError(
-                "Bad request error",
-                "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
-                400)
+            if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
+                raise ExpressionServiceError(
+                    "Bad request error",
+                    "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
+                    400)
 
-        if ('type' not in geojson[0]) or geojson[0]['type'] != 'Feature':
-            raise ExpressionServiceError(
-                "Bad request error",
-                ("Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed: type not defined or not "
-                 "Feature.").format(features),
-                400)
+            if ('type' not in geojson[0]) or geojson[0]['type'] != 'Feature':
+                raise ExpressionServiceError(
+                    "Bad request error",
+                    ("Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed: type not defined or not "
+                        "Feature.").format(features),
+                    400)
 
-        # try to load features
-        # read fields
-        feature_fields = QgsJsonUtils.stringToFields(
-            '{ "type": "FeatureCollection","features":' + features + '}',
-            QTextCodec.codecForName("UTF-8"))
-        # read features
-        feature_list = QgsJsonUtils.stringToFeatureList(
-            '{ "type": "FeatureCollection","features":' + features + '}',
-            feature_fields,
-            QTextCodec.codecForName("UTF-8"))
+            # try to load features
+            # read fields
+            feature_fields = QgsJsonUtils.stringToFields(
+                '{ "type": "FeatureCollection","features":' + features + '}',
+                QTextCodec.codecForName("UTF-8"))
+            # read features
+            feature_list = QgsJsonUtils.stringToFeatureList(
+                '{ "type": "FeatureCollection","features":' + features + '}',
+                feature_fields,
+                QTextCodec.codecForName("UTF-8"))
 
         # features not well formed
         if not feature_list:
@@ -479,6 +487,14 @@ class ExpressionService(QgsService):
 
         # form scope
         add_form_scope = to_bool(params.get('FORM_SCOPE'))
+
+        geojson_output = params.get('FORMAT', '').upper() == 'GEOJSON'
+        if geojson_output:
+            exporter = QgsJsonExporter()
+            exporter.setSourceCrs(layer.crs())
+            geojson_fields = QgsFields()
+            for k in str_map.keys():
+                geojson_fields.append(QgsField(k, QVariant.String))
 
         # loop through provided features to replace expression strings
         for f in feature_list:
@@ -503,9 +519,25 @@ class ExpressionService(QgsService):
             for k, s in str_map.items():
                 value = QgsExpression.replaceExpressionText(s, exp_context, da)
                 result[k] = json.loads(QgsJsonUtils.encodeValue(value))
-            body['results'].append(result)
+            if geojson_output:
+                feature = QgsFeature(geojson_fields, f.id())
+                feature.setGeometry(f.geometry())
+                feature.setAttributes(list(result.values()))
+                body['results'].append(exporter.exportFeature(feature))
+            else:
+                body['results'].append(result)
 
-        write_json_response(body, response)
+        if geojson_output:
+            response.setStatusCode(200)
+            response.setHeader("Content-Type", "application/vnd.geo+json; charset=utf-8")
+            response.write(
+                ',\n'.join([
+                    '{"type": "FeatureCollection"',
+                    '"features": [' + ',\n'.join(body['results']) + ']}'
+                ])
+            )
+        else:
+            write_json_response(body, response)
         return
 
     @staticmethod

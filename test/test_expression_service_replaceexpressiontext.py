@@ -195,6 +195,36 @@ def test_request_with_features(client):
     assert b['results'][1]['d'] == '105'
 
 
+def test_request_with_features_all(client):
+    """  Test Expression replaceExpressionText request with Feature or Features parameter
+    """
+    # Make a request
+    qs = f"?SERVICE=EXPRESSION&REQUEST=replaceExpressionText&MAP={PROJECT_FILE}&LAYER=france_parts"
+    qs += "&STRINGS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+        quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% NAME_1 %]', safe=''),
+        quote('[% round($area) %]', safe=''))
+    qs += "&FEATURES=ALL"
+    rv = client.get(qs, PROJECT_FILE)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+
+    b = json.loads(rv.content.decode('utf-8'))
+
+    assert 'status' in b
+    assert b['status'] == 'success'
+
+    assert 'results' in b
+    assert len(b['results']) == 4
+
+    assert 'a' in b['results'][0]
+    assert b['results'][0]['a'] == '1'
+    assert 'b' in b['results'][0]
+    assert b['results'][0]['b'] == '2'
+    assert b['results'][0]['c'] == 'Basse-Normandie'
+    assert 'd' in b['results'][0]
+    assert b['results'][0]['d'] == '27186051602'
+
+
 def test_request_with_form_scope(client):
     """  Test Expression replaceExpressionText request without Feature or Features and Form_Scope parameters
     """
@@ -249,3 +279,112 @@ def test_request_with_form_scope(client):
     assert b['results'][0]['c'] == ''
     assert 'd' in b['results'][0]
     assert b['results'][0]['d'] == '102'
+
+
+def test_request_with_features_geojson(client):
+    """  Test Expression replaceExpressionText request with Feature or Features parameter
+    """
+    # Make a request
+    qs = f"?SERVICE=EXPRESSION&REQUEST=replaceExpressionText&MAP={PROJECT_FILE}&LAYER=france_parts"
+    qs += "&STRINGS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+        quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
+        quote('[% $x %]', safe=''))
+    qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
+    qs += "&FORMAT=GeoJSON"
+    rv = client.get(qs, PROJECT_FILE)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('application/vnd.geo+json') == 0
+
+    b = json.loads(rv.content.decode('utf-8'))
+
+    assert 'type' in b
+    assert b['type'] == 'FeatureCollection'
+
+    assert 'features' in b
+    assert len(b['features']) == 1
+
+    assert 'id' in b['features'][0]
+    assert b['features'][0]['id'] == 0
+    assert 'properties' in b['features'][0]
+    assert 'a' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['a'] == '1'
+    assert 'b' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['b'] == '2'
+    assert b['features'][0]['properties']['c'] == 'value0'
+    assert 'd' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['d'] == '102'
+
+    # Make a request
+    qs = f"?SERVICE=EXPRESSION&REQUEST=replaceExpressionText&MAP={PROJECT_FILE}&LAYER=france_parts"
+    qs += "&STRINGS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+        quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
+        quote('[% $x %]', safe=''))
+    qs += "&FEATURES=["
+    qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
+    qs += ", "
+    qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [105.0, 0.5]}, \"properties\": {\"prop0\": \"value1\"}}"
+    qs += "]"
+    qs += "&FORMAT=GeoJSON"
+    rv = client.get(qs, PROJECT_FILE)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('application/vnd.geo+json') == 0
+
+    b = json.loads(rv.content.decode('utf-8'))
+
+    assert 'type' in b
+    assert b['type'] == 'FeatureCollection'
+
+    assert 'features' in b
+    assert len(b['features']) == 2
+
+    assert 'id' in b['features'][0]
+    assert b['features'][0]['id'] == 0
+    assert 'properties' in b['features'][0]
+    assert 'a' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['a'] == '1'
+    assert 'b' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['b'] == '2'
+    assert b['features'][0]['properties']['c'] == 'value0'
+    assert 'd' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['d'] == '102'
+
+    assert 'id' in b['features'][1]
+    assert b['features'][1]['id'] == 1
+    assert 'c' in b['features'][1]['properties']
+    assert b['features'][1]['properties']['c'] == 'value1'
+    assert 'd' in b['features'][1]['properties']
+    assert b['features'][1]['properties']['d'] == '105'
+
+
+def test_request_with_features_all_geojson(client):
+    """  Test Expression replaceExpressionText request with Feature or Features parameter
+    """
+    # Make a request
+    qs = f"?SERVICE=EXPRESSION&REQUEST=replaceExpressionText&MAP={PROJECT_FILE}&LAYER=france_parts"
+    qs += "&STRINGS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+        quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% NAME_1 %]', safe=''),
+        quote('[% round($area) %]', safe=''))
+    qs += "&FEATURES=ALL"
+    qs += "&FORMAT=GeoJSON"
+    rv = client.get(qs, PROJECT_FILE)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('application/vnd.geo+json') == 0
+
+    b = json.loads(rv.content.decode('utf-8'))
+
+    assert 'type' in b
+    assert b['type'] == 'FeatureCollection'
+
+    assert 'features' in b
+    assert len(b['features']) == 4
+
+    assert 'id' in b['features'][0]
+    assert b['features'][0]['id'] == 0
+    assert 'properties' in b['features'][0]
+    assert 'a' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['a'] == '1'
+    assert 'b' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['b'] == '2'
+    assert b['features'][0]['properties']['c'] == 'Basse-Normandie'
+    assert 'd' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['d'] == '27186051602'
