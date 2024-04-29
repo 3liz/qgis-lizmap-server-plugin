@@ -1,4 +1,4 @@
-__copyright__ = 'Copyright 2022, 3Liz'
+__copyright__ = 'Copyright 2024, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
@@ -15,6 +15,7 @@ from lizmap_server.lizmap_accesscontrol import LizmapAccessControlFilter
 from lizmap_server.lizmap_filter import LizmapFilter
 from lizmap_server.lizmap_service import LizmapService
 from lizmap_server.logger import Logger
+from lizmap_server.plausible import Plausible
 from lizmap_server.server_info_handler import ServerInfoHandler
 from lizmap_server.tools import check_environment_variable, version
 
@@ -28,6 +29,8 @@ class LizmapServer:
         self.logger = Logger()
         self.version = version()
         self.logger.info('Init server version "{}"'.format(self.version))
+        self.plausible = Plausible()
+        self.plausible.request_stat_event()
 
         service_registry = server_iface.serviceRegistry()
 
