@@ -1,6 +1,8 @@
 import logging
 import xml.etree.ElementTree as ET
 
+from test.utils import _check_request
+
 from qgis.core import Qgis
 from xmldiff import main as xml_diff
 
@@ -45,6 +47,9 @@ QGIS_POPUP = f"LAYERS={LAYER_QGIS_POPUP}&QUERY_LAYERS={LAYER_QGIS_POPUP}&"
 
 LAYER_QGIS_FORM = "qgis_form"
 QGIS_FORM = f"LAYERS={LAYER_QGIS_FORM}&QUERY_LAYERS={LAYER_QGIS_FORM}&"
+
+LAYER_FORM_SHORTNAME = "customformshortname"
+LAYER_FORM = f"LAYERS={LAYER_FORM_SHORTNAME}&QUERY_LAYERS={LAYER_FORM_SHORTNAME}&"
 
 
 def test_no_get_feature_info_default_popup(client):
@@ -184,6 +189,25 @@ def test_single_get_feature_info_form_popup(client):
     '''
     diff = xml_diff.diff_texts(expected, xml_string.strip())
     assert diff == [], diff
+
+    # Let's check the maptip content
+    assert '<div class="container popup_lizmap_dd" style="width:100%;">' in map_tip
+
+
+def test_single_get_feature_info_form_shortname_popup(client):
+    """ Test the get feature info with a single feature with QGIS form and a shortname. """
+    qs = BASE_QUERY + SINGLE_FEATURE + LAYER_FORM + "WITH_MAPTIP=true&"
+
+    rv = client.get(qs, PROJECT)
+    root = _check_request(rv, content_type="text/xml")
+
+    # Let's check only the XML first
+    map_tip = ''
+    for layer in root:
+        for feature in layer:
+            item = root.find(".//Attribute[@name='maptip']")
+            map_tip = item.attrib.get("value")
+            feature.remove(item)
 
     # Let's check the maptip content
     assert '<div class="container popup_lizmap_dd" style="width:100%;">' in map_tip

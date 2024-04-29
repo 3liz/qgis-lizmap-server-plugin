@@ -66,7 +66,7 @@ def find_vector_layer(layer_name: str, project: QgsProject) -> Union[None, QgsVe
             return layer
 
     Logger.warning(
-        "The vector layer {} has not been found in the project {}".format(layer_name, project.fileName()))
+        "The vector layer '{}' has not been found in the project '{}'".format(layer_name, project.fileName()))
     return None
 
 

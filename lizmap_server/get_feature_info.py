@@ -247,10 +247,13 @@ class GetFeatureInfoFilter(QgsServerFilter):
                     )
                     continue
 
+                layer_name = result.layer.shortName()
+                if not layer_name:
+                    layer_name = result.layer.name()
                 logger.info(
-                    "Replacing feature {} in layer {} for the GetFeatureInfo by the drag&drop form".format(
-                        result.feature_id, result.layer.name()))
-                xml = self.append_maptip(xml, result.layer.name(), result.feature_id, value)
+                    "Replacing feature '{}' in layer '{}' for the GetFeatureInfo by the drag&drop form".format(
+                        result.feature_id, layer_name))
+                xml = self.append_maptip(xml, layer_name, result.feature_id, value)
 
             # Safeguard, it shouldn't happen
             if not xml:
