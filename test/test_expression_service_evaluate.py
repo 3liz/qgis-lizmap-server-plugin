@@ -1,56 +1,62 @@
-import json
-
+from test.utils import _build_query_string, _check_request
 from urllib.parse import quote
 
 __copyright__ = 'Copyright 2019, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+PROJECT_FILE = "france_parts.qgs"
 
-def test_layer_error(client):
-    """  Test Expression Evaluate request with Layer parameter error
-    """
-    projectfile = "france_parts.qgs"
 
+def test_layer_error_without_layer(client):
+    """ Test Expression Evaluate request without layer parameter. """
     # Make a request without layer
-    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": PROJECT_FILE,
+    }
+    rv = client.get(_build_query_string(qs), PROJECT_FILE)
+    _check_request(rv, http_code=400)
 
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
 
+def test_layer_error_with_layer_error(client):
+    """ Test Expression Evaluate request with layer parameter error. """
     # Make a request with an unknown layer
-    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=UNKNOWN_LAYER"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": PROJECT_FILE,
+        "LAYER": "UNKNOWN_LAYER",
+    }
+    rv = client.get(_build_query_string(qs), PROJECT_FILE)
+    _check_request(rv, http_code=400)
 
 
 def test_expression_error(client):
-    """  Test Expression Evaluate request with Expression parameter error
-    """
-    projectfile = "france_parts.qgs"
-
+    """ Test Expression Evaluate request with Expression parameter error. """
     # Make a request without expression
-    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": PROJECT_FILE,
+        "LAYER": "france_parts",
+    }
+    rv = client.get(_build_query_string(qs), PROJECT_FILE)
+    _check_request(rv, http_code=400)
 
 
 def test_features_error(client):
     """  Test Expression Evaluate request with Feature or Features parameter error
     """
-    projectfile = "france_parts.qgs"
-
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
     qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    rv = client.get(qs, PROJECT_FILE)
+
+    _check_request(rv, http_code=400)
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
@@ -58,9 +64,9 @@ def test_features_error(client):
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     # type feature and not Feature error
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    rv = client.get(qs, PROJECT_FILE)
+
+    _check_request(rv, http_code=400)
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
@@ -70,25 +76,20 @@ def test_features_error(client):
     qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     qs += ", "
     qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [105.0, 0.5]}, \"properties\": {\"prop0\": \"value1\"}}"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 400
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    rv = client.get(qs, PROJECT_FILE)
+
+    _check_request(rv, http_code=400)
 
 
 def test_request_without_features(client):
     """  Test Expression Evaluate request without Feature or Features parameter
     """
-    projectfile = "france_parts.qgs"
-
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSION=%s" % (
         quote('1 + 1', safe=''))
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
+    rv = client.get(qs, PROJECT_FILE)
 
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -100,12 +101,8 @@ def test_request_without_features(client):
 
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS=[\"%s\", \"%s\"]" % (
         quote('1', safe=''), quote('1 + 1', safe=''))
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -119,12 +116,8 @@ def test_request_without_features(client):
 
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\"}" % (
         quote('1', safe=''), quote('1 + 1', safe=''))
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -140,12 +133,8 @@ def test_request_without_features(client):
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\"}" % (
         quote('@lizmap_user', safe=''), quote('@lizmap_user_groups', safe=''))
     headers = {'X-Lizmap-User-Groups': 'test1', 'X-Lizmap-User': 'Bretagne'}
-    rv = client.get(qs, projectfile, headers)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE, headers)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -160,9 +149,6 @@ def test_request_without_features(client):
 
 def test_layer_field_aggregates(client):
     """ Get the distinct values of the NAME_1 field """
-    # Project
-    project_file = "france_parts.qgs"
-
     # Test expression
     expressions = {
         'distinct_values': """
@@ -194,12 +180,10 @@ def test_layer_field_aggregates(client):
     query_string += ', '.join(query_expressions)
     query_string += '}'
     headers = {'X-Lizmap-User-Groups': 'test1', 'X-Lizmap-User': 'Bretagne'}
-    request = client.get(query_string, project_file, headers)
+    request = client.get(query_string, PROJECT_FILE, headers)
 
-    assert request.status_code == 200
-    assert request.headers.get('Content-Type', '').find('application/json') == 0
+    data = _check_request(request)
 
-    data = json.loads(request.content.decode('utf-8'))
     assert 'status' in data
     assert data['status'] == 'success'
     assert 'results' in data
@@ -215,19 +199,13 @@ def test_layer_field_aggregates(client):
 def test_request_with_features(client):
     """  Test Expression Evaluate request with Feature or Features parameter
     """
-    projectfile = "france_parts.qgs"
-
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
     qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -252,12 +230,8 @@ def test_request_with_features(client):
     qs += ", "
     qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [105.0, 0.5]}, \"properties\": {\"prop0\": \"value1\"}}"
     qs += "]"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -282,20 +256,14 @@ def test_request_with_features(client):
 def test_request_with_formscope(client):
     """  Test Expression Evaluate request without Feature or Features and Form_Scope parameters
     """
-    projectfile = "france_parts.qgs"
-
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
     qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
         quote('1', safe=''), quote('1 + 1', safe=''), quote("current_value('prop0')", safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     qs += "&FORM_SCOPE=true"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
@@ -316,12 +284,8 @@ def test_request_with_formscope(client):
     qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
         quote('1', safe=''), quote('1 + 1', safe=''), quote("current_value('prop0')", safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
-
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
 
     assert 'status' in b
     assert b['status'] == 'success'
