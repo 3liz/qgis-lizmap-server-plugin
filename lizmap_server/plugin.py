@@ -29,8 +29,13 @@ class LizmapServer:
         self.logger = Logger()
         self.version = version()
         self.logger.info('Init server version "{}"'.format(self.version))
-        self.plausible = Plausible()
-        self.plausible.request_stat_event()
+        # noinspection PyBroadException
+        try:
+            self.plausible = Plausible()
+            self.plausible.request_stat_event()
+        except Exception as e:
+            self.logger.log_exception(e)
+            self.logger.critical('Error while calling the API stats')
 
         service_registry = server_iface.serviceRegistry()
 

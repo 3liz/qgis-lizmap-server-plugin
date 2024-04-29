@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.9.0 - 2024-04-29
+
+* Review the GetLegendGraphic
+* Discard invalid layers from Services other than WMS
+* WMS GetLegendGraphic JSON: Provide Warning icon for invalid layers
+* Fix wrong maptip returned in case of layer short name versus layer name
+* Review logging in case of error
+* Internal refactoring about tests
+* For Lizmap Web Client 3.8 : Extending replaceExpressionText Request with ALL features and GeoJSON format
+* Add statistics
+
 ## 2.8.6 - 2024-03-18
 
 * GetFeatureInfo - Since QGIS 3.36, when reading a QGS file with an empty string, the variable is not returned
