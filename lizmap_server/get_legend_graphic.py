@@ -37,6 +37,15 @@ class GetLegendGraphicFilter(QgsServerFilter):
         """Regexp for extracting the feature count from the label. """
         return re.match(cls.FEATURE_COUNT_REGEXP, symbol_label)
 
+    @classmethod
+    def warning_icon(cls) -> str:
+        """ Warning icon as base 64. """
+        buffer = QBuffer()
+        buffer.open(QIODevice.WriteOnly)
+        qp = QImage(":/images/themes/default/mIconWarning.svg")
+        qp.save(buffer, "PNG")
+        return str(buffer.data().toBase64().data())
+
     @exception_handler
     def responseComplete(self):
 
@@ -82,16 +91,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
             return
 
         if not layer.isValid():
-            buffer = QBuffer()
-            buffer.open(QIODevice.WriteOnly)
-            qp = QImage(":/images/themes/default/mIconWarning.svg")
-            qp.save(buffer, "PNG")
+
             json_data = {
                 'title': '',
                 'nodes': [{
                     'type': 'layer',
                     'title': layer_name,
-                    'icon': str(buffer.data().toBase64().data()),
+                    'icon': self.warning_icon(),
+                    'valid': False,
                 }]
             }
             handler.clearBody()

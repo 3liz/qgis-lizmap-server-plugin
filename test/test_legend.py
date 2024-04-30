@@ -4,6 +4,8 @@ from test.utils import _build_query_string, _check_request
 
 from qgis.core import Qgis
 
+from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
+
 LOGGER = logging.getLogger('server')
 
 __copyright__ = 'Copyright 2023, 3Liz'
@@ -31,6 +33,7 @@ def test_unique_symbol(client):
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
     assert b['nodes'][0]['title'] == 'unique_symbol'
+    assert b['nodes'][0].get('valid') is None
     assert 'icon' in b['nodes'][0]
     assert 'symbols' not in b['nodes'][0]
 
@@ -42,6 +45,7 @@ def test_categorized_symbol(client):
     rv = client.get(_build_query_string(qs), PROJECT)
     b = _check_request(rv)
     assert b['nodes'][0]['title'] == 'categorized'
+    assert b['nodes'][0].get('valid') is None
     assert 'icon' not in b['nodes'][0]
     assert 'symbols' in b['nodes'][0]
 
@@ -80,6 +84,7 @@ def test_simple_rule_based(client):
     assert b['nodes'][0]['title'] == 'rule_based', b['nodes'][0]['title']
     assert 'icon' not in b['nodes'][0]
     assert 'symbols' in b['nodes'][0]
+    assert b['nodes'][0].get('valid') is None
 
     symbols = b['nodes'][0]['symbols']
 
@@ -106,6 +111,7 @@ def test_categorized_symbol_feature_count(client):
     assert b['nodes'][0]['title'].startswith('categorized'), b['nodes'][0]['title']
     assert 'icon' not in b['nodes'][0]
     assert 'symbols' in b['nodes'][0]
+    assert b['nodes'][0].get('valid') is None
 
     symbols = b['nodes'][0]['symbols']
     # expected = {
@@ -143,6 +149,7 @@ def test_simple_rule_based_feature_count(client):
     assert b['nodes'][0]['title'].startswith('rule_based'), b['nodes'][0]['title']
     assert 'icon' not in b['nodes'][0]
     assert 'symbols' in b['nodes'][0]
+    assert b['nodes'][0].get('valid') is None
 
     symbols = b['nodes'][0]['symbols']
 
@@ -159,7 +166,7 @@ def test_simple_rule_based_feature_count(client):
     assert b['nodes'][0]['title'] == 'rule_based [4]', b['nodes'][0]['title']
 
 
-def test_invalid_layer(client):
+def test_invalid_layer_symbol_layer(client):
     """ Test unique symbol for layer. """
     qs = dict(BASE_QUERY)
     qs['MAP'] = PROJECT_INVALID
@@ -170,9 +177,13 @@ def test_invalid_layer(client):
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
     assert b['nodes'][0]['title'] == 'unique_symbol'
+    assert b['nodes'][0].get('valid') is False
+    assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
     assert 'icon' in b['nodes'][0]
     assert 'symbols' not in b['nodes'][0]
 
+
+def test_invalid_layer_categorized_symbol_layer(client):
     """ Test categorized symbol for layer. """
     qs = dict(BASE_QUERY)
     qs['MAP'] = PROJECT_INVALID
@@ -183,9 +194,33 @@ def test_invalid_layer(client):
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
     assert b['nodes'][0]['title'] == 'categorized'
+    assert b['nodes'][0].get('valid') is False
+    assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
     assert 'icon' in b['nodes'][0]
     assert 'symbols' not in b['nodes'][0]
 
+
+def test_multiple_invalid_layers(client):
+    """ Test multiple invalid layers. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT_INVALID
+    qs['LAYER'] = 'unique_symbol,categorized'
+    rv = client.get(_build_query_string(qs), PROJECT_INVALID)
+    b = _check_request(rv)
+    #  {'nodes': [{'icon': 'ICON', 'title': 'unique_symbol', 'type': 'layer'}], 'title': ''}
+    assert len(b['nodes']) == 2, b
+    assert b['title'] == ''
+    assert b['nodes'][0]['title'] == 'categorized', b['nodes'][0]['title']
+    assert b['nodes'][0].get('valid') is None
+    # assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
+    assert 'symbols' in b['nodes'][0]
+    assert b['nodes'][1]['title'] == 'unique_symbol'
+    assert b['nodes'][1].get('valid') is None
+    # assert b['nodes'][1].get('icon') == GetLegendGraphicFilter.warning_icon()
+    assert 'symbols' not in b['nodes'][1]
+
+
+def test_invalid_layer_rule_based_symbol_layer(client):
     """ Test rule based layer, simple conversion from categorized. """
     qs = dict(BASE_QUERY)
     qs['MAP'] = PROJECT_INVALID
@@ -196,9 +231,13 @@ def test_invalid_layer(client):
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
     assert b['nodes'][0]['title'] == 'rule_based'
+    assert b['nodes'][0].get('valid') is False
+    assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
     assert 'icon' in b['nodes'][0]
     assert 'symbols' not in b['nodes'][0]
 
+
+def test_invalid_layer_categorized_symbol_layer_feature_count(client):
     """ Test categorized symbol for layer with SHOW FEATURE COUNT. """
     qs = dict(BASE_QUERY)
     qs['MAP'] = PROJECT_INVALID
@@ -210,5 +249,7 @@ def test_invalid_layer(client):
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
     assert b['nodes'][0]['title'] == 'categorized'
+    assert b['nodes'][0].get('valid') is False
+    assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
     assert 'icon' in b['nodes'][0]
     assert 'symbols' not in b['nodes'][0]
