@@ -48,7 +48,6 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
     @exception_handler
     def responseComplete(self):
-
         handler = self.serverInterface().requestHandler()
         logger = Logger()
         if not handler:
@@ -71,7 +70,9 @@ class GetLegendGraphicFilter(QgsServerFilter):
         layer_name = params.get('LAYER', '')
         if layer_name == '':
             return
+
         if ',' in layer_name:
+            # The PHP must split the request per layer
             return
 
         # noinspection PyArgumentList

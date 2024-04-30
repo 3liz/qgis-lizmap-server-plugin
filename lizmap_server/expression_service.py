@@ -473,7 +473,7 @@ class ExpressionService(QgsService):
                 feature_fields,
                 QTextCodec.codecForName("UTF-8"))
 
-        # features not well formed
+        # features not well-formed
         if not feature_list:
             raise ExpressionServiceError(
                 "Bad request error",
@@ -494,7 +494,10 @@ class ExpressionService(QgsService):
             exporter.setSourceCrs(layer.crs())
             geojson_fields = QgsFields()
             for k in str_map.keys():
-                geojson_fields.append(QgsField(k, QVariant.String))
+                geojson_fields.append(QgsField(str(k), QVariant.String))
+        else:
+            exporter = None
+            geojson_fields = None
 
         # loop through provided features to replace expression strings
         for f in feature_list:
