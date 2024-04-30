@@ -44,7 +44,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         buffer.open(QIODevice.WriteOnly)
         qp = QImage(":/images/themes/default/mIconWarning.svg")
         qp.save(buffer, "PNG")
-        return str(buffer.data().toBase64().data())
+        return bytes(buffer.data().toBase64().data()).decode()
 
     @exception_handler
     def responseComplete(self):
