@@ -10,17 +10,7 @@ import pytest
 
 from qgis.PyQt import Qt
 
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    from osgeo import gdal
-
-logging.basicConfig( stream=sys.stderr )
-logging.disable(logging.NOTSET)
-
-LOGGER = logging.getLogger('server')
-LOGGER.setLevel(logging.DEBUG)
-
-from typing import Any, Dict, Generator
+from typing import Any, Dict, Generator, Optional
 
 from qgis.core import Qgis, QgsApplication, QgsFontUtils, QgsProject
 from qgis.server import (
@@ -28,9 +18,22 @@ from qgis.server import (
     QgsBufferServerResponse,
     QgsServer,
     QgsServerRequest,
+    QgsServerInterface,
 )
 
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    from osgeo import gdal
+
+logging.basicConfig(stream=sys.stderr)
+logging.disable(logging.NOTSET)
+
+LOGGER = logging.getLogger('server')
+LOGGER.setLevel(logging.DEBUG)
+
+
 qgis_application = None
+
 
 def pytest_addoption(parser):
     parser.addoption("--qgis-plugins", metavar="PATH", help="Plugin path", default=None)
@@ -60,8 +63,8 @@ def pytest_sessionstart(session):
     os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
     # Define this in global environment
-    #os.environ['QGIS_DISABLE_MESSAGE_HOOKS'] = 1
-    #os.environ['QGIS_NO_OVERRIDE_IMPORT'] = 1
+    # os.environ['QGIS_DISABLE_MESSAGE_HOOKS'] = 1
+    # os.environ['QGIS_NO_OVERRIDE_IMPORT'] = 1
     qgis_application = QgsApplication([], False)
     qgis_application.initQgis()
 
@@ -86,8 +89,9 @@ NAMESPACES = {
     'wcs': "http://www.opengis.net/wcs",
     'ows': "http://www.opengis.net/ows/1.1",
     'gml': "http://www.opengis.net/gml",
-    'xsi': "http://www.w3.org/2001/XMLSchema-instance"
+    'xsi': "http://www.w3.org/2001/XMLSchema-instance",
 }
+
 
 class OWSResponse:
 
@@ -128,7 +132,7 @@ def client(request):
     """
     class _Client:
 
-        def __init__(self) -> None:
+        def __init__(self):
             self.fontFamily = QgsFontUtils.standardTestFontFamily()
             QgsFontUtils.loadStandardTestFonts(['All'])
 
@@ -138,12 +142,11 @@ def client(request):
             self.datapath = request.config.rootdir.join('data')
             self.server = QgsServer()
 
-
             # Load plugins
             load_plugins(self.server.serverInterface())
 
-        def getplugin(self, name) -> Any:
-            """ retourne l'instance du plugin
+        def getplugin(self, name: str) -> Any:   # noqa ANN401
+            """ Return the instance of the plugin
             """
             return server_plugins.get(name)
 
@@ -160,7 +163,7 @@ def client(request):
                 raise ValueError("Error reading project '%s':" % projectpath.strpath)
             return qgsproject
 
-        def get(self, query: str, project: str = None, headers: Dict[str, str] = None) -> OWSResponse:
+        def get(self, query: str, project: Optional[str] = None, headers: Optional[Dict[str, str]] = None) -> OWSResponse:
             """ Return server response from query
             """
             if headers is None:
@@ -174,7 +177,7 @@ def client(request):
             self.server.handleRequest(server_request, response, project=qgsproject)
             return OWSResponse(response)
 
-        def get_with_project(self, query: str, project: QgsProject, headers: Dict[str, str] = None) -> OWSResponse:
+        def get_with_project(self, query: str, project: QgsProject, headers: Optional[Dict[str, str]] = None) -> OWSResponse:
             """ Return server response from query
             """
             if headers is None:
@@ -189,7 +192,7 @@ def client(request):
 
 
 ##
-## Plugins
+# Plugins
 ##
 
 def checkQgisVersion(minver: str, maxver: str) -> bool:
@@ -198,22 +201,21 @@ def checkQgisVersion(minver: str, maxver: str) -> bool:
         major, *ver = ver.split('.')
         major = int(major)
         minor = int(ver[0]) if len(ver) > 0 else 0
-        rev   = int(ver[1]) if len(ver) > 1 else 0
+        rev = int(ver[1]) if len(ver) > 1 else 0
         if minor >= 99:
             minor = rev = 0
             major += 1
         if rev > 99:
             rev = 99
-        return int("{:d}{:02d}{:02d}".format(major,minor,rev))
-
+        return int("{:d}{:02d}{:02d}".format(major, minor, rev))
 
     version = to_int(Qgis.QGIS_VERSION.split('-')[0])
-    minver  = to_int(minver) if minver else version
-    maxver  = to_int(maxver) if maxver else version
+    minver = to_int(minver) if minver else version
+    maxver = to_int(maxver) if maxver else version
     return minver <= version <= maxver
 
 
-def find_plugins(pluginpath: str) -> Generator[str,None,None]:
+def find_plugins(pluginpath: str) -> Generator[str, None, None]:
     """ Load plugins
     """
     for plugin in glob.glob(os.path.join(plugin_path + "/*")):
@@ -235,25 +237,25 @@ def find_plugins(pluginpath: str) -> Generator[str,None,None]:
             minver = cp['general'].get('qgisMinimumVersion')
             maxver = cp['general'].get('qgisMaximumVersion')
         except Exception as exc:
-            LOGGER.critical("Error reading plugin metadata '%s': %s",metadatafile,exc)
+            LOGGER.critical("Error reading plugin metadata '%s': %s", metadatafile, exc)
             continue
 
-        if not checkQgisVersion(minver,maxver):
+        if not checkQgisVersion(minver, maxver):
             LOGGER.critical(("Unsupported version for %s:"
                 "\n MinimumVersion: %s"
                 "\n MaximumVersion: %s"
                 "\n Qgis version: %s"
-                "\n Discarding") % (plugin,minver,maxver,
+                "\n Discarding") % (plugin, minver, maxver,
                     Qgis.QGIS_VERSION.split('-')[0]))
             continue
 
         yield os.path.basename(plugin)
 
 
-server_plugins = {}
+server_plugins: Dict[str, Any] = {}
 
 
-def load_plugins(serverIface: 'QgsServerInterface') -> None:
+def load_plugins(serverIface: QgsServerInterface) -> None:
     """ Start all plugins
     """
     if not plugin_path:
@@ -270,9 +272,9 @@ def load_plugins(serverIface: 'QgsServerInterface') -> None:
 
             # Initialize the plugin
             server_plugins[plugin] = package.serverClassFactory(serverIface)
-            LOGGER.info("Loaded plugin %s",plugin)
+            LOGGER.info("Loaded plugin %s", plugin)
         except:
-            LOGGER.error("Error loading plugin %s",plugin)
+            LOGGER.error("Error loading plugin %s", plugin)
             raise
 
 
@@ -280,14 +282,14 @@ def load_plugins(serverIface: 'QgsServerInterface') -> None:
 # Logger hook
 #
 
-def install_logger_hook( verbose: bool=False ) -> None:
+def install_logger_hook(verbose: bool = False) -> None:
     """ Install message log hook
     """
-    from qgis.core import Qgis, QgsApplication, QgsMessageLog
+    from qgis.core import Qgis, QgsApplication
 
     # Add a hook to qgis  message log
     def writelogmessage(message, tag, level):
-        arg = '{}: {}'.format( tag, message )
+        arg = '{}: {}'.format(tag, message)
         if level == Qgis.Warning:
             LOGGER.warning(arg)
         elif level == Qgis.Critical:
@@ -298,4 +300,4 @@ def install_logger_hook( verbose: bool=False ) -> None:
             LOGGER.info(arg)
 
     messageLog = QgsApplication.messageLog()
-    messageLog.messageReceived.connect( writelogmessage )
+    messageLog.messageReceived.connect(writelogmessage)

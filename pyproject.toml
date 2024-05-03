@@ -1,0 +1,35 @@
+# Ruff configuration
+# See https://doc.astral.sh/ruff/configuration
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [
+    ".venv",
+    ".local",
+    ".test/.local",
+]
+
+[tool.ruff.format]
+indent-style = "space"
+
+[tool.ruff.lint]
+extend-select = ["E", "F", "ANN", "W", "T", "COM", "RUF"]
+ignore = ["ANN101", "ANN102", "ANN002", "ANN003", "RUF100"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["T201", "E501"]
+"test/*" = ["T201", "E501"]
+"lizmap_server/tooltip.py" = ["RUF001", "RUF002"]
+
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
+known-third-party = [
+    "qgis",
+]
+
+[tool.ruff.lint.flake8-annotations]
+ignore-fully-untyped = true
+suppress-none-returning = true
+suppress-dummy-args = true

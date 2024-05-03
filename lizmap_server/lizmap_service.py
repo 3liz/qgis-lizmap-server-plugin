@@ -112,7 +112,7 @@ class LizmapService(QgsService):
         body = {
             'status': 'success',
             'filter': ALL_FEATURES,
-            'polygons': ''
+            'polygons': '',
         }
 
         # Check first the headers to avoid unnecessary config file reading
@@ -166,7 +166,7 @@ class LizmapService(QgsService):
                     body = {
                         'status': 'success',
                         'filter': NO_FEATURES,
-                        'polygons': ''
+                        'polygons': '',
                     }
                     write_json_response(body, response)
                     return
@@ -199,7 +199,7 @@ class LizmapService(QgsService):
             body = {
                 'status': 'success',
                 'filter': NO_FEATURES,
-                'polygons': ''
+                'polygons': '',
             }
             write_json_response(body, response)
 

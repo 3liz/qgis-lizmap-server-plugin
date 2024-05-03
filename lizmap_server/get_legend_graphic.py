@@ -100,7 +100,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     'title': layer_name,
                     'icon': self.warning_icon(),
                     'valid': False,
-                }]
+                }],
             }
             handler.clearBody()
             handler.appendBody(json.dumps(json_data).encode('utf8'))
@@ -183,7 +183,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
     @classmethod
     def _extract_categories(
-            cls, layer: QgsVectorLayer, show_feature_count: bool = False, project_path: str = ""
+            cls, layer: QgsVectorLayer, show_feature_count: bool = False, project_path: str = "",
     ) -> dict:
         """ Extract categories from the layer legend. """
         # TODO Annotations QGIS 3.22 [str, Category]
@@ -209,14 +209,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 if not result:
                     Logger.warning(
                         f"The expression in the project '{project_path}', layer '{layer.name()}' has not "
-                        f"been generated correctly, setting the expression to an empty string"
+                        f"been generated correctly, setting the expression to an empty string",
                     )
                     expression = ''
 
             if item.label() in categories.keys():
                 Logger.warning(
                     f"The label key '{item.label()}' is not unique, expect the legend to be broken in the project "
-                    f"'{project_path}', layer '{layer.name()}'."
+                    f"'{project_path}', layer '{layer.name()}'.",
                 )
 
             categories[item.label()] = Category(

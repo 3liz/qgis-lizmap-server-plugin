@@ -55,9 +55,9 @@ attributes(
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [102.0, 0.5]
+                "coordinates": [102.0, 0.5],
             },
-            "properties": {"polygon_id": 4}})
+            "properties": {"polygon_id": 4}}),
     }
     rv = client.get(_build_query_string(qs), project_file)
     b = _check_request(rv)
@@ -114,8 +114,8 @@ def test_request_get_feature_form_scope_current_value(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         )}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)
@@ -153,8 +153,8 @@ def test_request_get_feature_form_scope_with_geom(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         ),
         'WITH_GEOMETRY': 'True'}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
@@ -192,8 +192,8 @@ def test_request_get_feature_form_scope_with_fields(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         ),
         'FIELDS': 'ISO,NAME_1'}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
@@ -230,8 +230,8 @@ def test_request_get_feature_form_scope_with_spatial_filter(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [-3.0, 48.0]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         )}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)
@@ -269,8 +269,8 @@ def test_request_get_feature_without_named_parameters(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"polygon_id": 4}
-            }
+                "properties": {"polygon_id": 4},
+            },
         )}
     rv = client.get(_build_query_string(qs), project_file)
     b = _check_request(rv)
@@ -295,8 +295,8 @@ def test_request_get_feature_with_named_parameters(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"polygon_id": 4}
-            }
+                "properties": {"polygon_id": 4},
+            },
         )}
     rv = client.get(_build_query_string(qs), project_file)
     b = _check_request(rv)
@@ -319,14 +319,14 @@ def test_request_given_parent_feature(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [-3.0, 48.0]},
-                "properties": {"prop1": "Rennes"}
-            }
+                "properties": {"prop1": "Rennes"},
+            },
         ),
         'PARENT_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         )}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)
@@ -364,14 +364,14 @@ def test_request_current_parent_feature(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [-3.0, 48.0]},
-                "properties": {"prop1": "Rennes"}
-            }
+                "properties": {"prop1": "Rennes"},
+            },
         ),
         'PARENT_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         )}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)
@@ -409,14 +409,14 @@ def test_request_current_parent_geometry(client):
         'FORM_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-                "properties": {"prop1": "Rennes"}
-            }
+                "properties": {"prop1": "Rennes"},
+            },
         ),
         'PARENT_FEATURE': json.dumps(
             {
                 "type": "Feature", "geometry": {"type": "Point", "coordinates": [-3.0, 48.0]},
-                "properties": {"prop0": "Bretagne"}
-            }
+                "properties": {"prop0": "Bretagne"},
+            },
         )}
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)

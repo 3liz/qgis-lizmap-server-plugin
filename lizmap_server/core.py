@@ -333,7 +333,7 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
     return False
 
 
-def server_feature_id_expression(feature_id, data_provider: QgsVectorDataProvider) -> str:
+def server_feature_id_expression(feature_id: str, data_provider: QgsVectorDataProvider) -> str:
     """ Fetch the QGIS server feature ID expression according to the current QGIS version. """
     if Qgis.QGIS_VERSION_INT >= 32400:
         from qgis.server import QgsServerFeatureId
@@ -344,7 +344,7 @@ def server_feature_id_expression(feature_id, data_provider: QgsVectorDataProvide
     return _server_feature_id_expression(feature_id, data_provider.pkAttributeIndexes(), data_provider.fields())
 
 
-def _server_feature_id_expression(feature_id, pk_attributes: list, fields: QgsFields) -> str:
+def _server_feature_id_expression(feature_id: str, pk_attributes: list, fields: QgsFields) -> str:
     """ Port of QgsServerFeatureId::getExpressionFromServerFid for QGIS < 3.24
 
     The value "@@" is hardcoded in the CPP file.

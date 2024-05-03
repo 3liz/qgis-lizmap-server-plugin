@@ -62,7 +62,7 @@ def plugins_installed(py_qgis_server: bool) -> list:
     return server_active_plugins
 
 
-def plugin_metadata_key(py_qgis_server: bool, name: str, key: str, ) -> str:
+def plugin_metadata_key(py_qgis_server: bool, name: str, key: str) -> str:
     """ Return the version for a given plugin. """
     unknown = 'unknown'
     # it seems configparser is transforming all keys as lowercase...
@@ -89,8 +89,8 @@ PyQgisServer = NamedTuple(
         ('version', str),
         ('build_id', Union[int, None]),
         ('commit_id', Union[int, None]),
-        ('is_stable', bool)
-    ]
+        ('is_stable', bool),
+    ],
 )
 
 
@@ -217,7 +217,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 'gdal': gdal.VersionInfo('VERSION_NUM'),
                 'python': sys.version,
                 'qt': Qt.QT_VERSION_STR,
-            }
+            },
         }
         self.write(data, context)
 
@@ -244,6 +244,6 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 "CHECK_CUSTOM_HEADERS",
                 False,
                 QgsServerQueryStringParameter.Type.String,
-                "If we check custom headers"
+                "If we check custom headers",
             ),
         ]

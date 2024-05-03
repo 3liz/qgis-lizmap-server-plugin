@@ -18,6 +18,9 @@ LOCAL_HOME ?= $(shell pwd)
 
 SRCDIR=$(shell realpath .)
 
+PYTHON_PKG=lizmap_server
+TESTDIR=test
+
 tests:
 	@mkdir -p $$(pwd)/.local $(LOCAL_HOME)/.cache
 	@echo Do not forget to run docker pull $(QGIS_IMAGE) from time to time
@@ -30,3 +33,21 @@ tests:
 		-e QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE \
 		-e PYTEST_ADDOPTS="$(TEST_OPTS) --assert=plain" \
 		$(QGIS_IMAGE) ./run-tests.sh
+
+.PHONY: test
+
+install-tests:
+	pip install -U --upgrade-strategy=eager -r requirements/dev.txt
+
+export QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE
+test:
+	cd test && pytest -v --qgis-plugins=..
+
+lint:
+	@ruff check $(PYTHON_PKG) $(TESTDIR)
+
+lint-preview:
+	@ruff check --preview $(PYTHON_PKG) $(TESTDIR)
+
+lint-fix:
+	@ruff check --fix  --preview  $(PYTHON_PKG) $(TESTDIR)

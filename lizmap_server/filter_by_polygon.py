@@ -151,7 +151,7 @@ class FilterByPolygon:
 
         return True
 
-    def sql_query(self, uri: QgsDataSourceUri, sql) -> Tuple[Tuple]:
+    def sql_query(self, uri: QgsDataSourceUri, sql: str) -> Tuple[Tuple]:
         """ For a given URI, execute an SQL query and return the result. """
         if self.connection is None:
             # noinspection PyArgumentList
@@ -205,7 +205,7 @@ class FilterByPolygon:
 
         ewkt = "SRID={crs};{wkt}".format(
             crs=self.polygon.crs().postgisSrid(),
-            wkt=polygon.asWkt(6 if self.polygon.crs().isGeographic() else 2)
+            wkt=polygon.asWkt(6 if self.polygon.crs().isGeographic() else 2),
         )
 
         use_st_intersect = False if self.spatial_relationship == 'contains' else True
@@ -266,7 +266,7 @@ array_intersect(
     )
 )""".format(
             polygon_field=self.group_field,
-            groups_or_user=','.join(groups_or_user)
+            groups_or_user=','.join(groups_or_user),
         )
 
         # Create request
@@ -492,13 +492,13 @@ ST_{function}(
         :returns: The QGIS expression
         """
         geom = "geom_from_wkt('{wkt}')".format(
-            wkt=polygons.asWkt(6 if filtering_crs.isGeographic() else 2)
+            wkt=polygons.asWkt(6 if filtering_crs.isGeographic() else 2),
         )
         if filtering_crs != filtered_crs:
             geom = "transform({geom}, '{from_crs}', '{to_crs}')".format(
                 geom=geom,
                 from_crs=filtering_crs.authid(),
-                to_crs=filtered_crs.authid()
+                to_crs=filtered_crs.authid(),
             )
 
         if use_centroid:
