@@ -17,7 +17,7 @@ def _build_query_string(params: dict) -> str:
     return query_string
 
 
-def _check_request(result, content_type: str = 'application/json', http_code=200):
+def _check_request(result, content_type: str = 'application/json', http_code: int = 200): # noqa ANN401
     """ Check the output and return the content. """
     assert result.status_code == http_code, f'HTTP code {result.status_code}, expected {http_code}'
     assert result.headers.get('Content-Type', '').lower().find(content_type) == 0, f'Headers {result.headers}'

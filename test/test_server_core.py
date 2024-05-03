@@ -78,9 +78,9 @@ class TestServerCore(unittest.TestCase):
             {
                 'loginFilteredLayers': {
                     'lines-geojson': {
-                        'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3'
-                    }
-                }
+                        'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3',
+                    },
+                },
             },
             'lines-geojson'))
         self.assertIsNone(get_lizmap_layer_login_filter(
@@ -88,9 +88,9 @@ class TestServerCore(unittest.TestCase):
                 'loginFilteredLayers': {
                     'lines-geojson': {
                         'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3',
-                        'filterAttribute': 'name'
-                    }
-                }
+                        'filterAttribute': 'name',
+                    },
+                },
             },
             'lines-geojson'))
         self.assertIsNone(get_lizmap_layer_login_filter(
@@ -98,9 +98,9 @@ class TestServerCore(unittest.TestCase):
                 'loginFilteredLayers': {
                     'lines-geojson': {
                         'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3',
-                        'filterPrivate': 'False'
-                    }
-                }
+                        'filterPrivate': 'False',
+                    },
+                },
             },
             'lines-geojson'))
         self.assertIsNone(get_lizmap_layer_login_filter(
@@ -108,9 +108,9 @@ class TestServerCore(unittest.TestCase):
                 'loginFilteredLayers': {
                     'lines-geojson': {
                         'filterAttribute': 'name',
-                        'filterPrivate': 'False'
-                    }
-                }
+                        'filterPrivate': 'False',
+                    },
+                },
             },
             'lines-geojson'))
 
@@ -120,9 +120,9 @@ class TestServerCore(unittest.TestCase):
                     'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3',
                     'filterAttribute': 'name',
                     'filterPrivate': 'False',
-                    'order': 0
-                }
-            }
+                    'order': 0,
+                },
+            },
         }
 
         self.assertIsNone(get_lizmap_layer_login_filter(good_dict, 'foobar'))
@@ -137,7 +137,7 @@ class TestServerCore(unittest.TestCase):
                 'layerId': 'lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3',
                 'filterAttribute': 'name',
                 'filterPrivate': 'False',
-                'order': 0
+                'order': 0,
             })
 
     def test_parse_xml_get_feature_info(self):
@@ -196,7 +196,7 @@ class TestServerCore(unittest.TestCase):
         '''
         self.assertEqual(
             ET.tostring(ET.fromstring(expected)).decode("utf-8"),
-            ET.tostring(ET.fromstring(response)).decode("utf-8")
+            ET.tostring(ET.fromstring(response)).decode("utf-8"),
         )
 
     def test_edit_xml_get_feature_info_with_maptip(self):
@@ -236,7 +236,7 @@ class TestServerCore(unittest.TestCase):
         '''
         self.assertEqual(
             ET.tostring(ET.fromstring(expected)).decode("utf-8"),
-            ET.tostring(ET.fromstring(response)).decode("utf-8")
+            ET.tostring(ET.fromstring(response)).decode("utf-8"),
         )
 
     def test_feature_id_expression(self):
@@ -247,13 +247,13 @@ class TestServerCore(unittest.TestCase):
 
         self.assertEqual(
             "",
-            _server_feature_id_expression("1", [], fields)
+            _server_feature_id_expression("1", [], fields),
         )
         self.assertEqual(
             "\"field_1\" = '1'",
-            _server_feature_id_expression("1", ['field_1'], fields)
+            _server_feature_id_expression("1", ['field_1'], fields),
         )
         self.assertEqual(
             "\"field_1\" = '1' AND \"field_2\" = '2'",
-            _server_feature_id_expression("1@@2", ['field_1', 'field_2'], fields)
+            _server_feature_id_expression("1@@2", ['field_1', 'field_2'], fields),
         )

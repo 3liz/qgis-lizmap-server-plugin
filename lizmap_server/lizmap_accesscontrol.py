@@ -116,14 +116,14 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Check lizmap edition config
         layer_id = layer.id()
-        if 'editionLayers' in cfg and cfg['editionLayers']:
+        if cfg.get('editionLayers'):
             if layer_id in cfg['editionLayers'] and cfg['editionLayers'][layer_id]:
                 edit_layer = cfg['editionLayers'][layer_id]
 
                 # Check if edition is possible
                 # By default not
                 can_edit = False
-                if 'acl' in edit_layer and edit_layer['acl']:
+                if edit_layer.get('acl'):
                     # acl is defined and not an empty string
                     # authorization defined for edition
                     group_edit = edit_layer['acl'].split(',')
@@ -383,7 +383,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Build filter
         layer_filter = '{} IN ({})'.format(
             QgsExpression.quotedColumnRef(cfg_layer_login_filter['filterAttribute']),
-            ', '.join(quoted_values)
+            ', '.join(quoted_values),
         )
 
         return layer_filter

@@ -38,8 +38,8 @@ class Logger:
         Logger.critical(
             "Critical exception:\n{e}\n{traceback}".format(
                 e=e,
-                traceback=traceback.format_exc()
-            )
+                traceback=traceback.format_exc(),
+            ),
         )
 
 

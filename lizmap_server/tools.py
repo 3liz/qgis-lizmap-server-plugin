@@ -56,7 +56,7 @@ def check_environment_variable() -> bool:
             'https://docs.lizmap.com/current/en/install/pre_requirements.html#lizmap-server-plugin '
             'An environment variable must be enabled to have Lizmap Web Client ≥ 3.5 working.',
             "Lizmap",
-            Qgis.Critical
+            Qgis.Critical,
         )
         return False
 

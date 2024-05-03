@@ -1,7 +1,3 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 """ Test filter by polygon. """
 
 import unittest
@@ -17,6 +13,9 @@ from qgis.core import (
 
 from lizmap_server.filter_by_polygon import FilterByPolygon
 
+__copyright__ = 'Copyright 2021, 3Liz'
+__license__ = 'GPL version 3'
+__email__ = 'info@3liz.org'
 
 class TestFilterByPolygon(unittest.TestCase):
 
@@ -25,16 +24,16 @@ class TestFilterByPolygon(unittest.TestCase):
         json = {
             "config": {
                 "polygon_layer_id": "FOO",
-                "group_field": "groups"
+                "group_field": "groups",
             },
             "layers": [
                 {
                     "layer": "BAR",
                     "primary_key": "primary",
                     "spatial_relationship": "intersects",
-                    "filter_mode": "display_and_editing"
-                }
-            ]
+                    "filter_mode": "display_and_editing",
+                },
+            ],
         }
         points = QgsVectorLayer('Point?field=id:integer', 'points', 'memory')
         self.assertFalse(FilterByPolygon(json, points).is_filtered())
@@ -86,16 +85,16 @@ class TestFilterByPolygon(unittest.TestCase):
         json = {
             "config": {
                 "polygon_layer_id": polygon.id(),
-                "group_field": "groups"
+                "group_field": "groups",
             },
             "layers": [
                 {
                     "layer": points.id(),
                     "primary_key": "id",
                     "spatial_relationship": "intersects",
-                    "filter_mode": "display_and_editing"
-                }
-            ]
+                    "filter_mode": "display_and_editing",
+                },
+            ],
         }
 
         project = QgsProject.instance()
@@ -150,16 +149,16 @@ class TestFilterByPolygon(unittest.TestCase):
         json = {
             "config": {
                 "polygon_layer_id": polygon.id(),
-                "group_field": "groups"
+                "group_field": "groups",
             },
             "layers": [
                 {
                     "layer": points.id(),
                     "primary_key": "id",
                     "spatial_relationship": "intersects",
-                    "filter_mode": "editing"
-                }
-            ]
+                    "filter_mode": "editing",
+                },
+            ],
         }
 
         config = FilterByPolygon(json, points, editing=False)

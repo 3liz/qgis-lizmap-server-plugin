@@ -19,6 +19,7 @@ from qgis.core import (
     QgsFeature,
     QgsFeatureRequest,
     QgsProject,
+    QgsRelationManager,
 )
 from qgis.server import QgsServerFilter, QgsServerProjectUtils
 
@@ -78,7 +79,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
         return xml_string.strip()
 
     @classmethod
-    def feature_list_to_replace(cls, cfg: dict, project: QgsProject, relation_manager, xml) -> List[Result]:
+    def feature_list_to_replace(
+            cls, cfg: dict, project: QgsProject, relation_manager: QgsRelationManager, xml: str) -> List[Result]:
         """ Parse the XML and check for each layer according to the Lizmap CFG file. """
         features = []
         for layer_name, feature_id in GetFeatureInfoFilter.parse_xml(xml):
@@ -191,13 +193,13 @@ class GetFeatureInfoFilter(QgsServerFilter):
             # The user has clicked in a random area on the map or no interesting LAYERS,
             # no features are returned.
             logger.info(
-                "No features found in the XML from QGIS Server for project {}".format(project_path)
+                "No features found in the XML from QGIS Server for project {}".format(project_path),
             )
             return
 
         logger.info(
             "Replacing the maptip from QGIS by the drag and drop expression for {} features on {}".format(
-                len(features), ','.join([result.layer.name() for result in features]))
+                len(features), ','.join([result.layer.name() for result in features])),
         )
 
         # Let's evaluate each expression popup
@@ -231,7 +233,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                     logger.warning(
                         "The feature {} for layer {} is not valid, skip replacing this XML "
                         "GetFeatureInfo, continue to the next feature".format(
-                            result.feature_id, result.layer.id())
+                            result.feature_id, result.layer.id()),
                     )
                     continue
 
@@ -243,7 +245,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                     logger.warning(
                         "The GetFeatureInfo result for feature {} in layer {} is not valid, skip replacing "
                         "this XML GetFeatureInfo, , continue to the next feature".format(
-                            result.feature_id, result.layer.id())
+                            result.feature_id, result.layer.id()),
                     )
                     continue
 

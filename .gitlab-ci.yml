@@ -28,12 +28,12 @@ qgis-server:
   tags:
     - infrav3
 
-flake:
+linter:
+  image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
   stage: test
-  before_script:
-    - pip3 install --user -r requirements/dev.txt
   script:
-    - flake8
+    - source ~/.bashrc
+    - make install-tests lint FLAVOR=$QGIS_FLAVOR
   tags:
     - factory
 

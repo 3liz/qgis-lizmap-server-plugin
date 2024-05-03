@@ -221,7 +221,7 @@ class ExpressionService(QgsService):
             'status': 'success',
             'results': [],
             'errors': [],
-            'features': 0
+            'features': 0,
         }
 
         # without features just evaluate expression with layer context
@@ -421,7 +421,7 @@ class ExpressionService(QgsService):
             'status': 'success',
             'results': [],
             'errors': [],
-            'features': 0
+            'features': 0,
         }
 
         # without features just replace expression string with layer context
@@ -536,8 +536,8 @@ class ExpressionService(QgsService):
             response.write(
                 ',\n'.join([
                     '{"type": "FeatureCollection"',
-                    '"features": [' + ',\n'.join(body['results']) + ']}'
-                ])
+                    '"features": [' + ',\n'.join(body['results']) + ']}',
+                ]),
             )
         else:
             write_json_response(body, response)
