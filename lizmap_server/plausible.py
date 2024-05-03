@@ -106,7 +106,6 @@ class Plausible:
                 "python-version-branch": python_version_branch,
                 # OS
                 "os-name": platform.system(),
-                "os-version": platform.release(),
             },
             "url": plausible_url,
             "domain": plausible_domain,
