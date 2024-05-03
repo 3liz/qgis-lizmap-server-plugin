@@ -82,7 +82,7 @@ class Tooltip:
             alias = field.alias()
             name = field.name()
             fname = alias if alias else name
-            fname = fname.replace("'", "’")  # noqa RUF001
+            fname = fname.replace("'", "’")
 
             # adapt the view depending on the field type
             field_widget_setup = field.editorWidgetSetup()

@@ -12,21 +12,28 @@ stages:
 - deploy
 - release
 
-qgis-server:
+.tests:
+  image: ${REGISTRY_URL}/factory-ci-runner:qgis-${QGIS_FLAVOR}
   stage: test
+  script:
+    - source ~/.bashrc
+    - make install-tests FLAVOR=$QGIS_FLAVOR
+    - pip list -l
+    - make test FLAVOR=$QGIS_FLAVOR
+  tags:
+    - factory
+
+
+qgis-server:
+  extends: .tests
   parallel:
     matrix:
-      - QGIS_VERSION: [
-        "3.16",
+      - QGIS_FLAVOR: [
         "3.22",
         "3.28",
         "3.34",
         "nightly-release",
       ]
-  script:
-    - make tests FLAVOR=${QGIS_VERSION}
-  tags:
-    - infrav3
 
 linter:
   image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr

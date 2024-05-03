@@ -5,21 +5,21 @@ import os
 import sys
 import warnings
 
-import lxml.etree
-import pytest
-
-from qgis.PyQt import Qt
-
 from typing import Any, Dict, Generator, Optional
 
+import pytest
+
 from qgis.core import Qgis, QgsApplication, QgsFontUtils, QgsProject
+from qgis.PyQt import Qt
 from qgis.server import (
     QgsBufferServerRequest,
     QgsBufferServerResponse,
     QgsServer,
-    QgsServerRequest,
     QgsServerInterface,
+    QgsServerRequest,
 )
+
+from .utils import OWSResponse
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -82,50 +82,6 @@ def pytest_sessionstart(session):
 #     del qgis_application
 
 
-NAMESPACES = {
-    'xlink': "http://www.w3.org/1999/xlink",
-    'wms': "http://www.opengis.net/wms",
-    'wfs': "http://www.opengis.net/wfs",
-    'wcs': "http://www.opengis.net/wcs",
-    'ows': "http://www.opengis.net/ows/1.1",
-    'gml': "http://www.opengis.net/gml",
-    'xsi': "http://www.w3.org/2001/XMLSchema-instance",
-}
-
-
-class OWSResponse:
-
-    def __init__(self, resp: QgsBufferServerResponse) -> None:
-        self._resp = resp
-        self._xml = None
-
-    @property
-    def xml(self) -> 'xml':
-        if self._xml is None and self._resp.headers().get('Content-Type','').find('text/xml')==0:
-            self._xml = lxml.etree.fromstring(self.content)
-        return self._xml
-
-    @property
-    def content(self) -> bytes:
-        return bytes(self._resp.body())
-
-    @property
-    def status_code(self) -> int:
-        return self._resp.statusCode()
-
-    @property
-    def headers(self) -> Dict[str,str]:
-        return self._resp.headers()
-
-    def xpath(self, path: str) -> lxml.etree.Element:
-        assert self.xml is not None
-        return self.xml.xpath(path, namespaces=NAMESPACES)
-
-    def xpath_text(self, path: str) -> str:
-        assert self.xml is not None
-        return ' '.join(e.text for e in self.xpath(path))
-
-
 @pytest.fixture(scope='session')
 def client(request):
     """ Return a qgis server instance
@@ -163,7 +119,12 @@ def client(request):
                 raise ValueError("Error reading project '%s':" % projectpath.strpath)
             return qgsproject
 
-        def get(self, query: str, project: Optional[str] = None, headers: Optional[Dict[str, str]] = None) -> OWSResponse:
+        def get(
+                self,
+                query: str,
+                project: Optional[str] = None,
+                headers: Optional[Dict[str, str]] = None,
+            ) -> OWSResponse:
             """ Return server response from query
             """
             if headers is None:
@@ -177,7 +138,11 @@ def client(request):
             self.server.handleRequest(server_request, response, project=qgsproject)
             return OWSResponse(response)
 
-        def get_with_project(self, query: str, project: QgsProject, headers: Optional[Dict[str, str]] = None) -> OWSResponse:
+        def get_with_project(
+            self, query: str,
+            project: QgsProject,
+            headers: Optional[Dict[str, str]] = None,
+        ) -> OWSResponse:
             """ Return server response from query
             """
             if headers is None:
