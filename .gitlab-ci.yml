@@ -29,11 +29,23 @@ qgis-server:
   parallel:
     matrix:
       - QGIS_FLAVOR: [
-        "3.22",
         "3.28",
         "3.34",
         "nightly-release",
       ]
+
+qgis-server-legacy:
+  stage: test
+  parallel:
+    matrix:
+      - QGIS_VERSION: [
+        "3.16",
+        "3.22",
+      ]
+  script:
+    - make tests FLAVOR=${QGIS_VERSION}
+  tags:
+    - infrav3
 
 linter:
   image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
