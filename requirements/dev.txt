@@ -4,3 +4,4 @@ mypy
 mypy-extensions
 pipdeptree
 xmldiff
+Pillow
