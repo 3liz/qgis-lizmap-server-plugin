@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.9.1 - 2024-05-13
+
+* Review the `GetLegendGraphic` request
+* Fix Python error when evaluating a QGIS Expression about fields
+* Return a warning icon if the layer is invalid
+* Some internal code refactoring
+
 ## 2.9.0 - 2024-04-29
 
 * Review the GetLegendGraphic
