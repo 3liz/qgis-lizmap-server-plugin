@@ -50,4 +50,4 @@ lint-preview:
 	@ruff check --preview $(PYTHON_PKG) $(TESTDIR)
 
 lint-fix:
-	@ruff check --fix  --preview  $(PYTHON_PKG) $(TESTDIR)
+	@ruff check --fix --preview $(PYTHON_PKG) $(TESTDIR)

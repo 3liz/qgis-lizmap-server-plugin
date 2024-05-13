@@ -16,7 +16,7 @@ MIN_SECONDS = 3600
 ENV_SKIP_STATS = "3LIZ_SKIP_STATS"
 
 PLAUSIBLE_DOMAIN_PROD = "plugin.server.lizmap.com"
-PLAUSIBLE_URL_PROD = "https://analytics.3liz.com/api/event"
+PLAUSIBLE_URL_PROD = "https://bourbon.3liz.com/api/event"
 
 PLAUSIBLE_DOMAIN_TEST = PLAUSIBLE_DOMAIN_PROD
 PLAUSIBLE_URL_TEST = "https://plausible.snap.3liz.net/api/event"
