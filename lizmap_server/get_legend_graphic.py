@@ -94,7 +94,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if not layer.isValid():
             logger.warning(
                 f"Layer '{layer_name}' is not valid, returning a warning icon in the legend for project "
-                f"'{project.homePath()}'"
+                f"'{project.homePath()}'",
             )
             json_data = {
                 'title': '',

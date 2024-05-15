@@ -82,7 +82,7 @@ def find_vector_layer(layer_name: str, project: QgsProject) -> Optional[QgsVecto
     if not found.isValid():
         Logger.warning(
             f"The vector layer '{layer_name}' has been found but it is not valid in the project "
-            f"'{project.fileName()}'"
+            f"'{project.fileName()}'",
         )
     return found
 

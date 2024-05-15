@@ -17,6 +17,7 @@ __copyright__ = 'Copyright 2021, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+
 class TestFilterByPolygon(unittest.TestCase):
 
     def test_not_filtered_layer(self):
