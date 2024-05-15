@@ -23,3 +23,4 @@ test/data/*.gpkg-wal
 test/data/*.qgs~
 test/data/*.qgz~
 test/data/*_attachments.zip
+test/data/*.asc.aux.xml

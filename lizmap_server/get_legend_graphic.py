@@ -11,12 +11,12 @@ import re
 from collections import namedtuple
 from typing import Optional
 
-from qgis.core import Qgis, QgsProject, QgsVectorLayer
+from qgis.core import Qgis, QgsMapLayer, QgsProject, QgsVectorLayer
 from qgis.PyQt.QtCore import QBuffer, QIODevice
 from qgis.PyQt.QtGui import QImage
 from qgis.server import QgsServerFilter
 
-from lizmap_server.core import find_vector_layer
+from lizmap_server.core import find_layer
 from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.tools import to_bool
 
@@ -86,11 +86,11 @@ class GetLegendGraphicFilter(QgsServerFilter):
         show_feature_count = to_bool(params.get('SHOWFEATURECOUNT'), default_value=False)
 
         current_style = ''
-        layer = find_vector_layer(layer_name, project)
+        layer = find_layer(layer_name, project)
         if not layer:
-            logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
             return
 
+        layer: QgsMapLayer
         if not layer.isValid():
             logger.warning(
                 f"Layer '{layer_name}' is not valid, returning a warning icon in the legend for project "
@@ -108,6 +108,12 @@ class GetLegendGraphicFilter(QgsServerFilter):
             handler.clearBody()
             handler.appendBody(json.dumps(json_data).encode('utf8'))
             return
+
+        if layer.type() != QgsMapLayer.VectorLayer:
+            logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
+            return
+
+        layer: QgsVectorLayer
 
         try:
             current_style = layer.styleManager().currentStyle()

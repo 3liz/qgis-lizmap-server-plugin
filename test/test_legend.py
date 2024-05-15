@@ -166,6 +166,78 @@ def test_simple_rule_based_feature_count(client):
     assert b['nodes'][0]['title'] == 'rule_based [4]', b['nodes'][0]['title']
 
 
+def test_valid_raster_layer(client):
+    """ Test valid raster layer. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT
+    qs['LAYER'] = 'raster'
+    rv = client.get(_build_query_string(qs), PROJECT)
+    b = _check_request(rv)
+
+    # Answer straight from QGIS Server
+    if Qgis.QGIS_VERSION_INT < 32200:
+        expected = {
+            'nodes': [
+                {
+                    'symbols': [
+                        {
+                            # 'icon': '',
+                            'title': '50',
+                        }, {
+                            # 'icon': '',
+                            'title': '125',
+                        },
+                    ],
+                    'title': qs['LAYER'],
+                    'type': 'layer',
+                },
+            ],
+            'title': '',
+        }
+        del b['nodes'][0]['symbols'][0]['icon']
+        del b['nodes'][0]['symbols'][1]['icon']
+    elif 32200 <= Qgis.QGIS_VERSION_INT < 33400:
+        expected = {
+            'nodes': [
+                {
+                    'symbols': [
+                        {
+                            'title': 'Band 1',
+                        }, {
+                            'title': '',
+                        },
+                    ],
+                    'title': qs['LAYER'],
+                    'type': 'layer',
+                },
+            ],
+            'title': '',
+        }
+    else:
+        expected = {
+            'nodes': [
+                {
+                    'symbols': [
+                        {
+                            'title': 'Band 1',
+                        }, {
+                            # 'icon': '',
+                            'max': 125,
+                            'min': 50,
+                            'title': '',
+                        },
+                    ],
+                    'title': qs['LAYER'],
+                    'type': 'layer',
+                },
+            ],
+            'title': '',
+        }
+        del b['nodes'][0]['symbols'][1]['icon']
+
+    assert b == expected, b
+
+
 def test_invalid_layer_symbol_layer(client):
     """ Test unique symbol for layer. """
     qs = dict(BASE_QUERY)
@@ -177,6 +249,36 @@ def test_invalid_layer_symbol_layer(client):
     assert b['title'] == ''
     assert len(b['nodes']) == 1, b
     assert b['nodes'][0]['title'] == 'unique_symbol'
+    assert b['nodes'][0].get('valid') is False
+    assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
+    assert 'icon' in b['nodes'][0]
+    assert 'symbols' not in b['nodes'][0]
+
+
+def test_invalid_layer_raster_layer(client):
+    """ Test invalid  raster layer. """
+    qs = dict(BASE_QUERY)
+    qs['MAP'] = PROJECT_INVALID
+    qs['LAYER'] = 'raster'
+    rv = client.get(_build_query_string(qs), PROJECT_INVALID)
+    b = _check_request(rv)
+
+    expected = {
+        'title': '',
+        'nodes': [
+            {
+                'type': 'layer',
+                'title': qs['LAYER'],
+                'icon': GetLegendGraphicFilter.warning_icon(),
+                'valid': False,
+            },
+        ],
+    }
+    assert b == expected, b
+
+    assert b['title'] == '', b
+    assert len(b['nodes']) == 1, b
+    assert b['nodes'][0]['title'] == qs['LAYER']
     assert b['nodes'][0].get('valid') is False
     assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
     assert 'icon' in b['nodes'][0]
