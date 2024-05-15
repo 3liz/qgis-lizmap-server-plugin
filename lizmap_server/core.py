@@ -7,7 +7,7 @@ import os
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 from qgis.core import (
     Qgis,
@@ -49,25 +49,42 @@ def find_vector_layer_from_params(params, project):
     return True, layer
 
 
-def find_vector_layer(layer_name: str, project: QgsProject) -> Union[None, QgsVectorLayer]:
+def find_vector_layer(layer_name: str, project: QgsProject) -> Optional[QgsVectorLayer]:
     """ Find vector layer with name, short name or layer id. """
+    found = None
     for layer in project.mapLayers().values():
+
         # only vector layer
         if layer.type() != QgsMapLayer.VectorLayer:
             continue
+
         # check name
         if layer.name() == layer_name:
-            return layer
+            found = layer
+            break
+
         # check short name
         if layer.shortName() == layer_name:
-            return layer
+            found = layer
+            break
+
         # check layer id
         if layer.id() == layer_name:
-            return layer
+            found = layer
+            break
 
-    Logger.warning(
-        "The vector layer '{}' has not been found in the project '{}'".format(layer_name, project.fileName()))
-    return None
+    if not found:
+        Logger.warning(
+            "The vector layer '{}' has not been found in the project '{}'".format(layer_name, project.fileName()))
+        return None
+
+    found: QgsVectorLayer
+    if not found.isValid():
+        Logger.warning(
+            f"The vector layer '{layer_name}' has been found but it is not valid in the project "
+            f"'{project.fileName()}'"
+        )
+    return found
 
 
 def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
