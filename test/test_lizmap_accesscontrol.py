@@ -66,11 +66,13 @@ def test_invalid_layer(client):
 
     layers = rv.xpath('//wms:Layer')
     assert layers is not None
-    assert len(layers) == 4, len(layers)
+    assert len(layers) == 5, len(layers)
 
     # Layer is WMS
     layer = "unique_symbol"
     assert layer in rv.content.decode('utf-8')
+
+    assert 'raster' in rv.content.decode('utf-8')
 
     qs['SERVICE'] = "WFS"
     rv = client.get(_build_query_string(qs), project_invalid)
