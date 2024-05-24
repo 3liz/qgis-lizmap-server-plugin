@@ -8,13 +8,15 @@ import platform
 
 from qgis.core import Qgis, QgsNetworkAccessManager
 from qgis.PyQt.QtCore import QByteArray, QDateTime, QUrl
-from qgis.PyQt.QtNetwork import QNetworkRequest
+from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 
+from lizmap_server.logger import Logger
 from lizmap_server.tools import to_bool, version
 
 MIN_SECONDS = 3600
 ENV_SKIP_STATS = "3LIZ_SKIP_STATS"
 
+PLAUSIBLE_DOMAIN_LIZCLOUD = "plugin.server.lizcloud"
 PLAUSIBLE_DOMAIN_PROD = "plugin.server.lizmap.com"
 PLAUSIBLE_URL_PROD = "https://bourbon.3liz.com/api/event"
 
@@ -71,7 +73,12 @@ class Plausible:
             debug = True
 
         plausible_url = PLAUSIBLE_URL_TEST if debug else PLAUSIBLE_URL_PROD
-        plausible_domain = PLAUSIBLE_DOMAIN_TEST if debug else PLAUSIBLE_DOMAIN_PROD
+
+        is_lizcloud = "lizcloud" in os.getenv("QGIS_SERVER_APPLICATION_NAME", "").lower()
+        if is_lizcloud:
+            plausible_domain = PLAUSIBLE_DOMAIN_LIZCLOUD
+        else:
+            plausible_domain = PLAUSIBLE_DOMAIN_TEST if debug else PLAUSIBLE_DOMAIN_PROD
 
         request = QNetworkRequest()
         # noinspection PyArgumentList
@@ -110,6 +117,17 @@ class Plausible:
             "url": plausible_url,
             "domain": plausible_domain,
         }
+
         # noinspection PyArgumentList
-        QgsNetworkAccessManager.instance().post(request, QByteArray(str.encode(json.dumps(data))))
+        r: QNetworkReply = QgsNetworkAccessManager.instance().post(request, QByteArray(str.encode(json.dumps(data))))
+        if not is_lizcloud:
+            return True
+
+        logger = Logger()
+        message = f"Request sent to '{plausible_url}' with domain '{plausible_domain} : "
+        if r.error() != QNetworkReply.NoError:
+            logger.warning(message + r.error())
+        else:
+            logger.info(message + "OK")
+
         return True
