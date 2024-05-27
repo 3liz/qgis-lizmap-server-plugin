@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.9.2 - 2024-05-27
+
+* Review the `GetLegendGraphic` request about invalid layer, not only for vector
+* Improve logging about invalid layer
+
 ## 2.9.1 - 2024-05-13
 
 * Review the `GetLegendGraphic` request

@@ -124,10 +124,11 @@ class Plausible:
             return True
 
         logger = Logger()
-        message = f"Request sent to '{plausible_url}' with domain '{plausible_domain} : "
-        if r.error() != QNetworkReply.NoError:
-            logger.warning(message + r.error())
-        else:
+        message = (
+            f"Request HTTP OS process '{os.getpid()}' sent to '{plausible_url}' with domain '{plausible_domain} : ")
+        if r.error() == QNetworkReply.NoError:
             logger.info(message + "OK")
+        else:
+            logger.warning(message + r.error())
 
         return True
