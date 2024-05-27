@@ -174,7 +174,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         human_version, human_name = Qgis.QGIS_VERSION.split('-', 1)
 
         services_available = []
-        expected_services = ('WMS', 'WFS', 'WCS', 'WMTS', 'ATLAS', 'CADASTRE', 'EXPRESSION', 'LIZMAP')
+        expected_services = ('WMS', 'WFS', 'WCS', 'WMTS', 'EXPRESSION', 'LIZMAP')
         for service in expected_services:
             if context.serverInterface().serviceRegistry().getService(service):
                 services_available.append(service)
