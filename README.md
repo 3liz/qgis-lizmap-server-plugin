@@ -3,6 +3,15 @@
 [![QGIS.org](https://img.shields.io/badge/QGIS.org-published-green)](https://plugins.qgis.org/plugins/lizmap_server/)
 [![Tests 🎳](https://github.com/3liz/qgis-lizmap-server-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/3liz/qgis-lizmap-server-plugin/actions/workflows/ci.yml)
 
+## Environment variables
+
+* `QGIS_SERVER_LIZMAP_REVEAL_SETTINGS`, read 
+  [docs.lizmap.com documentation](https://docs.lizmap.com/current/en/install/pre_requirements.html#qgis-server-plugins)
+* `STRICT_BING_TOS_CHECK` and `STRICT_GOOGLE_TOS_CHECK`, if set to `TRUE` (the default value), an API key will be
+  checked and required for these layers. If no API key provided in the Lizmap plugin, these layers will be discarded.
+  If set to `FALSE`, these layers will be forwarded from QGIS Server to Lizmap Web Client but these layers might not work
+  and the TOS from these providers might not be compliant.
+
 ## Download
 
 ### Stable
