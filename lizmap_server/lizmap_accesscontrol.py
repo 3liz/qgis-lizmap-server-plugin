@@ -131,11 +131,19 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         api_key = cfg['options'].get('googleKey', '')
         if is_google and not api_key and strict_tos_check(GOOGLE_KEY):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
+            Logger.warning(
+                f"The layer '{layer_name}' is protected by a licence, but the API key is not provided. Discarding the "
+                f"layer in the project {project.baseName()}."
+            )
             return rights
 
         api_key = cfg['options'].get('bingKey', '')
         if is_bing and not api_key and strict_tos_check(BING_KEY):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
+            Logger.warning(
+                f"The layer '{layer_name}' is protected by a licence, but the API key is not provided. Discarding the "
+                f"layer in the project {project.baseName()}."
+            )
             return rights
 
         # Get layers config
