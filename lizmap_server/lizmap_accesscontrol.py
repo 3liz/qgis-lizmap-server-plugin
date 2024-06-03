@@ -22,6 +22,13 @@ from lizmap_server.filter_by_polygon import (
 )
 from lizmap_server.logger import Logger, profiling
 from lizmap_server.tools import to_bool
+from lizmap_server.tos_definitions import (
+    BING_DOMAIN,
+    BING_KEY,
+    GOOGLE_DOMAIN,
+    GOOGLE_KEY,
+    strict_tos_check,
+)
 
 
 class LizmapAccessControlFilter(QgsAccessControlFilter):
@@ -30,6 +37,10 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         super().__init__(server_iface)
 
         self.iface = server_iface
+        self._strict_google = strict_tos_check(GOOGLE_KEY)
+        self._strict_bing = strict_tos_check(BING_KEY)
+
+        Logger.info(f"LayerAccessControl : Google {self._strict_google}, Bing {self._strict_bing}")
 
     # def layerFilterExpression(self, layer: QgsVectorLayer) -> str:
     #     """ Return an additional expression filter """
@@ -77,8 +88,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Discard invalid layers for other services than WMS
         if not layer.isValid() and request_handler.parameter('service').upper() != 'WMS':
             Logger.info(f"layerPermission: Layer {layer_name} is invalid in {project.fileName()}!")
-            rights.canRead = False
-            rights.canInsert = rights.canUpdate = rights.canDelete = False
+            rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             return rights
 
         # Get Lizmap user groups provided by the request
@@ -94,18 +104,38 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Try to override filter expression cache
         is_wfs = request_handler.parameter('service').upper() == 'WFS'
-        if is_wfs and request_handler.parameter('request') == 'getfeature':
+        if is_wfs and request_handler.parameter('request').upper() == 'GETFEATURE':
             self.iface.accessControls().resolveFilterFeatures([layer])
 
-        # If groups is empty, no Lizmap user groups provided by the request
-        # The default layer rights is applied
-        if len(groups) == 0:
-            return rights
+        datasource = layer.source().lower()
+        is_google = GOOGLE_DOMAIN in datasource
+        is_bing = BING_DOMAIN in datasource
+        if is_google or is_bing:
+            Logger.info(f"Layer '{layer_name}' has been detected as an external layer which might need a API key.")
 
         # Get Lizmap config
         cfg = get_lizmap_config(self.iface.configFilePath())
         if not cfg:
+            if is_google:
+                rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = not self._strict_google
+            elif is_bing:
+                rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = not self._strict_bing
             # Default layer rights applied
+            return rights
+
+        # If groups is empty, no Lizmap user groups provided by the request
+        # The default layer rights is applied
+        if len(groups) == 0 and not (is_google or is_bing):
+            return rights
+
+        api_key = cfg['options'].get('googleKey', '')
+        if is_google and not api_key and strict_tos_check(GOOGLE_KEY):
+            rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
+            return rights
+
+        api_key = cfg['options'].get('bingKey', '')
+        if is_bing and not api_key and strict_tos_check(BING_KEY):
+            rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             return rights
 
         # Get layers config

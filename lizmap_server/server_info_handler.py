@@ -19,6 +19,11 @@ from qgis.utils import pluginMetadata, server_active_plugins
 
 from lizmap_server.exception import ServiceError
 from lizmap_server.tools import check_environment_variable, to_bool
+from lizmap_server.tos_definitions import (
+    BING_KEY,
+    GOOGLE_KEY,
+    strict_tos_check,
+)
 
 try:
     # Py-QGIS-Server
@@ -207,6 +212,10 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'build_id': py_qgis_server_metadata.build_id,
                     'commit_id': py_qgis_server_metadata.commit_id,
                     'stable': py_qgis_server_metadata.is_stable,
+                },
+                'external_providers_tos_checks': {
+                    GOOGLE_KEY.lower(): strict_tos_check(GOOGLE_KEY),
+                    BING_KEY.lower(): strict_tos_check(BING_KEY),
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
                 'services': services_available,

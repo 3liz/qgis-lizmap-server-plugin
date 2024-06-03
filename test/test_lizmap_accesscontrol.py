@@ -3,16 +3,25 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 import logging
+import os
 
 from pathlib import Path
-from test.utils import _build_query_string, _check_request
+from test.utils import _build_query_string, _check_request, OWSResponse
+from test.conftest import client as cl
 
 from qgis.core import QgsVectorLayer
+
+from lizmap_server.tos_definitions import (
+    BING_KEY,
+    GOOGLE_KEY,
+    strict_tos_check_key,
+)
 
 LOGGER = logging.getLogger('server')
 PROJECT_FILE = "france_parts.qgs"
 PROJECT_LIZ_FILE = "france_parts_liz.qgs"
 PROJECT_FILE_GROUP_V = "france_parts_liz_grp_v.qgs"
+PROJECT_TOS_PROVIDERS = "external_providers_tos.qgs"
 
 
 def test_no_lizmap_config(client):
@@ -542,3 +551,43 @@ def test_layer_filter_login(client):
     layers = rv.xpath('//gml:featureMember')
     assert layers is not None
     assert len(layers) == 0
+
+
+def _make_get_capabilities_tos_layers(client: cl, strict: bool) -> OWSResponse:
+    """ Make the GetCapabilities request for TOS layers. """
+    os.environ[strict_tos_check_key(GOOGLE_KEY)] = str(strict)
+    os.environ[strict_tos_check_key(BING_KEY)] = str(strict)
+    qs = {
+        "SERVICE": "WMS",
+        "REQUEST": "GetCapabilities",
+        "MAP": PROJECT_TOS_PROVIDERS,
+    }
+    rv = client.get(_build_query_string(qs), PROJECT_TOS_PROVIDERS)
+    _check_request(rv, 'text/xml')
+    del os.environ[strict_tos_check_key(GOOGLE_KEY)]
+    del os.environ[strict_tos_check_key(BING_KEY)]
+    return rv
+
+
+def test_tos_strict_layers_false(client):
+    """ Test TOS layers restricted. """
+    rv = _make_get_capabilities_tos_layers(client, False)
+    content = rv.content.decode('utf-8')
+    layers = rv.xpath('//wms:Layer')
+    assert len(layers) == 2
+    assert "osm" in content
+    assert "google-satellite" not in content
+    assert "bing-map" not in content
+    assert "bing-satellite" not in content
+
+
+def tet_tos_strict_layers_true(client):
+    """ Test TOS layers not restricted. """
+    rv = _make_get_capabilities_tos_layers(client, True)
+    content = rv.content.decode('utf-8')
+    layers = rv.xpath('//wms:Layer')
+    assert len(layers) == 5
+    assert "osm" in content
+    assert "google-satellite" in content
+    assert "bing-map" in content
+    assert "bing-satellite" in content
