@@ -133,7 +133,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             Logger.warning(
                 f"The layer '{layer_name}' is protected by a licence, but the API key is not provided. Discarding the "
-                f"layer in the project {project.baseName()}."
+                f"layer in the project {project.baseName()}.",
             )
             return rights
 
@@ -142,7 +142,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             Logger.warning(
                 f"The layer '{layer_name}' is protected by a licence, but the API key is not provided. Discarding the "
-                f"layer in the project {project.baseName()}."
+                f"layer in the project {project.baseName()}.",
             )
             return rights
 
