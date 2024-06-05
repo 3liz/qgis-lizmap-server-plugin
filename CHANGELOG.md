@@ -2,10 +2,11 @@
 
 ## Unreleased
 
-## 2.9.3 - 2024-06-05
+## 2.9.4 - 2024-06-05
 
 * API key - check for Google or Bing layers without an API key
 * Avoid a critical error message which was not needed
+* Add missing LICENSE file
 
 ## 2.9.2 - 2024-05-27
 
