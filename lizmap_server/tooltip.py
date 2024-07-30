@@ -146,8 +146,8 @@ class Tooltip:
             else:
                 # Ticket https://github.com/3liz/qgis-lizmap-server-plugin/issues/82
                 LOGGER.warning(
-                    f"The node '{node.name()}::{node.label()}' cannot be processed for the tooltip because the "
-                    f"relation has not been found.")
+                    f"The node '{node.name()}::{node.label()}' cannot be processed for the tooltip "
+                    f"because the relation has not been found.")
 
         if isinstance(node, QgsAttributeEditorContainer):
 
