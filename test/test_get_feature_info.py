@@ -1,7 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
 
-from test.utils import _check_request
+from test.utils import _build_query_string, _check_request
 
 from qgis.core import Qgis
 from xmldiff import main as xml_diff
@@ -211,3 +211,51 @@ def test_single_get_feature_info_form_shortname_popup(client):
 
     # Let's check the maptip content
     assert '<div class="container popup_lizmap_dd" style="width:100%;">' in map_tip
+
+
+# @pytest.mark.skipif(Qgis.QGIS_VERSION_INT >= 32200, reason="Only QGIS 3.22 minimum")
+def test_single_get_feature_info_ascii(client):
+    """ Test the Get Feature Info with different filters. """
+    qs = {
+        "SERVICE": "WMS",
+        "REQUEST": "GetFeatureInfo",
+        "VERSION": "1.3.0",
+        "CRS": "EPSG:4326",
+        "MAP": PROJECT,
+        "LAYER": "accents",
+        "INFO_FORMAT": "application/json",
+        "QUERY_LAYERS": "accents",
+        "LAYERS": "accents",
+        "STYLE": "default",
+        "BBOX": "47.854014654373024,-2.1121730324386476,48.63739203589741,0.06890198724626884",
+        "WIDTH": "1832",
+        "HEIGHT": "658",
+        "FEATURE_COUNT": "10",
+        "I": "379",
+        "J": "431",
+        "FI_POINT_TOLERANCE": "25",
+        "FI_LINE_TOLERANCE": "10",
+        "FI_POLYGON_TOLERANCE": "5",
+        "FILTER": "accents:\"NAME_1\" = 'Bret\\'agne'",
+    }
+
+    rv = client.get(_build_query_string(qs, use_urllib3=True), PROJECT)
+    data = _check_request(rv)
+
+    if Qgis.QGIS_VERSION_INT <= 31700:
+        expected = {'features': [], 'type': 'FeatureCollection'}
+    else:
+        expected = {
+            'features': [
+                {
+                    'geometry': None,
+                    'id': 'accents.3',
+                    'properties': {
+                        'NAME_1': "Bret'agne",
+                    },
+                    'type': 'Feature',
+                },
+            ],
+            'type': 'FeatureCollection',
+        }
+    assert expected == data, data
