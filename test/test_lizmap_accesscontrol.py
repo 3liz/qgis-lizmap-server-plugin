@@ -6,8 +6,8 @@ import logging
 import os
 
 from pathlib import Path
-from test.utils import _build_query_string, _check_request, OWSResponse
 from test.conftest import client as cl
+from test.utils import OWSResponse, _build_query_string, _check_request
 
 from qgis.core import QgsVectorLayer
 

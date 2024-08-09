@@ -1,5 +1,7 @@
 import io
 import json
+
+from urllib3 import request
 import xml.etree.ElementTree as ET
 
 from typing import Dict, Union
@@ -57,8 +59,11 @@ class OWSResponse:
         return ' '.join(e.text for e in self.xpath(path))
 
 
-def _build_query_string(params: dict) -> str:
+def _build_query_string(params: dict, use_urllib3: bool=False) -> str:
     """ Build a query parameter from a dictionary. """
+    if use_urllib3:
+        return "?" + request.urlencode(params)
+
     query_string = '?'
     for k, v in params.items():
         query_string += f'{k}={v}&'
