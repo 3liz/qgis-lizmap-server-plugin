@@ -79,7 +79,7 @@ class LizmapService(QgsService):
             except Exception:
                 raise LizmapServiceError(
                     "Bad request error",
-                    "Invalid POST DATA for '{}'".format(req_param),
+                    f"Invalid POST DATA for '{req_param}'",
                     400)
 
             if req_param == 'GETSERVERSETTINGS':
@@ -96,7 +96,7 @@ class LizmapService(QgsService):
         except LizmapServiceError as err:
             err.formatResponse(response)
         except Exception as e:
-            self.logger.critical("Unhandled exception:\n{}".format(traceback.format_exc()))
+            self.logger.critical(f"Unhandled exception:\n{traceback.format_exc()}")
             self.logger.critical(str(e))
             err = LizmapServiceError("Internal server error", "Internal 'lizmap' service error")
             err.formatResponse(response)

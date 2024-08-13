@@ -198,7 +198,7 @@ class FilterByPolygon:
         # Logger.info("LRU Cache _polygon_for_groups : {}".format(self._polygon_for_groups.cache_info()))
 
         if polygon.isEmpty():
-            Logger.info("The polygon is empty, returning default NO_FEATURES {}".format(NO_FEATURES))
+            Logger.info(f"The polygon is empty, returning default NO_FEATURES {NO_FEATURES}")
             # Let's try to free the connection
             self.connection = None
             return NO_FEATURES, ''
@@ -254,20 +254,17 @@ class FilterByPolygon:
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_qgis_api(self, groups_or_user: tuple) -> QgsGeometry:
         """ All features from the polygon layer corresponding to the user groups or the user """
-        expression = """
+        expression = f"""
 array_intersect(
     array_foreach(
-        string_to_array("{polygon_field}"),
+        string_to_array("{self.group_field}"),
         trim(@element)
     ),
     array_foreach(
-        string_to_array('{groups_or_user}'),
+        string_to_array('{','.join(groups_or_user)}'),
         trim(@element)
     )
-)""".format(
-            polygon_field=self.group_field,
-            groups_or_user=','.join(groups_or_user),
-        )
+)"""
 
         # Create request
         request = QgsFeatureRequest()
@@ -329,7 +326,7 @@ c.user_group && (
                 table=uri.table(),
             )
             Logger.info(
-                "Requesting the database about polygons for the current groups or user with : \n{}".format(sql))
+                f"Requesting the database about polygons for the current groups or user with : \n{sql}")
 
             results = self.sql_query(uri, sql)
             wkb = results[0][1]
@@ -377,7 +374,7 @@ c.user_group && (
         candidates = index.intersects(polygons.boundingBox())
         if not candidates:
             Logger.info(
-                "Not features in the index matching the bounding box, return the default value {}".format(NO_FEATURES))
+                f"Not features in the index matching the bounding box, return the default value {NO_FEATURES}")
             return NO_FEATURES
 
         # Check real intersection for the candidates
@@ -414,7 +411,7 @@ c.user_group && (
             st_intersect=st_intersect,
         )
         Logger.info(
-            "Requesting the database about IDs to filter with {}...".format(sql[0:90]))
+            f"Requesting the database about IDs to filter with {sql[0:90]}...")
 
         results = self.sql_query(uri, sql)
         unique_ids = [str(row[0]) for row in results]
@@ -425,17 +422,17 @@ c.user_group && (
     def _format_sql_in(cls, primary_key: str, values: Union[list, Tuple]) -> str:
         """Format the SQL IN statement."""
         if not values:
-            Logger.info('No values, returning default NO VALUES {}'.format(NO_FEATURES))
+            Logger.info(f'No values, returning default NO VALUES {NO_FEATURES}')
             return NO_FEATURES
 
         cleaned = []
         for value in values:
             if isinstance(value, str):
-                cleaned.append("'{}'".format(value))
+                cleaned.append(f"'{value}'")
             else:
                 cleaned.append(str(value))
 
-        return '"{pk}" IN ( {values} )'.format(pk=primary_key, values=' , '.join(cleaned))
+        return f"\"{primary_key}\" IN ( {' , '.join(cleaned)} )"
 
     @classmethod
     def _format_sql_st_relationship(
@@ -451,31 +448,21 @@ c.user_group && (
 
         :returns: The subset SQL string.
         """
-        geom = "ST_GeomFromText('{geom}')".format(geom=polygons.asWkt(6 if filtering_crs.isGeographic() else 2))
-        geom = "ST_SetSRID({geom}, {from_crs})".format(
-            geom=geom,
-            from_crs=filtering_crs.postgisSrid(),
-        )
+        geom = f"ST_GeomFromText('{polygons.asWkt(6 if filtering_crs.isGeographic() else 2)}')"
+        geom = f"ST_SetSRID({geom}, {filtering_crs.postgisSrid()})"
         if filtering_crs != filtered_crs:
-            geom = "ST_Transform({geom}, {to_crs})".format(
-                geom=geom,
-                to_crs=filtered_crs.postgisSrid(),
-            )
+            geom = f"ST_Transform({geom}, {filtered_crs.postgisSrid()})"
 
         if use_centroid:
-            geom_field = "ST_Centroid(\"{geom_field}\")".format(geom_field=geom_field)
+            geom_field = f"ST_Centroid(\"{geom_field}\")"
         else:
-            geom_field = "\"{geom_field}\"".format(geom_field=geom_field)
+            geom_field = f"\"{geom_field}\""
 
-        sql = """
-ST_{function}(
+        sql = f"""
+ST_{'Intersects' if use_st_intersect else 'Contains'}(
     {geom},
     {geom_field}
-)""".format(
-            function="Intersects" if use_st_intersect else "Contains",
-            geom_field=geom_field,
-            geom=geom,
-        )
+)"""
         return sql
 
     @classmethod
@@ -506,13 +493,9 @@ ST_{function}(
         else:
             current_geometry = "$geometry"
 
-        expression = """
-{function}(
+        expression = f"""
+{'intersects' if use_st_intersect else 'contains'}(
     {geom},
     {current_geometry}
-)""".format(
-            function="intersects" if use_st_intersect else "contains",
-            geom=geom,
-            current_geometry=current_geometry,
-            )
+)"""
         return expression

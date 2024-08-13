@@ -83,7 +83,7 @@ class ExpressionService(QgsService):
             except Exception:
                 raise ExpressionServiceError(
                     "Bad request error",
-                    "Invalid POST DATA for '{}'".format(reqparam),
+                    f"Invalid POST DATA for '{reqparam}'",
                     400)
 
             if reqparam == 'EVALUATE':
@@ -141,7 +141,7 @@ class ExpressionService(QgsService):
         if not layer:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid LAYER parameter for 'Evaluate': {} provided".format(layer_name),
+                f"Invalid LAYER parameter for 'Evaluate': {layer_name} provided",
                 400)
 
         # get expressions
@@ -153,17 +153,17 @@ class ExpressionService(QgsService):
                     "Bad request error",
                     "Invalid 'Evaluate' REQUEST: EXPRESSION or EXPRESSIONS parameter is mandatory",
                     400)
-            expressions = '["{}"]'.format(expression)
+            expressions = f'["{expression}"]'
 
         # try to load expressions list or dict
         try:
             exp_json = json.loads(expressions)
         except Exception:
             logger.critical(
-                "JSON loads expressions '{}' exception:\n{}".format(expressions, traceback.format_exc()))
+                f"JSON loads expressions '{expressions}' exception:\n{traceback.format_exc()}")
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid 'Evaluate' REQUEST: EXPRESSIONS '{}' are not well formed".format(expressions),
+                f"Invalid 'Evaluate' REQUEST: EXPRESSIONS '{expressions}' are not well formed",
                 400)
 
         # create expression context
@@ -192,11 +192,11 @@ class ExpressionService(QgsService):
             exp.setAreaUnits(project.areaUnits())
 
             if exp.hasParserError():
-                exp_parser_errors.append('Error "{}": {}'.format(e, exp.parserErrorString()))
+                exp_parser_errors.append(f'Error "{e}": {exp.parserErrorString()}')
                 continue
 
             if not exp.isValid():
-                exp_parser_errors.append('Expression not valid "{}"'.format(e))
+                exp_parser_errors.append(f'Expression not valid "{e}"')
                 continue
 
             exp.prepare(exp_context)
@@ -245,16 +245,16 @@ class ExpressionService(QgsService):
             geojson = json.loads(features)
         except Exception:
             logger.critical(
-                "JSON loads features '{}' exception:\n{}".format(features, traceback.format_exc()))
+                f"JSON loads features '{features}' exception:\n{traceback.format_exc()}")
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
+                f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
                 400)
 
         if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
+                f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
                 400)
 
         if 'type' not in geojson[0] or geojson[0]['type'] != 'Feature':
@@ -279,7 +279,7 @@ class ExpressionService(QgsService):
         if not feature_list:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid FEATURES for 'Evaluate': not GeoJSON features array provided\n{}".format(features),
+                f"Invalid FEATURES for 'Evaluate': not GeoJSON features array provided\n{features}",
                 400)
 
         # Extend layer fields with this provided in GeoJSON Features
@@ -363,7 +363,7 @@ class ExpressionService(QgsService):
         if not layer:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid LAYER parameter for 'ReplaceExpressionText': {} provided".format(layer_name),
+                f"Invalid LAYER parameter for 'ReplaceExpressionText': {layer_name} provided",
                 400)
 
         # get strings
@@ -375,17 +375,17 @@ class ExpressionService(QgsService):
                     "Bad request error",
                     "Invalid 'ReplaceExpressionText' REQUEST: STRING or STRINGS parameter is mandatory",
                     400)
-            strings = '["{}"]'.format(the_string)
+            strings = f'["{the_string}"]'
 
         # try to load expressions list or dict
         try:
             str_json = json.loads(strings)
         except Exception:
             logger.critical(
-                "JSON loads strings '{}' exception:\n{}".format(strings, traceback.format_exc()))
+                f"JSON loads strings '{strings}' exception:\n{traceback.format_exc()}")
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid 'ReplaceExpressionText' REQUEST: STRINGS '{}' are not well formed".format(strings),
+                f"Invalid 'ReplaceExpressionText' REQUEST: STRINGS '{strings}' are not well formed",
                 400)
 
         # get features
@@ -443,16 +443,16 @@ class ExpressionService(QgsService):
                 geojson = json.loads(features)
             except Exception:
                 logger.critical(
-                    "JSON loads features '{}' exception:\n{}".format(features, traceback.format_exc()))
+                    f"JSON loads features '{features}' exception:\n{traceback.format_exc()}")
                 raise ExpressionServiceError(
                     "Bad request error",
-                    "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
+                    f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
                     400)
 
             if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
                 raise ExpressionServiceError(
                     "Bad request error",
-                    "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed".format(features),
+                    f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
                     400)
 
             if ('type' not in geojson[0]) or geojson[0]['type'] != 'Feature':
@@ -571,7 +571,7 @@ class ExpressionService(QgsService):
         if not layer:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid LAYER parameter for 'VirtualField': {} provided".format(layer_name),
+                f"Invalid LAYER parameter for 'VirtualField': {layer_name} provided",
                 400)
 
         # get filter
@@ -595,7 +595,7 @@ class ExpressionService(QgsService):
             geojson = json.loads(form_feature)
         except Exception:
             logger.critical(
-                "JSON loads form feature '{}' exception:\n{}".format(form_feature, traceback.format_exc()))
+                f"JSON loads form feature '{form_feature}' exception:\n{traceback.format_exc()}")
             raise ExpressionServiceError(
                 "Bad request error",
                 "Invalid 'GetFeatureWithFormScope' REQUEST: FORM_FEATURE '{}' are not well formed".format(
@@ -654,7 +654,7 @@ class ExpressionService(QgsService):
                 geojson = json.loads(parent_feature)
             except Exception:
                 logger.critical(
-                    "JSON loads form feature '{}' exception:\n{}".format(parent_feature, traceback.format_exc()))
+                    f"JSON loads form feature '{parent_feature}' exception:\n{traceback.format_exc()}")
                 raise ExpressionServiceError(
                     "Bad request error",
                     "Invalid 'GetFeatureWithFormScope' REQUEST: PARENT_FEATURE '{}' are not well formed".format(
@@ -792,7 +792,7 @@ class ExpressionService(QgsService):
         if not layer:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid LAYER parameter for 'VirtualFields': {} provided".format(layer_name),
+                f"Invalid LAYER parameter for 'VirtualFields': {layer_name} provided",
                 400)
 
         # get virtuals
@@ -808,16 +808,16 @@ class ExpressionService(QgsService):
             vir_json = json.loads(virtuals)
         except Exception:
             logger.critical(
-                "JSON loads virtuals '{}' exception:\n{}".format(virtuals, traceback.format_exc()))
+                f"JSON loads virtuals '{virtuals}' exception:\n{traceback.format_exc()}")
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid 'VirtualFields' REQUEST: VIRTUALS '{}' are not well formed".format(virtuals),
+                f"Invalid 'VirtualFields' REQUEST: VIRTUALS '{virtuals}' are not well formed",
                 400)
 
         if not isinstance(vir_json, dict):
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid 'VirtualFields' REQUEST: VIRTUALS '{}' are not well formed".format(virtuals),
+                f"Invalid 'VirtualFields' REQUEST: VIRTUALS '{virtuals}' are not well formed",
                 400)
 
         # create expression context
@@ -841,11 +841,11 @@ class ExpressionService(QgsService):
             exp.setAreaUnits(project.areaUnits())
 
             if exp.hasParserError():
-                exp_parser_errors.append('Error "{}": {}'.format(e, exp.parserErrorString()))
+                exp_parser_errors.append(f'Error "{e}": {exp.parserErrorString()}')
                 continue
 
             if not exp.isValid():
-                exp_parser_errors.append('Expression not valid "{}"'.format(e))
+                exp_parser_errors.append(f'Expression not valid "{e}"')
                 continue
 
             exp.prepare(exp_context)
@@ -878,7 +878,7 @@ class ExpressionService(QgsService):
             if not req_exp.isValid():
                 raise ExpressionServiceError(
                     "Bad request error",
-                    "Invalid FILTER for 'VirtualFields' Expression not valid \"{}\"".format(req_filter),
+                    f"Invalid FILTER for 'VirtualFields' Expression not valid \"{req_filter}\"",
                     400)
 
             req_exp.prepare(exp_context)

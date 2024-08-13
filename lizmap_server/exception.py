@@ -18,7 +18,7 @@ class ServiceError(Exception):
         self.msg = msg
         self.code = code
         self.response_code = response_code
-        Logger.critical("{} request error {}: {}".format(self.service, code, msg))
+        Logger.critical(f"{self.service} request error {code}: {msg}")
 
     def formatResponse(self, response: QgsServerResponse) -> None:
         """ Format error response
