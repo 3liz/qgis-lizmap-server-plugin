@@ -29,7 +29,7 @@ def write_json_response(data: Dict[str, str], response: QgsServerResponse, code:
     """ Write data as JSON response. """
     response.setStatusCode(code)
     response.setHeader("Content-Type", "application/json")
-    Logger.info("Sending JSON response : {}".format(data))
+    Logger.info(f"Sending JSON response : {data}")
     response.write(json.dumps(data))
 
 
@@ -71,7 +71,7 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
 
     if not found:
         Logger.warning(
-            "The layer '{}' has not been found in the project '{}'".format(layer_name, project.fileName()))
+            f"The layer '{layer_name}' has not been found in the project '{project.fileName()}'")
         return None
 
     found: QgsMapLayer
@@ -123,7 +123,7 @@ def get_lizmap_config(qgis_project_path: str) -> Union[Dict, None]:
         return None
 
     last_modified = Path(config_path).stat().st_mtime
-    logger.info("Fetching {} cfg file with last modified timestamp : {}".format(config_path, last_modified))
+    logger.info(f"Fetching {config_path} cfg file with last modified timestamp : {last_modified}")
     return _get_lizmap_config(config_path, last_modified)
 
 
@@ -198,7 +198,7 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
     # Check loginFilteredLayers for layer
     if layer_name not in login_filtered_layers or not login_filtered_layers[layer_name]:
         # Lizmap config has no options
-        logger.info("Layer {} has no loginFilteredLayers".format(layer_name))
+        logger.info(f"Layer {layer_name} has no loginFilteredLayers")
         return None
 
     # get loginFilteredLayers for layer to check it
@@ -206,14 +206,14 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
 
     # Check loginFilteredLayers for layer is dict
     if not isinstance(cfg_layer_login_filter, dict):
-        logger.warning("loginFilteredLayers for layer {} is not dict".format(layer_name))
+        logger.warning(f"loginFilteredLayers for layer {layer_name} is not dict")
         return None
 
     if 'layerId' not in cfg_layer_login_filter or \
             'filterAttribute' not in cfg_layer_login_filter or \
             'filterPrivate' not in cfg_layer_login_filter:
         # loginFilteredLayers for layer not well formed
-        logger.warning("loginFilteredLayers for layer {} not well formed".format(layer_name))
+        logger.warning(f"loginFilteredLayers for layer {layer_name} not well formed")
         return None
 
     return cfg_layer_login_filter
@@ -234,7 +234,7 @@ def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
         user_groups = headers.get('X-Lizmap-User-Groups')
         if user_groups is not None:
             groups = [g.strip() for g in user_groups.split(',')]
-            logger.info("Lizmap user groups in request headers : {}".format(','.join(groups)))
+            logger.info(f"Lizmap user groups in request headers : {','.join(groups)}")
     else:
         logger.info("No request headers provided")
 
@@ -251,7 +251,7 @@ def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
         user_groups = params.get('LIZMAP_USER_GROUPS')
         if user_groups is not None:
             groups = [g.strip() for g in user_groups.split(',')]
-            logger.info("Lizmap user groups in parameters : {}".format(','.join(groups)))
+            logger.info(f"Lizmap user groups in parameters : {','.join(groups)}")
 
     # noinspection PyTypeChecker
     return tuple(groups)
@@ -272,7 +272,7 @@ def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
         user_login = headers.get('X-Lizmap-User')
         if user_login is not None:
             login = user_login
-            logger.info("Lizmap user login in request headers : {}".format(login))
+            logger.info(f"Lizmap user login in request headers : {login}")
     else:
         logger.info("No request headers provided")
 
@@ -288,7 +288,7 @@ def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
         user_login = params.get('LIZMAP_USER')
         if user_login is not None:
             login = user_login
-            logger.info("Lizmap user login in parameters : {}".format(login))
+            logger.info(f"Lizmap user login in parameters : {login}")
 
     return login
 
@@ -341,7 +341,7 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
         editing_context = headers.get('X-Lizmap-Edition-Context')
         if editing_context is not None:
             result = to_bool(editing_context)
-            logger.info("Lizmap editing context is found in request headers : {}".format(result))
+            logger.info(f"Lizmap editing context is found in request headers : {result}")
             return result
 
     logger.info("No editing context found in request headers")
@@ -351,7 +351,7 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
         result = params.get('LIZMAP_EDITION_CONTEXT')
         if result is not None:
             result = to_bool(result)
-            logger.info("Lizmap editing context is found in parameters : {}".format(result))
+            logger.info(f"Lizmap editing context is found in parameters : {result}")
             return result
 
     logger.info("No lizmap editing context filter in parameters : default value false")

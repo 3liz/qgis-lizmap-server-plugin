@@ -28,7 +28,7 @@ class LizmapServer:
         self.server_iface = server_iface
         self.logger = Logger()
         self.version = version()
-        self.logger.info('Init server version "{}"'.format(self.version))
+        self.logger.info(f'Init server version "{self.version}"')
         # noinspection PyBroadException
         try:
             self.plausible = Plausible()
@@ -56,55 +56,55 @@ class LizmapServer:
         try:
             service_registry.registerService(ExpressionService())
         except Exception as e:
-            self.logger.critical('Error loading service "expression" : {}'.format(e))
+            self.logger.critical(f'Error loading service "expression" : {e}')
             raise
         self.logger.info('Service "expression" loaded')
 
         try:
             service_registry.registerService(LizmapService(self.server_iface))
         except Exception as e:
-            self.logger.critical('Error loading service "lizmap" : {}'.format(e))
+            self.logger.critical(f'Error loading service "lizmap" : {e}')
             raise
         self.logger.info('Service "lizmap" loaded')
 
         try:
             server_iface.registerFilter(LizmapFilter(self.server_iface), 50)
         except Exception as e:
-            self.logger.critical('Error loading filter "lizmap" : {}'.format(e))
+            self.logger.critical(f'Error loading filter "lizmap" : {e}')
             raise
         self.logger.info('Filter "lizmap" loaded')
 
         try:
             server_iface.registerAccessControl(LizmapAccessControlFilter(self.server_iface), 100)
         except Exception as e:
-            self.logger.critical('Error loading access control "lizmap" : {}'.format(e))
+            self.logger.critical(f'Error loading access control "lizmap" : {e}')
             raise
         self.logger.info('Access control "lizmap" loaded')
 
         try:
             server_iface.registerFilter(GetFeatureInfoFilter(self.server_iface), 150)
         except Exception as e:
-            self.logger.critical('Error loading filter "get feature info" : {}'.format(e))
+            self.logger.critical(f'Error loading filter "get feature info" : {e}')
             raise
         self.logger.info('Filter "get feature info" loaded')
 
         try:
             server_iface.registerFilter(GetLegendGraphicFilter(self.server_iface), 170)
         except Exception as e:
-            self.logger.critical('Error loading filter "get legend graphic" : {}'.format(e))
+            self.logger.critical(f'Error loading filter "get legend graphic" : {e}')
             raise
         self.logger.info('Filter "get legend graphic" loaded')
 
         try:
             server_iface.registerFilter(LegendOnOffFilter(self.server_iface), 175)
         except Exception as e:
-            self.logger.critical('Error loading filter "legend on/off" : {}'.format(e))
+            self.logger.critical(f'Error loading filter "legend on/off" : {e}')
             raise
         self.logger.info('Filter "legend on/off" loaded')
 
         try:
             server_iface.registerAccessControl(LegendOnOffAccessControl(self.server_iface), 175)
         except Exception as e:
-            self.logger.critical('Error loading access control "legend on/off" : {}'.format(e))
+            self.logger.critical(f'Error loading access control "legend on/off" : {e}')
             raise
         self.logger.info('Access control "legend on/off" loaded')

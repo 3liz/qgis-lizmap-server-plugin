@@ -192,7 +192,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         # noinspection PyBroadException
         try:
             # Format the tag according to QGIS git repository
-            tag = 'final-{}'.format(human_version.replace('.', '_'))  # final-3_16_0
+            tag = f"final-{human_version.replace('.', '_')}"  # final-3_16_0
         except Exception:
             tag = ""
 

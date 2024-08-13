@@ -86,7 +86,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
         for layer_name, feature_id in GetFeatureInfoFilter.parse_xml(xml):
             layer = find_vector_layer(layer_name, project)
             if not layer:
-                Logger.info("Skipping the layer '{}' because it's not a vector layer".format(layer_name))
+                Logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
                 continue
 
             if layer_name != layer.name():
@@ -95,7 +95,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
             layers = cfg.get('layers')
             if not layers:
-                Logger.critical("No 'layers' section in the CFG file {}.cfg".format(project.fileName()))
+                Logger.critical(f"No 'layers' section in the CFG file {project.fileName()}.cfg")
                 continue
 
             layer_config = layers.get(layer.name())
@@ -193,7 +193,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             # The user has clicked in a random area on the map or no interesting LAYERS,
             # no features are returned.
             logger.info(
-                "No features found in the XML from QGIS Server for project {}".format(project_path),
+                f"No features found in the XML from QGIS Server for project {project_path}",
             )
             return
 
@@ -267,7 +267,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             request.clear()
             request.setResponseHeader('Content-Type', 'text/xml')
             request.appendBody(bytes(xml, 'utf-8'))
-            logger.info("GetFeatureInfo replaced for project {}".format(project_path))
+            logger.info(f"GetFeatureInfo replaced for project {project_path}")
 
         except Exception as e:
             if to_bool(os.getenv("CI")):

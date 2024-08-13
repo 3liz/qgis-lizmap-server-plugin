@@ -201,7 +201,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
                 # The layer has no editionLayers config defined
                 # Reset edition rights
                 Logger.info(
-                    "No edition config defined for layer: %s (%s)" % (layer_name, layer_id))
+                    f"No edition config defined for layer: {layer_name} ({layer_id})")
                 rights.canInsert = rights.canUpdate = rights.canDelete = False
         else:
             # No editionLayers defined
@@ -212,7 +212,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Check Lizmap layer config
         if layer_name not in cfg_layers or not cfg_layers[layer_name]:
             # Lizmap layer config not defined
-            Logger.info("Lizmap config has no layer: %s" % layer_name)
+            Logger.info(f"Lizmap config has no layer: {layer_name}")
             # Default layer rights applied
             return rights
 
@@ -220,7 +220,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         cfg_layer = cfg_layers[layer_name]
         if 'group_visibility' not in cfg_layer or not cfg_layer['group_visibility']:
             # Lizmap config has no options
-            Logger.info("No Lizmap layer group visibility for: %s" % layer_name)
+            Logger.info(f"No Lizmap layer group visibility for: {layer_name}")
             # Default layer rights applied
             return rights
 
@@ -233,13 +233,13 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         for g in groups:
             if g in group_visibility:
                 Logger.info(
-                    "Group %s is in Lizmap layer group visibility for: %s" % (g, layer_name))
+                    f"Group {g} is in Lizmap layer group visibility for: {layer_name}")
                 return rights
 
         # The lizmap user groups provided gy the request are not
         # authorized to get access to the layer
         Logger.info(
-            "Groups %s is in Lizmap layer group visibility for: %s" % (', '.join(groups), layer_name))
+            f"Groups {', '.join(groups)} is in Lizmap layer group visibility for: {layer_name}")
         rights.canRead = False
         rights.canInsert = rights.canUpdate = rights.canDelete = False
         return rights
@@ -361,7 +361,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             return NO_FEATURES
 
         if polygon_filter:
-            Logger.info("The polygon filter subset string is not null : {}".format(polygon_filter))
+            Logger.info(f"The polygon filter subset string is not null : {polygon_filter}")
 
         # Get layer login filter
         cfg_layer_login_filter = get_lizmap_layer_login_filter(cfg, layer_name)
@@ -387,13 +387,13 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             # we use expression tools also for subset string
             login_filter = QgsExpression.createFieldEqualityExpression(attribute, 'all')
             if polygon_filter:
-                return '{} AND {}'.format(polygon_filter, login_filter)
+                return f'{polygon_filter} AND {login_filter}'
 
             return login_filter
 
         login_filter = self._filter_by_login(cfg_layer_login_filter, groups, user_login)
         if polygon_filter:
-            return '{} AND {}'.format(polygon_filter, login_filter)
+            return f'{polygon_filter} AND {login_filter}'
 
         return login_filter
 
