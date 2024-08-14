@@ -1,7 +1,5 @@
 import io
 import json
-
-from urllib3 import request
 import xml.etree.ElementTree as ET
 
 from typing import Dict, Union
@@ -10,6 +8,7 @@ import lxml.etree
 
 from PIL import Image
 from qgis.server import QgsBufferServerResponse
+from urllib3 import request
 
 __copyright__ = 'Copyright 2024, 3Liz'
 __license__ = 'GPL version 3'

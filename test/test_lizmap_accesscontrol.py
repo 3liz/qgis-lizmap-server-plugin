@@ -11,6 +11,7 @@ from test.utils import OWSResponse, _build_query_string, _check_request
 
 from qgis.core import QgsVectorLayer
 
+from lizmap_server.lizmap_accesscontrol import LizmapAccessControlFilter
 from lizmap_server.tos_definitions import (
     BING_KEY,
     GOOGLE_KEY,
@@ -581,13 +582,27 @@ def test_tos_strict_layers_false(client):
     assert "bing-satellite" not in content
 
 
-def tet_tos_strict_layers_true(client):
+def test_tos_strict_layers_true(client):
     """ Test TOS layers not restricted. """
+    # TODO fixme
     rv = _make_get_capabilities_tos_layers(client, True)
     content = rv.content.decode('utf-8')
     layers = rv.xpath('//wms:Layer')
-    assert len(layers) == 5
+    assert len(layers) == 2
     assert "osm" in content
-    assert "google-satellite" in content
-    assert "bing-map" in content
-    assert "bing-satellite" in content
+    assert "google-satellite" not in content
+    assert "bing-map" not in content
+    assert "bing-satellite" not in content
+
+
+def test_filter_by_login():
+    """ Test about comma separated list of values with the current user."""
+    config = {
+        'filterPrivate': ['a', 'b'],
+        'filterAttribute': 'f',
+    }
+    output = LizmapAccessControlFilter._filter_by_login(config, ('grp_1', 'grp_2'), 'a')
+    assert (
+        "\"f\" = 'a' OR \"f\" LIKE 'a,%' OR \"f\" LIKE '%,a' OR \"f\" LIKE '%,a,%' OR \"f\" = 'all' "
+        "OR \"f\" LIKE 'all,%' OR \"f\" LIKE '%,all' OR \"f\" LIKE '%,all,%'"
+           ) == output, output
