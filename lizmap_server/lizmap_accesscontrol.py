@@ -405,23 +405,59 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         :param groups: List of groups for the current user
         :param login: The current user
         """
-        # List of quoted values for expression
-        quoted_values = []
+        # List of values for expression
+        values = []
 
         if to_bool(cfg_layer_login_filter['filterPrivate']):
             # If filter is private use user_login
-            quoted_values.append(QgsExpression.quotedString(login))
+            values.append(login)
         else:
             # Else use user groups
-            quoted_values = [QgsExpression.quotedString(g) for g in groups]
+            values = list(groups)
 
-        # Add all to quoted values
-        quoted_values.append(QgsExpression.quotedString('all'))
+        # Add all to values
+        values.append('all')
 
-        # Build filter
-        layer_filter = '{} IN ({})'.format(
-            QgsExpression.quotedColumnRef(cfg_layer_login_filter['filterAttribute']),
-            ', '.join(quoted_values),
-        )
+        # Since LWC 3.8, we allow to have a list of groups (or logins)
+        # separated by comma, with NO SPACES
+        # e.g. field "filter_fiel" can contain 'group_a,group_b,group_c'
+        # To use only pure SQL allowed by QGIS, we can use LIKE items
+        # For big dataset, a GIN index with pg_trgm must be used for the
+        # filter field to improve performance
+        # We cannot use array_remove, string_to_array or regexp_replace
+        # as it should be SQL safe for QGIS Server
+
+        value_filters = []
+
+        # Quoted attribute with double-quotes
+        quoted_field = QgsExpression.quotedColumnRef(cfg_layer_login_filter['filterAttribute'])
+
+        # For each value (group, all, login, etc.), create a filter
+        # combining all the possibility: equality & LIKE
+        for value in values:
+            filters = []
+            # Quote the value with single quotes
+            quoted_value = QgsExpression.quotedString(value)
+
+            # equality
+            filters.append(f'{quoted_field} = {quoted_value}')
+
+            # begins with value & comma
+            quoted_like_value = QgsExpression.quotedString(f'{value},%')
+            filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+
+            # ends with comma & value
+            quoted_like_value = QgsExpression.quotedString(f'%,{value}')
+            filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+
+            # value between two commas
+            quoted_like_value = QgsExpression.quotedString(f'%,{value},%')
+            filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+
+            # Build the filter for this value
+            value_filters.append(' OR '.join(filters))
+
+        # Build filter for all values
+        layer_filter = ' OR '.join(value_filters)
 
         return layer_filter
