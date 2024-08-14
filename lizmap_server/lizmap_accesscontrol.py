@@ -420,7 +420,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Since LWC 3.8, we allow to have a list of groups (or logins)
         # separated by comma, with NO SPACES
-        # e.g. field "filter_fiel" can contain 'group_a,group_b,group_c'
+        # e.g. field "filter_field" can contain 'group_a,group_b,group_c'
         # To use only pure SQL allowed by QGIS, we can use LIKE items
         # For big dataset, a GIN index with pg_trgm must be used for the
         # filter field to improve performance
