@@ -391,19 +391,25 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
             return login_filter
 
-        login_filter = self._filter_by_login(cfg_layer_login_filter, groups, user_login)
+        login_filter = self._filter_by_login(
+            cfg_layer_login_filter,
+            groups,
+            user_login,
+            layer.dataProvider().name(),
+        )
         if polygon_filter:
             return f'{polygon_filter} AND {login_filter}'
 
         return login_filter
 
     @staticmethod
-    def _filter_by_login(cfg_layer_login_filter: dict, groups: tuple, login: str) -> str:
+    def _filter_by_login(cfg_layer_login_filter: dict, groups: tuple, login: str, provider: str) -> str:
         """ Build the string according to the filter by login configuration.
 
         :param cfg_layer_login_filter: The Lizmap Filter by login configuration.
         :param groups: List of groups for the current user
         :param login: The current user
+        :param provider: The layer data provider ('postgres' for example)
         """
         # List of values for expression
         values = []
@@ -420,7 +426,9 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Since LWC 3.8, we allow to have a list of groups (or logins)
         # separated by comma, with NO SPACES
-        # e.g. field "filter_field" can contain 'group_a,group_b,group_c'
+        # only for PostgreSQL layers and if the option allow_multiple_acl_values
+        # is set to True
+        # For example the field can contain 'group_a,group_b,group_c'
         # To use only pure SQL allowed by QGIS, we can use LIKE items
         # For big dataset, a GIN index with pg_trgm must be used for the
         # filter field to improve performance
@@ -442,17 +450,19 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             # equality
             filters.append(f'{quoted_field} = {quoted_value}')
 
-            # begins with value & comma
-            quoted_like_value = QgsExpression.quotedString(f'{value},%')
-            filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+            # Add LIKE statements to manage multiple values separated by comma
+            if provider == 'postgres' and cfg_layer_login_filter.get('allow_multiple_acl_values'):
+                # begins with value & comma
+                quoted_like_value = QgsExpression.quotedString(f'{value},%')
+                filters.append(f'{quoted_field} LIKE {quoted_like_value}')
 
-            # ends with comma & value
-            quoted_like_value = QgsExpression.quotedString(f'%,{value}')
-            filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+                # ends with comma & value
+                quoted_like_value = QgsExpression.quotedString(f'%,{value}')
+                filters.append(f'{quoted_field} LIKE {quoted_like_value}')
 
-            # value between two commas
-            quoted_like_value = QgsExpression.quotedString(f'%,{value},%')
-            filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+                # value between two commas
+                quoted_like_value = QgsExpression.quotedString(f'%,{value},%')
+                filters.append(f'{quoted_field} LIKE {quoted_like_value}')
 
             # Build the filter for this value
             value_filters.append(' OR '.join(filters))
