@@ -595,14 +595,44 @@ def test_tos_strict_layers_true(client):
     assert "bing-satellite" not in content
 
 
-def test_filter_by_login():
-    """ Test about comma separated list of values with the current user."""
+def test_filter_by_login_simple_values():
+    """ Test filter with simple values in field with the current user."""
     config = {
         'filterPrivate': ['a', 'b'],
         'filterAttribute': 'f',
+        'allow_multiple_acl_values': False,
     }
-    output = LizmapAccessControlFilter._filter_by_login(config, ('grp_1', 'grp_2'), 'a')
+    output = LizmapAccessControlFilter._filter_by_login(config, ('grp_1', 'grp_2'), 'a', 'other_provider')
+    assert (
+        "\"f\" = 'a' OR \"f\" = 'all'"
+           ) == output, output
+
+
+def test_filter_by_login_postgres_multiple_values():
+    """ Test filter with comma separated list of values with the current user."""
+    config = {
+        'filterPrivate': ['a', 'b'],
+        'filterAttribute': 'f',
+        'allow_multiple_acl_values': True,
+    }
+    output = LizmapAccessControlFilter._filter_by_login(config, ('grp_1', 'grp_2'), 'a', 'postgres')
     assert (
         "\"f\" = 'a' OR \"f\" LIKE 'a,%' OR \"f\" LIKE '%,a' OR \"f\" LIKE '%,a,%' OR \"f\" = 'all' "
         "OR \"f\" LIKE 'all,%' OR \"f\" LIKE '%,all' OR \"f\" LIKE '%,all,%'"
+           ) == output, output
+
+
+def test_filter_by_login_postgres_multiple_values_deactivated():
+    """
+    Test filter with comma separated list of values with the current user
+    but with option disabled
+    """
+    config = {
+        'filterPrivate': ['a', 'b'],
+        'filterAttribute': 'f',
+        'allow_multiple_acl_values': False,
+    }
+    output = LizmapAccessControlFilter._filter_by_login(config, ('grp_1', 'grp_2'), 'a', 'postgres')
+    assert (
+        "\"f\" = 'a' OR \"f\" = 'all'"
            ) == output, output
