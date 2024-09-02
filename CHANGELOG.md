@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 2.10.0 - 2024-09-02
+
+* Attribute filter - Allow to have a comma separated list of groups or users, for Lizmap Web Client 3.8 and PostgreSQL layer
+* Add tests with a FILTER with apostrophe
+* Add log if the relation was not found when generating the tooltip
+
 ## 2.9.4 - 2024-06-05
 
 * API key - check for Google or Bing layers without an API key
