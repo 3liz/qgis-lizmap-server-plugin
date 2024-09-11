@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.10.1 - 2024-09-11
+
+* Fix relation ID in tooltip.py
+
 ## 2.10.0 - 2024-09-02
 
 * Attribute filter - Allow to have a comma separated list of groups or users, for Lizmap Web Client 3.8 and PostgreSQL layer
