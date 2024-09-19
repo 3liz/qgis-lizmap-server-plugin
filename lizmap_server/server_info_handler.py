@@ -150,7 +150,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         py_qgis_server_metadata = py_qgis_server_info(is_py_qgis_server)
 
         # 'name' is not the folder name in the 'expected_list' variable, it can be different
-        keys = ('name', 'version', 'commitNumber', 'commitSha1', 'dateTime', 'repository')
+        keys = ('name', 'version', 'commitNumber', 'commitSha1', 'dateTime', 'repository', 'homepage')
         plugins = dict()
         for plugin in plugins_installed(is_py_qgis_server):
             plugins[plugin] = dict()
