@@ -85,7 +85,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             project: QgsProject,
             relation_manager: QgsRelationManager,
             xml: str,
-            bootstrap_5: bool
+            bootstrap_5: bool,
     ) -> List[Result]:
         """ Parse the XML and check for each layer according to the Lizmap CFG file. """
         features = []

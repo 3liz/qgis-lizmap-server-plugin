@@ -8,7 +8,7 @@ import lxml.etree
 
 from PIL import Image
 from qgis.server import QgsBufferServerResponse
-from urllib3 import request
+from urllib.parse import urlencode
 
 __copyright__ = 'Copyright 2024, 3Liz'
 __license__ = 'GPL version 3'
@@ -58,10 +58,10 @@ class OWSResponse:
         return ' '.join(e.text for e in self.xpath(path))
 
 
-def _build_query_string(params: dict, use_urllib3: bool=False) -> str:
+def _build_query_string(params: dict, use_urllib: bool = False) -> str:
     """ Build a query parameter from a dictionary. """
-    if use_urllib3:
-        return "?" + request.urlencode(params)
+    if use_urllib:
+        return "?" + urlencode(params)
 
     query_string = '?'
     for k, v in params.items():

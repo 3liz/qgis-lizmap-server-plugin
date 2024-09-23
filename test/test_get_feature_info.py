@@ -239,7 +239,7 @@ def test_single_get_feature_info_ascii(client):
         "FILTER": "accents:\"NAME_1\" = 'Bret\\'agne'",
     }
 
-    rv = client.get(_build_query_string(qs, use_urllib3=True), PROJECT)
+    rv = client.get(_build_query_string(qs, use_urllib=True), PROJECT)
     data = _check_request(rv)
 
     if Qgis.QGIS_VERSION_INT <= 31700:
