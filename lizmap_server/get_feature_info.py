@@ -80,7 +80,13 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
     @classmethod
     def feature_list_to_replace(
-            cls, cfg: dict, project: QgsProject, relation_manager: QgsRelationManager, xml: str) -> List[Result]:
+            cls,
+            cfg: dict,
+            project: QgsProject,
+            relation_manager: QgsRelationManager,
+            xml: str,
+            bootstrap_5: bool
+    ) -> List[Result]:
         """ Parse the XML and check for each layer according to the Lizmap CFG file. """
         features = []
         for layer_name, feature_id in GetFeatureInfoFilter.parse_xml(xml):
@@ -120,7 +126,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
             root = config.invisibleRootContainer()
 
             # Need to eval the html_content
-            html_content = Tooltip.create_popup_node_item_from_form(layer, root, 0, [], '', relation_manager)
+            html_content = Tooltip.create_popup_node_item_from_form(
+                layer, root, 0, [], '', relation_manager, bootstrap_5)
             html_content = Tooltip.create_popup(html_content)
 
             # Maybe we can avoid the CSS on all features ?
@@ -175,9 +182,11 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
         xml = request.body().data().decode("utf-8")
 
+        bootstrap_5 = params.get('CSS_FRAMEWORK', '').upper() == 'BOOTSTRAP5'
+
         # noinspection PyBroadException
         try:
-            features = self.feature_list_to_replace(cfg, project, relation_manager, xml)
+            features = self.feature_list_to_replace(cfg, project, relation_manager, xml, bootstrap_5)
         except Exception as e:
             if to_bool(os.getenv("CI")):
                 logger.log_exception(e)
