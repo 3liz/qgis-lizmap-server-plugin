@@ -40,11 +40,11 @@ install-tests:
 	pip install -U --upgrade-strategy=eager -r requirements/dev.txt
 
 export QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE
-test:
+test: lint
 	cd test && pytest -v --qgis-plugins=..
 
 lint:
-	@ruff check $(PYTHON_PKG) $(TESTDIR)
+	@ruff check --output-format=concise $(PYTHON_PKG) $(TESTDIR)
 
 lint-preview:
 	@ruff check --preview $(PYTHON_PKG) $(TESTDIR)
