@@ -124,11 +124,7 @@ class FilterByPolygon:
 
     def is_valid(self) -> bool:
         """ If the configuration is valid or not."""
-        if not self.polygon:
-            Logger.critical("The polygon layer for filtering is not valid.")
-            return False
-
-        if not self.polygon and self.polygon.isValid():
+        if not self.polygon or not self.polygon.isValid():
             Logger.critical("The polygon layer for filtering is not valid.")
             return False
 
