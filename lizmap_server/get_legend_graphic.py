@@ -83,7 +83,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if not style:
             style = params.get('STYLE', '')
 
-        show_feature_count = to_bool(params.get('SHOWFEATURECOUNT'), default_value=False)
+        show_feature_count = to_bool(params.get('SHOWFEATURECOUNT'))
 
         current_style = ''
         layer = find_layer(layer_name, project)
