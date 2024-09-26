@@ -56,7 +56,7 @@ class Context(ContextABC):
                 raise ProjectCacheError(404, f"Requested project not found: {uri}")
             case Co.REMOVED:
                 # Do not return a removed project
-                # Since layer's data may not exists
+                # Since layer's data may not exist
                 # anymore
                 raise ProjectCacheError(410, f"Requested removed project: {uri}")
         return rv
@@ -81,9 +81,9 @@ class Context(ContextABC):
     ) -> Iterator[Tuple[str, Dict]]:
         """ return installed plugins metadata
         """
-        srvc = QgisPluginService.get_service()
+        service = QgisPluginService.get_service()
 
-        for plugin in srvc.plugins:
+        for plugin in service.plugins:
             md = plugin.metadata
             yield (
                 plugin,

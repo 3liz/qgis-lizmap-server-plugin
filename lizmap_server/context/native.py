@@ -1,4 +1,4 @@
-""" Native Qgis context
+""" Native QGIS context
 """
 from itertools import chain
 from pathlib import Path
@@ -40,7 +40,7 @@ class Context(ContextABC):
     def project(self, uri: str) -> QgsProject:
         """ Return the project specified by `uri`
         """
-        # XXX Fix me
+        # TODO Fix me
         raise ProjectCacheError(403, f"Project not found in cache: {uri}")
 
     def catalog(self, search_path: Optional[str] = None) -> List[CatalogItem]:
@@ -54,8 +54,8 @@ class Context(ContextABC):
             return []
 
         def _items():
-            globpattern = '**/*.%s'
-            files = chain(*(location.glob(globpattern % sfx) for sfx in ('qgs', 'qgz')))
+            glob_pattern = '**/*.%s'
+            files = chain(*(location.glob(glob_pattern % sfx) for sfx in ('qgs', 'qgz')))
             for p in files:
                 st = p.stat()
                 yield CatalogItem(
@@ -85,7 +85,7 @@ class Context(ContextABC):
             return unknown_default
 
         for plugin in server_active_plugins:
-            yield (plugin, {k: _get_key(plugin, k) for k in keys})
+            yield plugin, {k: _get_key(plugin, k) for k in keys}
 
     @property
     def metadata(self) -> Optional[ServerMetadata]:

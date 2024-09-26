@@ -18,7 +18,7 @@ from .common import (
     to_iso8601,
 )
 
-SERVER_CONTEXT_NAME = "py-qgis_server"
+SERVER_CONTEXT_NAME = "py-qgis-server"
 
 
 class Context(ContextABC):
@@ -35,12 +35,6 @@ class Context(ContextABC):
         """ Return search paths for projects
         """
         return []
-
-    @property
-    def max_projects(self) -> Optional[int]:
-        """ Return context name
-        """
-        return None
 
     def project(self, uri: str) -> QgsProject:
         """ Return the project specified by `uri`
@@ -69,8 +63,8 @@ class Context(ContextABC):
             return []
 
         def _items():
-            globpattern = '**/*.%s'
-            files = chain(*(location.glob(globpattern % sfx) for sfx in ('qgs', 'qgz')))
+            glob_pattern = '**/*.%s'
+            files = chain(*(location.glob(glob_pattern % sfx) for sfx in ('qgs', 'qgz')))
             for p in files:
                 st = p.stat()
                 yield CatalogItem(

@@ -1,7 +1,7 @@
 
 import json
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
@@ -53,13 +53,15 @@ class ProjectCacheError(Exception):
 
 class ContextABC(ABC):
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def name(self) -> str:
         """ Return context name
         """
         ...
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def search_paths(self) -> List[str]:
         """ Return search paths for projects
         """
@@ -87,7 +89,8 @@ class ContextABC(ABC):
         """
         ...
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def metadata(self) -> Optional[ServerMetadata]:
         """ Return server metadata if the server
             is not a native (FCGI) server
