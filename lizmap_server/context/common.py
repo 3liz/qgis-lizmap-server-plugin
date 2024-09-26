@@ -1,6 +1,5 @@
 
 import json
-import logging
 
 from abc import ABC, abstractmethod, abstractproperty
 from dataclasses import asdict, dataclass, is_dataclass
@@ -8,8 +7,6 @@ from datetime import datetime, timezone
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 from qgis.core import QgsProject
-
-logger = logging.getLogger('Lizmap')
 
 
 def to_iso8601(dt: Union[float, datetime]) -> str:

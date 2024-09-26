@@ -3,7 +3,6 @@ __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
 
-import logging
 import sys
 import traceback
 import warnings
@@ -33,7 +32,8 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     from osgeo import gdal
 
-logger = logging.getLogger('Lizmap')
+from .logger import Logger
+
 
 PLUGIN_METADATA_KEYS = (
     # 'name' is not the folder name in the 'expected_list' variable,
@@ -46,6 +46,18 @@ PLUGIN_METADATA_KEYS = (
     'repository',
     'homepage',
 )
+
+EXPECTED_PLUGINS = (
+    'wfsOutputExtension',
+    # 'cadastre', very specific for the French use-case
+    'lizmap_server',
+    'atlasprint',
+    # waiting a little for these one
+    # 'tilesForServer',
+    # 'DataPlotly',
+)
+
+EXPECTED_SERVICES = ('WMS', 'WFS', 'WCS', 'WMTS', 'EXPRESSION', 'LIZMAP')
 
 
 class ServerInfoHandler(QgsServerOgcApiHandler):
@@ -81,7 +93,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         try:
             self._handleRequest(context)
         except Exception:
-            logger.critical(traceback.format_exc())
+            Logger.critical(traceback.format_exc())
             raise
 
     def _handleRequest(self, context):
@@ -92,17 +104,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 
         plugins = dict(self._context.installed_plugins(PLUGIN_METADATA_KEYS))
 
-        expected_list = (
-            'wfsOutputExtension',
-            # 'cadastre', very specific for the French use-case
-            'lizmap_server',
-            'atlasprint',
-            # waiting a little for these one
-            # 'tilesForServer',
-            # 'DataPlotly',
-        )
-
-        for expected in expected_list:
+        for expected in EXPECTED_PLUGINS:
             if expected not in plugins:
                 plugins[expected] = {
                     'version': 'not found',
@@ -114,8 +116,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         human_version, human_name = Qgis.QGIS_VERSION.split('-', 1)
 
         services_available = []
-        expected_services = ('WMS', 'WFS', 'WCS', 'WMTS', 'EXPRESSION', 'LIZMAP')
-        for service in expected_services:
+        for service in EXPECTED_SERVICES:
             if context.serverInterface().serviceRegistry().getService(service):
                 services_available.append(service)
 

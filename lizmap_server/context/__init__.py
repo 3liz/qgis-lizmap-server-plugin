@@ -1,8 +1,9 @@
 import sys
 
 from .common import ContextABC as ServerContext  # noqa
-from .common import logger, model_dump_json, to_iso8601  # noqa
+from .common import model_dump_json, to_iso8601  # noqa
 
+from ..logger import Logger
 
 def create_server_context() -> ServerContext:
     """ Create the appropriate server context
@@ -18,5 +19,5 @@ def create_server_context() -> ServerContext:
         from .native import Context  # type: ignore [assignment]
 
     context: ServerContext = Context()
-    logger.info("Using %s context", context.name)
+    Logger.info(f"Using {context.name} context")
     return context
