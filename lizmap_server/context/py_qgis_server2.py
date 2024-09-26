@@ -3,6 +3,7 @@ from functools import cached_property
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple
 
 from py_qgis_contrib.core.qgis import QgisPluginService
+from py_qgis_contrib.core import logger
 from py_qgis_cache import CacheEntry, CacheManager, ProjectMetadata
 from py_qgis_cache import CheckoutStatus as Co
 
@@ -15,6 +16,7 @@ from .common import (
     ServerMetadata,
     to_iso8601,
 )
+
 
 SERVER_CONTEXT_NAME = 'py-qgis-server2'
 
@@ -84,9 +86,10 @@ class Context(ContextABC):
         service = QgisPluginService.get_service()
 
         for plugin in service.plugins:
-            md = plugin.metadata
+            md = plugin.metadata['general']
+            logger.trace("== PLUGIN METADATA(%s): %s", plugin.name, md)
             yield (
-                plugin,
+                plugin.path.name,
                 {k: (md.get(k) or md.get(k.lower(), unknown_default)) for k in keys},
             )
 
