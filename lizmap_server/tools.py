@@ -15,16 +15,13 @@ Tools for Lizmap.
 """
 
 
-def to_bool(val: Union[str, int, float, bool], default_value: bool = True) -> bool:
+def to_bool(val: Union[str, int, float, bool, None]) -> bool:
     """ Convert lizmap config value to boolean """
     if isinstance(val, str):
         # For string, compare lower value to True string
         return val.lower() in ('yes', 'true', 't', '1')
-    elif not val:
-        # For value like False, 0, 0.0, None, empty list or dict returns False
-        return False
     else:
-        return default_value
+        return bool(val)
 
 
 def version() -> str:
@@ -49,7 +46,7 @@ def version() -> str:
 
 def check_environment_variable() -> bool:
     """ Check the server configuration. """
-    if not to_bool(os.environ.get('QGIS_SERVER_LIZMAP_REVEAL_SETTINGS', ''), default_value=False):
+    if not to_bool(os.environ.get('QGIS_SERVER_LIZMAP_REVEAL_SETTINGS', '')):
         QgsMessageLog.logMessage(
             'The Lizmap API is currently not enabled. Please read the documentation how to enable the Lizmap API '
             'on QGIS server side '
