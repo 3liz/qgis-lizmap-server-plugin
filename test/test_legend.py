@@ -175,28 +175,7 @@ def test_valid_raster_layer(client):
     b = _check_request(rv)
 
     # Answer straight from QGIS Server
-    if Qgis.QGIS_VERSION_INT < 32200:
-        expected = {
-            'nodes': [
-                {
-                    'symbols': [
-                        {
-                            # 'icon': '',
-                            'title': '50',
-                        }, {
-                            # 'icon': '',
-                            'title': '125',
-                        },
-                    ],
-                    'title': qs['LAYER'],
-                    'type': 'layer',
-                },
-            ],
-            'title': '',
-        }
-        del b['nodes'][0]['symbols'][0]['icon']
-        del b['nodes'][0]['symbols'][1]['icon']
-    elif 32200 <= Qgis.QGIS_VERSION_INT < 33400:
+    if Qgis.QGIS_VERSION_INT < 33400:
         expected = {
             'nodes': [
                 {

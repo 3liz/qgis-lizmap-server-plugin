@@ -45,7 +45,7 @@ def test_lizmap_server_info(client):
 
     if 33000 <= Qgis.QGIS_VERSION_INT < 33200:
         assert json_content['qgis_server']['metadata']['name'] == "'s-Hertogenbosch"
-    elif 32800 <= Qgis.QGIS_VERSION_INT < 32800:
+    elif 32800 <= Qgis.QGIS_VERSION_INT < 32900:
         assert json_content['qgis_server']['metadata']['name'] == "Firenze"
 
     # Names and versions are used in Lizmap Web Client
