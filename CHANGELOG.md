@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Add plugin homepage to the `server.json`, it enables HTTP link in the Lizmap Web Client administration interface
+* Place text widget in right list according to the Drag&Drop form
+* Add Py-QGIS-Server 2 support
+* Update HTML tooltip to handle Bootstrap 5 tabs with Lizmap Web Client 3.9
+
 ## 2.10.1 - 2024-09-11
 
 * Fix relation ID in tooltip.py
