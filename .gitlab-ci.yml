@@ -39,7 +39,6 @@ qgis-server-legacy:
   parallel:
     matrix:
       - QGIS_VERSION: [
-        "3.16",
         "3.22",
       ]
   script:

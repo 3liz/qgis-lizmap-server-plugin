@@ -120,7 +120,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
             if context.serverInterface().serviceRegistry().getService(service):
                 services_available.append(service)
 
-        if Qgis.QGIS_VERSION_INT >= 31200 and Qgis.devVersion() != 'exported':
+        if Qgis.devVersion() != 'exported':
             commit_id = Qgis.devVersion()
         else:
             commit_id = ''

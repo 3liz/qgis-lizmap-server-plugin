@@ -213,7 +213,6 @@ def test_single_get_feature_info_form_shortname_popup(client):
     assert '<div class="container popup_lizmap_dd" style="width:100%;">' in map_tip
 
 
-# @pytest.mark.skipif(Qgis.QGIS_VERSION_INT >= 32200, reason="Only QGIS 3.22 minimum")
 def test_single_get_feature_info_ascii(client):
     """ Test the Get Feature Info with different filters. """
     qs = {
@@ -242,20 +241,17 @@ def test_single_get_feature_info_ascii(client):
     rv = client.get(_build_query_string(qs, use_urllib=True), PROJECT)
     data = _check_request(rv)
 
-    if Qgis.QGIS_VERSION_INT <= 31700:
-        expected = {'features': [], 'type': 'FeatureCollection'}
-    else:
-        expected = {
-            'features': [
-                {
-                    'geometry': None,
-                    'id': 'accents.3',
-                    'properties': {
-                        'NAME_1': "Bret'agne",
-                    },
-                    'type': 'Feature',
+    expected = {
+        'features': [
+            {
+                'geometry': None,
+                'id': 'accents.3',
+                'properties': {
+                    'NAME_1': "Bret'agne",
                 },
-            ],
-            'type': 'FeatureCollection',
-        }
+                'type': 'Feature',
+            },
+        ],
+        'type': 'FeatureCollection',
+    }
     assert expected == data, data
