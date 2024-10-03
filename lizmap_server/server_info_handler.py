@@ -65,6 +65,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
     def __init__(self):
         super().__init__()
         self._context = create_server_context()
+        Logger.info(f"Server information handler using context '{self._context.name}'")
 
     def path(self):
         return QRegularExpression("server.json")
