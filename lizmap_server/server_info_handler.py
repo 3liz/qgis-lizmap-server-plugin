@@ -2,7 +2,7 @@ __copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
-
+import os
 import sys
 import traceback
 import warnings
@@ -54,7 +54,7 @@ EXPECTED_PLUGINS = (
     'atlasprint',
     # waiting a little for these one
     # 'tilesForServer',
-    # 'DataPlotly',
+    # 'DataPlotly',  # Special case for this one, depending on the hosting infrastructure
 )
 
 EXPECTED_SERVICES = ('WMS', 'WFS', 'WCS', 'WMTS', 'EXPRESSION', 'LIZMAP')
@@ -111,6 +111,20 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'version': 'not found',
                     'name': expected,
                 }
+
+        # Lizmap Cloud allocated ressources
+        allocated_ressources = os.getenv("LZM_ALLOCATION_MODE", "")
+        if allocated_ressources != "":
+            if allocated_ressources == "shared":
+                version = 'Not available on this Lizmap Cloud plan, only on a higher plan : standard or advanced'
+            else:
+                # allocated_ressources == "dedicated"
+                version = 'Not installed, you can ask a commercial proposal to Lizmap Cloud'
+            plugins["DataPlotly"] = {
+                'version': version,
+                'name': "DataPlotly",
+                'homepage': 'https://github.com/ghtmtt/DataPlotly/blob/master/README.md',
+            }
 
         # 3.28 : Firenze
         # 3.30 : 's-Hertogenbosch
