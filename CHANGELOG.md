@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.11.1 - 2024-10-14
+
+* Improve the server information handler
+
 ## 2.11.0 - 2024-10-03
 
 * Raise QGIS minimum version to QGIS 3.22

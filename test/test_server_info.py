@@ -53,7 +53,7 @@ def test_lizmap_server_info(client):
     assert len(json_content['qgis_server']['plugins'].keys()) == len(expected_plugins)
     for plugin in expected_plugins:
         assert json_content['qgis_server']['plugins'][plugin]['name'] == plugin
-        assert json_content['qgis_server']['plugins'][plugin]['version'] == 'not found'
+        assert json_content['qgis_server']['plugins'][plugin]['version'] == 'Not found'
 
     assert len(json_content['qgis_server']['fonts']) >= 1
 

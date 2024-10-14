@@ -108,7 +108,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         for expected in EXPECTED_PLUGINS:
             if expected not in plugins:
                 plugins[expected] = {
-                    'version': 'not found',
+                    'version': 'Not found',
                     'name': expected,
                 }
 
@@ -116,7 +116,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         allocated_ressources = os.getenv("LZM_ALLOCATION_MODE", "")
         if allocated_ressources != "":
             if allocated_ressources == "shared":
-                version = 'Not available on this Lizmap Cloud plan, only on a higher plan : standard or advanced'
+                version = 'Not available on this Lizmap Cloud plan, only on a higher plan : "Standard" or "Advanced"'
             else:
                 # allocated_ressources == "dedicated"
                 version = 'Not installed, you can ask a commercial proposal to Lizmap Cloud'
