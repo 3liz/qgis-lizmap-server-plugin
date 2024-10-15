@@ -113,16 +113,18 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 }
 
         # Lizmap Cloud allocated ressources
+        data_plotly = "DataPlotly"
         allocated_ressources = os.getenv("LZM_ALLOCATION_MODE", "")
-        if allocated_ressources != "":
+        if allocated_ressources != "" and data_plotly not in plugins.keys():
             if allocated_ressources == "shared":
-                version = 'Not available on this Lizmap Cloud plan, only on a higher plan : "Standard" or "Advanced"'
+                version = 'Not available on the "Basic" Lizmap Cloud plan'
             else:
                 # allocated_ressources == "dedicated"
-                version = 'Not installed, you can ask a commercial proposal to Lizmap Cloud'
-            plugins["DataPlotly"] = {
+                version = 'Not installed'
+
+            plugins[data_plotly] = {
                 'version': version,
-                'name': "DataPlotly",
+                'name': data_plotly,
                 'homepage': 'https://github.com/ghtmtt/DataPlotly/blob/master/README.md',
             }
 
