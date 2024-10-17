@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.11.2 - 2024-10-17
+
+* Fix wrong variable in the server information handler
+
 ## 2.11.1 - 2024-10-14
 
 * Improve the server information handler
