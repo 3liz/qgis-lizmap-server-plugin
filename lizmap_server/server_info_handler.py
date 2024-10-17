@@ -47,6 +47,7 @@ PLUGIN_METADATA_KEYS = (
     'homepage',
 )
 
+DATA_PLOTLY = "DataPlotly"
 EXPECTED_PLUGINS = (
     'wfsOutputExtension',
     # 'cadastre', very specific for the French use-case
@@ -54,7 +55,7 @@ EXPECTED_PLUGINS = (
     'atlasprint',
     # waiting a little for these one
     # 'tilesForServer',
-    # 'DataPlotly',  # Special case for this one, depending on the hosting infrastructure
+    # DATA_PLOTLY,  # Special case for this one, depending on the hosting infrastructure
 )
 
 EXPECTED_SERVICES = ('WMS', 'WFS', 'WCS', 'WMTS', 'EXPRESSION', 'LIZMAP')
@@ -113,18 +114,17 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 }
 
         # Lizmap Cloud allocated ressources
-        data_plotly = "DataPlotly"
         allocated_ressources = os.getenv("LZM_ALLOCATION_MODE", "")
-        if allocated_ressources != "" and data_plotly not in plugins.keys():
+        if allocated_ressources != "" and DATA_PLOTLY not in plugins.keys():
             if allocated_ressources == "shared":
                 version = 'Not available on the "Basic" Lizmap Cloud plan'
             else:
                 # allocated_ressources == "dedicated"
                 version = 'Not installed'
 
-            plugins[data_plotly] = {
+            plugins[DATA_PLOTLY] = {
                 'version': version,
-                'name': data_plotly,
+                'name': DATA_PLOTLY,
                 'homepage': 'https://github.com/ghtmtt/DataPlotly/blob/master/README.md',
             }
 
