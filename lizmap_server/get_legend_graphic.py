@@ -109,7 +109,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
             handler.appendBody(json.dumps(json_data).encode('utf8'))
             return
 
-        if layer.type() != QgsMapLayer.VectorLayer:
+        if layer.type() != QgsMapLayer.LayerType.VectorLayer:
             logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
             return
 

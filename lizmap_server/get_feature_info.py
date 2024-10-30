@@ -118,7 +118,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 continue
 
             config = layer.editFormConfig()
-            if config.layout() != QgsEditFormConfig.TabLayout:
+            if config.layout() != QgsEditFormConfig.EditorLayout.TabLayout:
                 Logger.warning(
                     'The CFG is requesting a form popup, but the layer is not a form drag&drop layout')
                 continue

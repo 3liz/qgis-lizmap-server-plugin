@@ -89,7 +89,7 @@ def find_vector_layer(layer_name: str, project: QgsProject) -> Optional[QgsVecto
     if not layer:
         return None
 
-    if not layer.type() == QgsMapLayer.VectorLayer:
+    if not layer.type() == QgsMapLayer.LayerType.VectorLayer:
         return None
 
     return layer
