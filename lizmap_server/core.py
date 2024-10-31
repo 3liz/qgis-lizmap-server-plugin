@@ -60,7 +60,10 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
             break
 
         # check short name
-        if layer.shortName() == layer_name:
+        if Qgis.versionInt() < 33800 and layer.shortName() == layer_name:
+            found = layer
+            break
+        elif Qgis.versionInt() >= 33800 and layer.serverProperties().shortName() == layer_name:
             found = layer
             break
 

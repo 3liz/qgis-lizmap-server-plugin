@@ -5,7 +5,7 @@ __copyright__ = 'Copyright 2022, Gis3w'
 
 # File adapted by @rldhont, 3Liz
 
-from qgis.core import QgsMapLayer, QgsProject
+from qgis.core import Qgis, QgsMapLayer, QgsProject
 from qgis.server import (
     QgsAccessControlFilter,
     QgsServerFilter,
@@ -25,13 +25,19 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
     @staticmethod
     def _setup_legend(layer: QgsMapLayer, qs: str, onoff: bool):
+
+        if Qgis.versionInt() < 33800:
+            layer_short_name = layer.shortName()
+        else:
+            layer_short_name = layer.serverProperties().shortName()
+
         for legend_layer in qs.split(';'):
             layer_name, key_list = legend_layer.split(':')
             # not empty
             if layer_name == '' or key_list == '':
                 continue
             # for the layer
-            if layer_name not in (layer.shortName(), layer.name(), layer.id()):
+            if layer_name not in (layer_short_name, layer.name(), layer.id()):
                 continue
 
             for key in key_list.split(','):
@@ -66,8 +72,13 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         style = sm.currentStyle()
 
         # check short name
-        if layer.shortName() in style_map:
-            style = style_map[layer.shortName()]
+        if Qgis.versionInt() < 33800:
+            layer_short_name = layer.shortName()
+        else:
+            layer_short_name = layer.serverProperties().shortName()
+        if layer_short_name in style_map:
+            style = style_map[layer_short_name]
+
         # check layer name
         elif layer.name() in style_map:
             style = style_map[layer.name()]
