@@ -8,6 +8,7 @@ import traceback
 from typing import Dict
 
 from qgis.core import (
+    Qgis,
     QgsDistanceArea,
     QgsExpression,
     QgsExpressionContext,
@@ -20,7 +21,7 @@ from qgis.core import (
     QgsJsonUtils,
     QgsProject,
 )
-from qgis.PyQt.QtCore import QTextCodec, QVariant
+from qgis.PyQt.QtCore import QMetaType, QTextCodec, QVariant
 from qgis.server import (
     QgsRequestHandler,
     QgsServerRequest,
@@ -494,7 +495,11 @@ class ExpressionService(QgsService):
             exporter.setSourceCrs(layer.crs())
             geojson_fields = QgsFields()
             for k in str_map.keys():
-                geojson_fields.append(QgsField(str(k), QVariant.String))
+                if Qgis.versionInt() < 33800:
+                    field = QgsField(str(k), QVariant.String)
+                else:
+                    field = QgsField(str(k), QMetaType.QString)
+                geojson_fields.append(field)
         else:
             exporter = None
             geojson_fields = None

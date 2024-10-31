@@ -4,8 +4,8 @@ import os
 import unittest
 import xml.etree.ElementTree as ET
 
-from qgis.core import QgsField, QgsFields
-from qgis.PyQt.QtCore import QVariant
+from qgis.core import Qgis, QgsField, QgsFields
+from qgis.PyQt.QtCore import QMetaType, QVariant
 
 from lizmap_server.core import (
     _server_feature_id_expression,
@@ -242,8 +242,17 @@ class TestServerCore(unittest.TestCase):
     def test_feature_id_expression(self):
         """ Test the QgsServerFeatureId port from CPP into Python. """
         fields = QgsFields()
-        fields.append(QgsField('field_1', type=QVariant.Double))
-        fields.append(QgsField('field_2', type=QVariant.Double))
+        if Qgis.versionInt() < 33800:
+            field = QgsField('field_1', QVariant.Double)
+        else:
+            field = QgsField('field_1', QMetaType.Double)
+        fields.append(field)
+
+        if Qgis.versionInt() < 33800:
+            field = QgsField('field_2', QVariant.Double)
+        else:
+            field = QgsField('field_2', QMetaType.Double)
+        fields.append(field)
 
         self.assertEqual(
             "",
