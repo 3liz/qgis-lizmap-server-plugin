@@ -392,3 +392,19 @@ def _server_feature_id_expression(feature_id: str, pk_attributes: list, fields: 
         expression += QgsExpression.createFieldEqualityExpression(field_name, pk_values[i])
 
     return expression
+
+
+def qgis_expression(text: str, only_fields: bool = False) -> Tuple[QgsExpression, bool]:
+    """ Get the QGIS expression. """
+    exp = QgsExpression(text)
+    if only_fields:
+        functions = exp.referencedFunctions()
+        if len(functions) >= 1:
+            logger = Logger()
+            logger.critical(
+                f"The expression below\n{text}\ncontains some functions : {','.join(functions)}\n"
+                f"Returning an empty expression."
+            )
+            return QgsExpression(''), False
+
+    return exp, True

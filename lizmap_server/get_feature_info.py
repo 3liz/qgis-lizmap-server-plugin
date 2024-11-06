@@ -24,7 +24,7 @@ from qgis.core import (
 )
 from qgis.server import QgsServerFilter, QgsServerProjectUtils
 
-from lizmap_server.core import find_vector_layer, server_feature_id_expression
+from lizmap_server.core import find_vector_layer, server_feature_id_expression, qgis_expression
 from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.tools import to_bool
 from lizmap_server.tooltip import Tooltip
@@ -230,7 +230,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
                 expression = server_feature_id_expression(result.feature_id, result.layer.dataProvider())
                 if expression:
-                    expression_request = QgsFeatureRequest(QgsExpression(expression))
+                    expression_request = QgsFeatureRequest(qgis_expression(expression)[0])
                     if not geometry_result:
                         expression_request.setFlags(QgsFeatureRequest.NoGeometry)
                     feature = QgsFeature()

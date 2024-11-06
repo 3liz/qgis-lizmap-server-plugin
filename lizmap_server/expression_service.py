@@ -34,6 +34,7 @@ from lizmap_server.core import (
     get_lizmap_groups,
     get_lizmap_user_login,
     get_server_fid,
+    qgis_expression,
     write_json_response,
 )
 from lizmap_server.exception import ExpressionServiceError
@@ -187,7 +188,7 @@ class ExpressionService(QgsService):
         elif isinstance(exp_json, dict):
             exp_items = exp_json.items()
         for k, e in exp_items:
-            exp = QgsExpression(e)
+            exp = qgis_expression(e)[0]
             exp.setGeomCalculator(da)
             exp.setDistanceUnits(project.distanceUnits())
             exp.setAreaUnits(project.areaUnits())
@@ -716,7 +717,7 @@ class ExpressionService(QgsService):
         da.setEllipsoid(project.ellipsoid())
 
         # Get filter expression
-        exp_f = QgsExpression(exp_filter)
+        exp_f = qgis_expression(exp_filter)[0]
         exp_f.setGeomCalculator(da)
         exp_f.setDistanceUnits(project.distanceUnits())
         exp_f.setAreaUnits(project.areaUnits())
@@ -840,7 +841,7 @@ class ExpressionService(QgsService):
         exp_map = {}
         exp_parser_errors = []
         for k, e in vir_json.items():
-            exp = QgsExpression(e)
+            exp = qgis_expression(e)[0]
             exp.setGeomCalculator(da)
             exp.setDistanceUnits(project.distanceUnits())
             exp.setAreaUnits(project.areaUnits())
@@ -868,7 +869,7 @@ class ExpressionService(QgsService):
         # get filter
         req_filter = params.get('FILTER', '')
         if req_filter:
-            req_exp = QgsExpression(req_filter)
+            req_exp = qgis_expression(req_filter)[0]
             req_exp.setGeomCalculator(da)
             req_exp.setDistanceUnits(project.distanceUnits())
             req_exp.setAreaUnits(project.areaUnits())
