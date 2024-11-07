@@ -46,7 +46,7 @@ jobs:
           "3.28",
           "3.34",
           "3.40",
-          "release-rc",
+          "nightly-release",
         ]
     # container: 3liz/qgis-platform:${{ matrix.qgis_version }}
     steps:
