@@ -782,6 +782,7 @@ class ExpressionService(QgsService):
             FILTER=An expression to filter layer
             FIELDS=list of requested field separated by comma
             WITH_GEOMETRY=False
+            LIMIT=number of features to return or nothing to return all
         """
         logger = Logger()
         layer_name = params.get('LAYER', '')
@@ -864,6 +865,16 @@ class ExpressionService(QgsService):
                 400)
 
         req = QgsFeatureRequest()
+
+        # set limit
+        req_limit = params.get('LIMIT', '-1')
+        try:
+            req.setLimit(int(req_limit))
+        except ValueError:
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid LIMIT for 'VirtualFields': \"{req_limit}\"",
+                400)
 
         # get filter
         req_filter = params.get('FILTER', '')
