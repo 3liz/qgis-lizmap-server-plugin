@@ -879,14 +879,17 @@ class ExpressionService(QgsService):
                 400)
 
         # set orderby
-        req_sorting_order = params.get('SORTING_ORDER', '')
+        req_sorting_order_param = params.get('SORTING_ORDER', '')
+        # Initialize to a default value
+        req_sorting_order = ''
 
-        if req_sorting_order in ['asc', 'desc']:
-            req_sorting_order = req_sorting_order == 'asc'
-        elif req_sorting_order != '' :
+        if req_sorting_order_param in ['asc', 'desc']:
+            # QGIS expects a boolean to know how to sort
+            req_sorting_order = (req_sorting_order_param == 'asc')
+        elif req_sorting_order_param != '' :
             raise ExpressionServiceError(
                 "Bad request error",
-                f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order}\"",
+                f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"",
                 400)
 
         req_sorting_field = params.get('SORTING_FIELD', '')
