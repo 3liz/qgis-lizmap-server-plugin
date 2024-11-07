@@ -240,3 +240,44 @@ def test_request_limit(client):
     assert b['features'][0]['properties']['a'] == 1
     assert 'b' in b['features'][0]['properties']
     assert b['features'][0]['properties']['b'] == 2
+
+
+def test_request_order(client):
+    """  Test Expression VirtualFields request
+    """
+    projectfile = "france_parts.qgs"
+
+    # Make a request
+    qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
+    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+        quote('1', safe=''), quote('1 + 1', safe=''))
+    qs += "&SORTING_ORDER=desc"
+    qs += "&SORTING_FIELD=NAME_1"
+    rv = client.get(qs, projectfile)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+
+    b = json.loads(rv.content.decode('utf-8'))
+    assert 'type' in b
+    assert b['type'] == 'FeatureCollection'
+
+    assert 'features' in b
+    assert len(b['features']) == 4
+
+    assert 'type' in b['features'][0]
+    assert b['features'][0]['type'] == 'Feature'
+
+    assert 'geometry' in b['features'][0]
+    assert b['features'][0]['geometry'] is None
+
+    assert 'properties' in b['features'][0]
+    assert 'NAME_1' in b['features'][0]['properties']
+    assert 'Region' in b['features'][0]['properties']
+
+    assert 'a' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['a'] == 1
+    assert 'b' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['b'] == 2
+
+    assert b['features'][0]['id'] == 'france_parts.2'
+    assert b['features'][3]['id'] == 'france_parts.0'
