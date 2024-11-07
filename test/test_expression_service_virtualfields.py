@@ -1,6 +1,7 @@
 import json
 
 from urllib.parse import quote
+from test.utils import _build_query_string, _check_request
 
 __copyright__ = 'Copyright 2019, 3Liz'
 __license__ = 'GPL version 3'
@@ -211,15 +212,19 @@ def test_request_limit(client):
     projectfile = "france_parts.qgs"
 
     # Make a request
-    qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
-        quote('1', safe=''), quote('1 + 1', safe=''))
-    qs += "&LIMIT=2"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "VirtualFields",
+        "MAP": "france_parts.qgs",
+        "LAYER": "france_parts",
+        "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+        quote('1', safe=''), quote('1 + 1', safe='')),
+        "LIMIT": "2",
+    }
 
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(_build_query_string(qs), projectfile)
+    b = _check_request(rv, http_code=200)
+
     assert 'type' in b
     assert b['type'] == 'FeatureCollection'
 
@@ -248,16 +253,20 @@ def test_request_order(client):
     projectfile = "france_parts.qgs"
 
     # Make a request
-    qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
-        quote('1', safe=''), quote('1 + 1', safe=''))
-    qs += "&SORTING_ORDER=desc"
-    qs += "&SORTING_FIELD=NAME_1"
-    rv = client.get(qs, projectfile)
-    assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('application/json') == 0
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "VirtualFields",
+        "MAP": "france_parts.qgs",
+        "LAYER": "france_parts",
+        "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+        quote('1', safe=''), quote('1 + 1', safe='')),
+        "SORTING_ORDER": "desc",
+        "SORTING_FIELD": "NAME_1",
+    }
 
-    b = json.loads(rv.content.decode('utf-8'))
+    rv = client.get(_build_query_string(qs), projectfile)
+    b = _check_request(rv, http_code=200)
+
     assert 'type' in b
     assert b['type'] == 'FeatureCollection'
 

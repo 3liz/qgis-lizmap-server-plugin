@@ -892,7 +892,8 @@ class ExpressionService(QgsService):
         req_sorting_field = params.get('SORTING_FIELD', '')
 
         if type(req_sorting_order) is bool :
-            req.setOrderBy(QgsFeatureRequest.OrderBy([QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order)]))
+            order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order)
+            req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
 
         # get filter
         req_filter = params.get('FILTER', '')
