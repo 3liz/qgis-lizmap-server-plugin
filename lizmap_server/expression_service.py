@@ -868,30 +868,6 @@ class ExpressionService(QgsService):
 
         req = QgsFeatureRequest()
 
-        # set limit
-        req_limit = params.get('LIMIT', '-1')
-        try:
-            req.setLimit(int(req_limit))
-        except ValueError:
-            raise ExpressionServiceError(
-                "Bad request error",
-                f"Invalid LIMIT for 'VirtualFields': \"{req_limit}\"",
-                400)
-
-        # set orderby
-        req_sorting_order_param = params.get('SORTING_ORDER', '')
-
-        if req_sorting_order_param in ('asc', 'desc'):
-            # QGIS expects a boolean to know how to sort
-            req_sorting_field = params.get('SORTING_FIELD', '')
-            order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order_param == 'asc')
-            req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
-        elif req_sorting_order_param != '' :
-            raise ExpressionServiceError(
-                "Bad request error",
-                f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"",
-                400)
-
         # get filter
         req_filter = params.get('FILTER', '')
         if req_filter:
@@ -915,6 +891,30 @@ class ExpressionService(QgsService):
 
             req_exp.prepare(exp_context)
             req = QgsFeatureRequest(req_exp, exp_context)
+
+        # set limit
+        req_limit = params.get('LIMIT', '-1')
+        try:
+            req.setLimit(int(req_limit))
+        except ValueError:
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid LIMIT for 'VirtualFields': \"{req_limit}\"",
+                400)
+
+        # set orderby
+        req_sorting_order_param = params.get('SORTING_ORDER', '')
+
+        if req_sorting_order_param in ('asc', 'desc'):
+            # QGIS expects a boolean to know how to sort
+            req_sorting_field = params.get('SORTING_FIELD', '')
+            order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order_param == 'asc')
+            req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+        elif req_sorting_order_param != '' :
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"",
+                400)
 
         # With geometry
         with_geom = to_bool(params.get('WITH_GEOMETRY'))
