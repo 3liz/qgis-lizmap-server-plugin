@@ -782,6 +782,9 @@ class ExpressionService(QgsService):
             FILTER=An expression to filter layer
             FIELDS=list of requested field separated by comma
             WITH_GEOMETRY=False
+            LIMIT=number of features to return or nothing to return all
+            SORTING_ORDER=asc or desc, default = asc
+            SORTING_FIELD=field name to sort by
         """
         logger = Logger()
         layer_name = params.get('LAYER', '')
@@ -864,6 +867,30 @@ class ExpressionService(QgsService):
                 400)
 
         req = QgsFeatureRequest()
+
+        # set limit
+        req_limit = params.get('LIMIT', '-1')
+        try:
+            req.setLimit(int(req_limit))
+        except ValueError:
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid LIMIT for 'VirtualFields': \"{req_limit}\"",
+                400)
+
+        # set orderby
+        req_sorting_order_param = params.get('SORTING_ORDER', '')
+
+        if req_sorting_order_param in ('asc', 'desc'):
+            # QGIS expects a boolean to know how to sort
+            req_sorting_field = params.get('SORTING_FIELD', '')
+            order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order_param == 'asc')
+            req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+        elif req_sorting_order_param != '' :
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"",
+                400)
 
         # get filter
         req_filter = params.get('FILTER', '')

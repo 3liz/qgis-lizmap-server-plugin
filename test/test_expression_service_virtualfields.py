@@ -1,6 +1,7 @@
 import json
 
 from urllib.parse import quote
+from test.utils import _build_query_string, _check_request
 
 __copyright__ = 'Copyright 2019, 3Liz'
 __license__ = 'GPL version 3'
@@ -204,3 +205,88 @@ def test_request_with_filter_fields_geometry(client):
     assert b['features'][0]['properties']['a'] == 1
     assert 'b' in b['features'][0]['properties']
     assert b['features'][0]['properties']['b'] == 2
+
+def test_request_limit(client):
+    """  Test Expression VirtualFields request
+    """
+    projectfile = "france_parts.qgs"
+
+    # Make a request
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "VirtualFields",
+        "MAP": "france_parts.qgs",
+        "LAYER": "france_parts",
+        "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+        quote('1', safe=''), quote('1 + 1', safe='')),
+        "LIMIT": "2",
+    }
+
+    rv = client.get(_build_query_string(qs), projectfile)
+    b = _check_request(rv, http_code=200)
+
+    assert 'type' in b
+    assert b['type'] == 'FeatureCollection'
+
+    assert 'features' in b
+    assert len(b['features']) == 2
+
+    assert 'type' in b['features'][0]
+    assert b['features'][0]['type'] == 'Feature'
+
+    assert 'geometry' in b['features'][0]
+    assert b['features'][0]['geometry'] is None
+
+    assert 'properties' in b['features'][0]
+    assert 'NAME_1' in b['features'][0]['properties']
+    assert 'Region' in b['features'][0]['properties']
+
+    assert 'a' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['a'] == 1
+    assert 'b' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['b'] == 2
+
+
+def test_request_order(client):
+    """  Test Expression VirtualFields request
+    """
+    projectfile = "france_parts.qgs"
+
+    # Make a request
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "VirtualFields",
+        "MAP": "france_parts.qgs",
+        "LAYER": "france_parts",
+        "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+        quote('1', safe=''), quote('1 + 1', safe='')),
+        "SORTING_ORDER": "desc",
+        "SORTING_FIELD": "NAME_1",
+    }
+
+    rv = client.get(_build_query_string(qs), projectfile)
+    b = _check_request(rv, http_code=200)
+
+    assert 'type' in b
+    assert b['type'] == 'FeatureCollection'
+
+    assert 'features' in b
+    assert len(b['features']) == 4
+
+    assert 'type' in b['features'][0]
+    assert b['features'][0]['type'] == 'Feature'
+
+    assert 'geometry' in b['features'][0]
+    assert b['features'][0]['geometry'] is None
+
+    assert 'properties' in b['features'][0]
+    assert 'NAME_1' in b['features'][0]['properties']
+    assert 'Region' in b['features'][0]['properties']
+
+    assert 'a' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['a'] == 1
+    assert 'b' in b['features'][0]['properties']
+    assert b['features'][0]['properties']['b'] == 2
+
+    assert b['features'][0]['id'] == 'france_parts.2'
+    assert b['features'][3]['id'] == 'france_parts.0'
