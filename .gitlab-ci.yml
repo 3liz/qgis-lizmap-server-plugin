@@ -155,45 +155,9 @@ push-repository:
   tags:
     - fabric
 
-# Dev for infra-V2 and infra-V3
+# Dev for infra-V2
 # For snap, artifact available : lizmap_server.master.zip
 # For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
-
-.infrav3-package:
-  only:
-    - tags
-    - master
-  dependencies:
-    - version
-    - package-zip
-  script:
-    - $FACTORY_SCRIPTS/make-package-$CI_STAGING qgis_lizmap_server ${VERSION} ${FACTORY_PRODUCT_NAME} qgis-plugin
-  tags:
-    - infrav3
-  variables:
-    CI_ARCHIVE: ${FACTORY_PRODUCT_NAME}.${VERSION}.zip
-
-deploy_snap:infrav3:
-  only:
-    - tags
-    - master
-  extends: .infrav3-package
-  stage: deploy
-  environment:
-    name: snap
-  variables:
-    CI_STAGING: snapshot
-
-release_prod:infrav3:
-  extends: .infrav3-package
-  stage: release
-  environment:
-    name: production
-  only:
-    - tags
-  variables:
-    CI_STAGING: release
-
 
 deploy:infrav2:
   stage: deploy
