@@ -21,7 +21,7 @@ stages:
     - pip list -l
     - make test FLAVOR=$QGIS_FLAVOR
   tags:
-    - factory
+    - factory-plain
 
 
 qgis-server:
@@ -44,7 +44,7 @@ qgis-server-legacy:
   script:
     - make tests FLAVOR=${QGIS_VERSION}
   tags:
-    - infrav3
+    - factory-dind
 
 linter:
   image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
@@ -53,7 +53,7 @@ linter:
     - source ~/.bashrc
     - make install-tests lint FLAVOR=$QGIS_FLAVOR
   tags:
-    - factory
+    - factory-plain
 
 version:
   stage: test
@@ -87,7 +87,7 @@ package-zip:
     # On a tag, the zip will be the existing already
     - cp ${FACTORY_PRODUCT_NAME}.${VERSION}.zip lizmap_server.${CI_COMMIT_REF_NAME}.zip || true
   tags:
-    - infrav3-plain
+    - factory-plain
   artifacts:
     untracked: true
     expose_as: 'QGIS package'
@@ -98,6 +98,7 @@ package-zip:
       - plugins.xml
 
 push-zip-fetch-repo:
+  image: $REGISTRY_URI/factory-ci-runner:fabric-ci
   only:
     - tags
     - master
@@ -143,6 +144,7 @@ edit-repository:
       - tmp_repository/*.xml
 
 push-repository:
+  image: $REGISTRY_URI/factory-ci-runner:fabric-ci
   only:
     - tags
     - master
@@ -160,6 +162,7 @@ push-repository:
 # For prod, artifact available : lizmap_server.${CI_COMMIT_REF_NAME}.zip
 
 deploy:infrav2:
+  image: $REGISTRY_URI/factory-ci-runner:fabric-ci
   stage: deploy
   dependencies:
     - push-repository
