@@ -282,6 +282,7 @@ array_intersect(
         Only for QGIS >= 3.10
         """
         uri = QgsDataSourceUri(self.polygon.source())
+
         try:
             sql = r"""
 WITH current_groups AS (
@@ -298,7 +299,7 @@ WITH current_groups AS (
 SELECT
         1 AS id, ST_AsBinary(ST_Union("{geom}")) AS geom
 FROM
-        "{schema}"."{table}" AS p,
+        {table_name} AS p,
         current_groups AS c
 WHERE
 c.user_group && (
@@ -318,8 +319,7 @@ c.user_group && (
                 polygon_field=self.group_field,
                 groups_or_user=','.join(groups_or_user),
                 geom=uri.geometryColumn(),
-                schema=uri.schema(),
-                table=uri.table(),
+                table_name=FilterByPolygon._format_table_name(uri),
             )
             Logger.info(
                 f"Requesting the database about polygons for the current groups or user with : \n{sql}")
@@ -400,10 +400,9 @@ c.user_group && (
         """
         uri = QgsDataSourceUri(self.layer.source())
 
-        sql = 'SELECT "{pk}" FROM "{schema}"."{table}" WHERE {st_intersect}'.format(
+        sql = 'SELECT "{pk}" FROM {table_name} WHERE {st_intersect}'.format(
             pk=self.primary_key,
-            schema=uri.schema(),
-            table=uri.table(),
+            table_name=FilterByPolygon._format_table_name(uri),
             st_intersect=st_intersect,
         )
         Logger.info(
@@ -495,3 +494,14 @@ ST_{'Intersects' if use_st_intersect else 'Contains'}(
     {current_geometry}
 )"""
         return expression
+
+    @classmethod
+    def _format_table_name(cls, uri: QgsDataSourceUri) -> str:
+        """ Format the table name according to the URI. """
+        table_name = uri.table()
+        # is the datasource a query or a table ?
+        if not uri.schema() and table_name.startswith('(') and table_name.endswith(')'):
+            # it is a query
+            return table_name
+        # it is a table
+        return uri.quotedTablename()
