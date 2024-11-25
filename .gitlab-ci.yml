@@ -124,6 +124,7 @@ push-zip-fetch-repo:
       - tmp_repository/*.xml
 
 edit-repository:
+  image: $REGISTRY_URI/factory-ci-runner:factory-ci
   only:
     - tags
     - master
@@ -132,12 +133,12 @@ edit-repository:
     - package-zip
     - push-zip-fetch-repo
   before_script:
-    - PATH=$PATH:~/.local/bin
-    - pip3 install --user qgis-plugin-repo
+    - source ~/.bashrc 
+    - pip3 install qgis-plugin-repo
   script:
     - qgis-plugin-repo merge plugins.xml tmp_repository/*.xml
   tags:
-    - factory
+    - factory-plain
   artifacts:
     untracked: true
     paths:
