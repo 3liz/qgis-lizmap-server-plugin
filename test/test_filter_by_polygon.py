@@ -4,6 +4,7 @@ import unittest
 
 from qgis.core import (
     QgsCoordinateReferenceSystem,
+    QgsDataSourceUri,
     QgsFeature,
     QgsGeometry,
     QgsProject,
@@ -280,3 +281,19 @@ ST_Contains(
     ST_Centroid(\"geom\")
 )"""
         self.assertEqual(expected, sql)
+
+    def test_format_table_name(self):
+        """ Test format table name. """
+        uri = QgsDataSourceUri()
+        uri.setConnection("localhost", "5432", "dbname", "johny", "xxx")
+        uri.setDataSource("public", "roads", "the_geom", "cityid = 2643", "primary_key_field")
+
+        self.assertEqual('"public"."roads"', FilterByPolygon._format_table_name(uri))
+
+        uri.setDataSource("", "roads", "the_geom", "cityid = 2643", "primary_key_field")
+
+        self.assertEqual('"roads"', FilterByPolygon._format_table_name(uri))
+
+        uri.setDataSource("", '(SELECT * FROM "public"."roads")', "the_geom", "cityid = 2643", "primary_key_field")
+
+        self.assertEqual('(SELECT * FROM "public"."roads")', FilterByPolygon._format_table_name(uri))
