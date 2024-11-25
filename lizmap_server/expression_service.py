@@ -903,7 +903,7 @@ class ExpressionService(QgsService):
                 400)
 
         # set orderby
-        req_sorting_order_param = params.get('SORTING_ORDER', '')
+        req_sorting_order_param = params.get('SORTING_ORDER', '').lower()
 
         if req_sorting_order_param in ('asc', 'desc'):
             # QGIS expects a boolean to know how to sort

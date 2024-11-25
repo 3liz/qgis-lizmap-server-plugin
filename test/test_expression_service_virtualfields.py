@@ -260,7 +260,7 @@ def test_request_order(client):
         "LAYER": "france_parts",
         "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
         quote('1', safe=''), quote('1 + 1', safe='')),
-        "SORTING_ORDER": "desc",
+        "SORTING_ORDER": "DESC",
         "SORTING_FIELD": "NAME_1",
     }
 
