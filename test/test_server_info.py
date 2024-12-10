@@ -56,6 +56,7 @@ def test_lizmap_server_info(client):
         assert json_content['qgis_server']['plugins'][plugin]['version'] == 'Not found'
 
     assert len(json_content['qgis_server']['fonts']) >= 1
+    assert len(json_content['qgis_server'].get('py_qgis_server').keys()) >= 2
 
 
 def test_tos_checks(client):
