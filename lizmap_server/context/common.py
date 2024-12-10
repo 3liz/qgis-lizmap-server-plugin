@@ -62,6 +62,20 @@ class ContextABC(ABC):
 
     @property
     @abstractmethod
+    def git_repository_url(self) -> str:
+        """ Return Git repository URL
+        """
+        ...
+
+    @property
+    @abstractmethod
+    def documentation_url(self) -> str:
+        """ Return documentation URL
+        """
+        ...
+
+    @property
+    @abstractmethod
     def search_paths(self) -> List[str]:
         """ Return search paths for projects
         """
