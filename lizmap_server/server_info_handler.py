@@ -156,6 +156,8 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 build_id=server_metadata.build_id,
                 commit_id=server_metadata.commit_id,
                 stable=server_metadata.is_stable,
+                git_repository_url=self._context.git_repository_url,
+                documentation_url=self._context.documentation_url,
             )
         else:
             py_qgis_server = dict(found=False, version="not used")

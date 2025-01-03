@@ -32,6 +32,14 @@ class Context(ContextABC):
         return SERVER_CONTEXT_NAME
 
     @property
+    def git_repository_url(self) -> str:
+        return "https://github.com/qgis/QGIS"
+
+    @property
+    def documentation_url(self) -> str:
+        return "https://docs.qgis.org/latest/en/docs/server_manual/"
+
+    @property
     def search_paths(self) -> List[str]:
         """ Return search paths for projects
         """
