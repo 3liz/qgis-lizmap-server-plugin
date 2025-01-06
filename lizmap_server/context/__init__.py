@@ -14,8 +14,8 @@ def create_server_context() -> ServerContext:
     # a py-qgis-server instance
     if hasattr(m, '_is_py_qgis_server'):
         from .py_qgis_server import Context
-    elif hasattr(m, '_is_py_qgis_server2'):
-        from .py_qgis_server2 import Context   # type: ignore [assignment]
+    elif hasattr(m, '_is_qjazz_server'):
+        from .qjazz import Context   # type: ignore [assignment]
     else:
         from .native import Context  # type: ignore [assignment]
 

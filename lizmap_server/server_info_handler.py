@@ -150,8 +150,9 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
             tag = ""
 
         if server_metadata:
-            py_qgis_server = dict(
+            qgis_server_meta = dict(
                 found=True,
+                name=server_metadata.name,
                 version=server_metadata.version,
                 build_id=server_metadata.build_id,
                 commit_id=server_metadata.commit_id,
@@ -160,7 +161,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 documentation_url=self._context.documentation_url,
             )
         else:
-            py_qgis_server = dict(found=False, version="not used")
+            qgis_server_meta = dict(found=False, version="not used")
 
         data = {
             # Only the "qgis_server" section is forwarded in LWC source code
@@ -172,7 +173,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                     'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
                     'version_int': Qgis.QGIS_VERSION_INT,  # 31600
                 },
-                'py_qgis_server': py_qgis_server,
+                'py_qgis_server': qgis_server_meta,
                 'external_providers_tos_checks': {
                     GOOGLE_KEY.lower(): strict_tos_check(GOOGLE_KEY),
                     BING_KEY.lower(): strict_tos_check(BING_KEY),
