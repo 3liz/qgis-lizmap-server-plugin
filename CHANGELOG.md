@@ -10,6 +10,7 @@
 * Remove the use of deprecated methods from the QGIS API
 * Support for Qt6
 * Tests - Add QGIS 3.40 for testing
+* Support for QJazz, instead of Py-QGIS-Server 2
 
 ## 2.11.2 - 2024-10-17
 
