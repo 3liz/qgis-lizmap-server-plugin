@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+* Improve the `VIRTUAFIELDS` request of the `EXPRESSION` service:
+  * Support a new `LIMIT` parameter to limit the number of features returned
+  * Support new `SORTING_FIELD` and `SORTING_ORDER` parameters to set the order
+    of the returned features
+* Filter by polygon: fix a bug when the QGIS table datasource property is a query
+* Remove the use of deprecated methods from the QGIS API
+* Support for Qt6
+* Tests - Add QGIS 3.40 for testing
+
 ## 2.11.2 - 2024-10-17
 
 * Fix wrong variable in the server information handler
