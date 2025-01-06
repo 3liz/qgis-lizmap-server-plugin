@@ -18,7 +18,7 @@ from .common import (
 )
 
 
-SERVER_CONTEXT_NAME = 'qjazz'
+SERVER_CONTEXT_NAME = 'QJazz'
 
 
 class Context(ContextABC):
