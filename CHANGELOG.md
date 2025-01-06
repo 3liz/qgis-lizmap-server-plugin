@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.12.0 - 2025-01-06
+
 * Improve the `VIRTUAFIELDS` request of the `EXPRESSION` service:
   * Support a new `LIMIT` parameter to limit the number of features returned
   * Support new `SORTING_FIELD` and `SORTING_ORDER` parameters to set the order
