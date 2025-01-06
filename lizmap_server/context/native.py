@@ -22,7 +22,7 @@ from .common import (
     to_iso8601,
 )
 
-SERVER_CONTEXT_NAME = 'native'
+SERVER_CONTEXT_NAME = 'FCGI'
 
 
 class Context(ContextABC):

@@ -18,7 +18,7 @@ from .common import (
     to_iso8601,
 )
 
-SERVER_CONTEXT_NAME = "py-qgis-server"
+SERVER_CONTEXT_NAME = "Py-QGIS-Server"
 
 
 class Context(ContextABC):
