@@ -2,10 +2,10 @@
 from functools import cached_property
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple
 
-from py_qgis_contrib.core.qgis import QgisPluginService
-from py_qgis_contrib.core import logger
-from py_qgis_cache import CacheEntry, CacheManager, ProjectMetadata
-from py_qgis_cache import CheckoutStatus as Co
+from qjazz_contrib.core.qgis import QgisPluginService
+from qjazz_contrib.core import logger
+from qjazz_cache.prelude import CacheEntry, CacheManager, ProjectMetadata
+from qjazz_cache.prelude import CheckoutStatus as Co
 
 from qgis.core import QgsProject
 
@@ -18,7 +18,7 @@ from .common import (
 )
 
 
-SERVER_CONTEXT_NAME = 'py-qgis-server2'
+SERVER_CONTEXT_NAME = 'qjazz'
 
 
 class Context(ContextABC):
@@ -106,7 +106,7 @@ class Context(ContextABC):
         """ Return server metadata
         """
         from importlib import metadata
-        version = metadata.version('py_qgis_cache')
+        version = metadata.version('qjazz_cache')
         return ServerMetadata(
             name=SERVER_CONTEXT_NAME,
             version=version,
