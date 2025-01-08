@@ -12,6 +12,7 @@ from lizmap_server.core import (
     get_lizmap_config,
     get_lizmap_layer_login_filter,
     get_lizmap_layers_config,
+    qgis_expression,
 )
 from lizmap_server.get_feature_info import GetFeatureInfoFilter
 from lizmap_server.tools import to_bool
@@ -266,3 +267,9 @@ class TestServerCore(unittest.TestCase):
             "\"field_1\" = '1' AND \"field_2\" = '2'",
             _server_feature_id_expression("1@@2", ['field_1', 'field_2'], fields),
         )
+
+    def test_expression(self):
+        """ Test about expressions and tokens. """
+        self.assertTrue(qgis_expression('"hi"')[1])
+        self.assertTrue(qgis_expression('hi')[1])
+        self.assertTrue(qgis_expression('lower("hi")')[1])
