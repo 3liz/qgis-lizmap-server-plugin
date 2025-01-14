@@ -206,6 +206,7 @@ def test_request_with_filter_fields_geometry(client):
     assert 'b' in b['features'][0]['properties']
     assert b['features'][0]['properties']['b'] == 2
 
+
 def test_request_limit(client):
     """  Test Expression VirtualFields request
     """

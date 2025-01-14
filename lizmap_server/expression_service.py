@@ -910,7 +910,7 @@ class ExpressionService(QgsService):
             req_sorting_field = params.get('SORTING_FIELD', '')
             order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order_param == 'asc')
             req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
-        elif req_sorting_order_param != '' :
+        elif req_sorting_order_param != '':
             raise ExpressionServiceError(
                 "Bad request error",
                 f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"",

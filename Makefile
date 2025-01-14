@@ -36,7 +36,9 @@ tests:
 
 .PHONY: test
 
-install-tests:
+install-tests: install-dev
+
+install-dev:
 	pip install -U --upgrade-strategy=eager -r requirements/dev.txt
 
 export QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE

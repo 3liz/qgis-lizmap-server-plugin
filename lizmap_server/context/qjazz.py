@@ -106,9 +106,16 @@ class Context(ContextABC):
         """ Return server metadata
         """
         from importlib import metadata
+        from qjazz_contrib.core import manifest
+
+        commit = manifest.get_manifest().commit_id
+        if commit:
+            commit = commit[:12]
+
         version = metadata.version('qjazz_cache')
         return ServerMetadata(
             name=SERVER_CONTEXT_NAME,
+            commit_id=commit,
             version=version,
             is_stable=not any(x in version for x in ("pre", "alpha", "beta", "rc", "dev")),
         )
