@@ -109,10 +109,8 @@ class Context(ContextABC):
         from qjazz_contrib.core import manifest
 
         commit = manifest.get_manifest().commit_id
-        if commit:
-            commit = commit[:12]
 
-        version = metadata.version('qjazz_cache')
+        version = metadata.version('qjazz_contrib')
         return ServerMetadata(
             name=SERVER_CONTEXT_NAME,
             commit_id=commit,
