@@ -191,7 +191,7 @@ def test_single_get_feature_info_form_popup(client):
     assert diff == [], diff
 
     # Let's check the maptip content
-    assert '<div class="container popup_lizmap_dd" style="width:100%;">' in map_tip
+    assert '<div class="container popup_lizmap_dd form-horizontal" style="width:100%;">' in map_tip
 
 
 def test_single_get_feature_info_form_shortname_popup(client):
@@ -210,7 +210,7 @@ def test_single_get_feature_info_form_shortname_popup(client):
             feature.remove(item)
 
     # Let's check the maptip content
-    assert '<div class="container popup_lizmap_dd" style="width:100%;">' in map_tip
+    assert '<div class="container popup_lizmap_dd form-horizontal" style="width:100%;">' in map_tip
 
 
 def test_single_get_feature_info_ascii(client):
