@@ -35,7 +35,8 @@ class Tooltip:
 
     @staticmethod
     def create_popup(html: str) -> str:
-        template = '''<div class="container popup_lizmap_dd" style="width:100%;">
+        template = '''
+        <div class="container popup_lizmap_dd form-horizontal" style="width:100%;">
     {}
 </div>\n'''
         return template.format(html)
@@ -294,15 +295,33 @@ class Tooltip:
     @staticmethod
     def _generate_field_name(name: str, fname: str, expression: str) -> str:
         text = '''
-                    [% CASE
-                        WHEN "{0}" IS NOT NULL OR trim("{0}") != ''
-                        THEN concat(
-                            '<p>', '<b>{1}</b>',
-                            '<div class="field">', {2}, '</div>',
-                            '</p>'
-                        )
-                        ELSE ''
-                    END %]'''.format(
+                    [%
+                    concat(
+                        '<div class="control-group ',
+                        CASE
+                            WHEN "{0}" IS NULL OR trim("{0}") = ''
+                                THEN ' control-has-empty-value '
+                            ELSE ''
+                        END,
+                        '">',
+                        '    <label ',
+                        '       id="dd_jforms_view_edition_{0}_label" ',
+                        '       class="control-label jforms-label" ',
+                        '       for="dd_jforms_view_edition_{0}" >',
+                        '    {1}',
+                        '    </label>',
+                        '    <div class="controls">',
+                        '        <span ',
+                        '            id="dd_jforms_view_edition_{0}" ',
+                        '            class="jforms-control-input" ',
+                        '        >',
+                                    {2},
+                        '        </span>',
+                        '    </div>',
+                        '</div>'
+                    )
+                    %]
+        '''.format(
             name,
             fname,
             expression,
@@ -445,41 +464,6 @@ class Tooltip:
     @staticmethod
     def css() -> str:
         css = '''<style>
-    div.popup_lizmap_dd {
-        margin: 2px;
-    }
-    div.popup_lizmap_dd div {
-        padding: 5px;
-    }
-    div.popup_lizmap_dd div.tab-content{
-        border: 1px solid rgba(150,150,150,0.5);
-    }
-    div.popup_lizmap_dd ul.nav.nav-tabs li a {
-        border: 1px solid rgba(150,150,150,0.5);
-        border-bottom: none;
-        color: grey;
-    }
-    div.popup_lizmap_dd ul.nav.nav-tabs li.active a {
-        color: #333333;
-    }
-    div.popup_lizmap_dd div.tab-content div.tab-pane div {
-        border: 1px solid rgba(150,150,150,0.5);
-        border-radius: 5px;
-        background-color: rgba(150,150,150,0.5);
-    }
-    div.popup_lizmap_dd div.tab-content div.tab-pane div.field,
-    div.popup_lizmap_dd div.field,
-    div.popup_lizmap_dd div.tab-content div.field {
-        background-color: white;
-        border: 1px solid white;
-    }
-    div.popup_lizmap_dd div.tab-content legend {
-        font-weight: bold;
-        font-size: 1em !important;
-        color: #333333;
-        border-bottom: none;
-        margin-top: 15px !important;
-    }
 
 </style>\n'''
         return css
