@@ -1,4 +1,3 @@
-
 from functools import cached_property
 
 from itertools import chain

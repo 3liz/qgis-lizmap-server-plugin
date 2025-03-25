@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Raise to QGIS Server 3.28 minimum
+
 ## 2.12.0 - 2025-01-06
 
 * Improve the `VIRTUAFIELDS` request of the `EXPRESSION` service:

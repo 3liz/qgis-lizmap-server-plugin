@@ -11,7 +11,7 @@ import re
 from collections import namedtuple
 from typing import Optional
 
-from qgis.core import Qgis, QgsMapLayer, QgsProject, QgsVectorLayer
+from qgis.core import QgsMapLayer, QgsProject, QgsVectorLayer
 from qgis.PyQt.QtCore import QBuffer, QIODevice
 from qgis.PyQt.QtGui import QImage
 from qgis.server import QgsServerFilter
@@ -211,16 +211,13 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     count if count != -1 else "N/A",
                 )
 
-            expression = ''
-            # TODO simplify when QGIS 3.26 will be the minimum version
-            if Qgis.QGIS_VERSION_INT >= 32600:
-                expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
-                if not result:
-                    Logger.warning(
-                        f"The expression in the project '{project_path}', layer '{layer.name()}' has not "
-                        f"been generated correctly, setting the expression to an empty string",
-                    )
-                    expression = ''
+            expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
+            if not result:
+                Logger.warning(
+                    f"The expression in the project '{project_path}', layer '{layer.name()}' has not "
+                    f"been generated correctly, setting the expression to an empty string",
+                )
+                expression = ''
 
             if item.label() in categories.keys():
                 Logger.warning(

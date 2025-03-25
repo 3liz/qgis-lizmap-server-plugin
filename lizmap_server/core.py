@@ -11,12 +11,9 @@ from typing import Dict, Optional, Tuple, Union
 
 from qgis.core import (
     Qgis,
-    QgsExpression,
     QgsFeature,
-    QgsFields,
     QgsMapLayer,
     QgsProject,
-    QgsVectorDataProvider,
     QgsVectorLayer,
 )
 from qgis.server import QgsRequestHandler, QgsServerResponse
@@ -138,7 +135,7 @@ def _get_lizmap_config(config_path: str, last_modified: float) -> Union[Dict, No
     logger = Logger()
 
     # Get Lizmap config
-    with open(config_path, 'r') as cfg_file:
+    with open(config_path) as cfg_file:
         # noinspection PyBroadException
         try:
             cfg = json.loads(cfg_file.read())
@@ -359,36 +356,3 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
 
     logger.info("No lizmap editing context filter in parameters : default value false")
     return False
-
-
-def server_feature_id_expression(feature_id: str, data_provider: QgsVectorDataProvider) -> str:
-    """ Fetch the QGIS server feature ID expression according to the current QGIS version. """
-    if Qgis.QGIS_VERSION_INT >= 32400:
-        from qgis.server import QgsServerFeatureId
-
-        # noinspection PyArgumentList
-        return QgsServerFeatureId.getExpressionFromServerFid(feature_id, data_provider)
-
-    return _server_feature_id_expression(feature_id, data_provider.pkAttributeIndexes(), data_provider.fields())
-
-
-def _server_feature_id_expression(feature_id: str, pk_attributes: list, fields: QgsFields) -> str:
-    """ Port of QgsServerFeatureId::getExpressionFromServerFid for QGIS < 3.24
-
-    The value "@@" is hardcoded in the CPP file.
-    """
-    if len(pk_attributes) == 0:
-        return ""
-
-    expression = ""
-    pk_values = feature_id.split("@@")
-
-    for i, pk_value in enumerate(pk_values):
-
-        if i > 0:
-            expression += ' AND '
-
-        field_name = fields.at(i).name()
-        expression += QgsExpression.createFieldEqualityExpression(field_name, pk_values[i])
-
-    return expression

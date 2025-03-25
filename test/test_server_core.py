@@ -4,11 +4,7 @@ import os
 import unittest
 import xml.etree.ElementTree as ET
 
-from qgis.core import Qgis, QgsField, QgsFields
-from qgis.PyQt.QtCore import QMetaType, QVariant
-
 from lizmap_server.core import (
-    _server_feature_id_expression,
     get_lizmap_config,
     get_lizmap_layer_login_filter,
     get_lizmap_layers_config,
@@ -237,32 +233,4 @@ class TestServerCore(unittest.TestCase):
         self.assertEqual(
             ET.tostring(ET.fromstring(expected)).decode("utf-8"),
             ET.tostring(ET.fromstring(response)).decode("utf-8"),
-        )
-
-    def test_feature_id_expression(self):
-        """ Test the QgsServerFeatureId port from CPP into Python. """
-        fields = QgsFields()
-        if Qgis.versionInt() < 33800:
-            field = QgsField('field_1', QVariant.Double)
-        else:
-            field = QgsField('field_1', QMetaType.Double)
-        fields.append(field)
-
-        if Qgis.versionInt() < 33800:
-            field = QgsField('field_2', QVariant.Double)
-        else:
-            field = QgsField('field_2', QMetaType.Double)
-        fields.append(field)
-
-        self.assertEqual(
-            "",
-            _server_feature_id_expression("1", [], fields),
-        )
-        self.assertEqual(
-            "\"field_1\" = '1'",
-            _server_feature_id_expression("1", ['field_1'], fields),
-        )
-        self.assertEqual(
-            "\"field_1\" = '1' AND \"field_2\" = '2'",
-            _server_feature_id_expression("1@@2", ['field_1', 'field_2'], fields),
         )

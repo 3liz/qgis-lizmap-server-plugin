@@ -24,6 +24,12 @@ NAMESPACES = {
     'xsi': "http://www.w3.org/2001/XMLSchema-instance",
 }
 
+PROJECT_FILE = "france_parts.qgs"
+
+BASE = {
+    "MAP": PROJECT_FILE,
+}
+
 
 class OWSResponse:
 
