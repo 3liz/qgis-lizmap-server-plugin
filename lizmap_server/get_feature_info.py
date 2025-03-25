@@ -22,9 +22,9 @@ from qgis.core import (
     QgsProject,
     QgsRelationManager,
 )
-from qgis.server import QgsServerFilter, QgsServerProjectUtils
+from qgis.server import QgsServerFeatureId, QgsServerFilter, QgsServerProjectUtils
 
-from lizmap_server.core import find_vector_layer, server_feature_id_expression
+from lizmap_server.core import find_vector_layer
 from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.tools import to_bool
 from lizmap_server.tooltip import Tooltip
@@ -228,7 +228,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 distance_area.setEllipsoid(project.ellipsoid())
                 exp_context.appendScope(QgsExpressionContextUtils.layerScope(result.layer))
 
-                expression = server_feature_id_expression(result.feature_id, result.layer.dataProvider())
+                expression = QgsServerFeatureId.getExpressionFromServerFid(
+                    result.feature_id, result.layer.dataProvider())
                 if expression:
                     expression_request = QgsFeatureRequest(QgsExpression(expression))
                     if not geometry_result:
