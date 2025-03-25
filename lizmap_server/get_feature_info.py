@@ -175,7 +175,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             return
 
         # str() because the plugin must be compatible Python 3.5
-        with open(str(config_path), 'r', encoding='utf-8') as cfg_file:
+        with open(str(config_path), encoding='utf-8') as cfg_file:
             cfg = json.loads(cfg_file.read())
 
         project = QgsProject.instance()

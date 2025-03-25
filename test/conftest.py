@@ -43,11 +43,11 @@ plugin_path = None
 
 
 def pytest_report_header(config):
-    message = 'QGIS : {}\n'.format(Qgis.QGIS_VERSION_INT)
+    message = f'QGIS : {Qgis.QGIS_VERSION_INT}\n'
     message += 'Python GDAL : {}\n'.format(gdal.VersionInfo('VERSION_NUM'))
-    message += 'Python : {}\n'.format(sys.version)
+    message += f'Python : {sys.version}\n'
     # message += 'Python path : {}'.format(sys.path)
-    message += 'QT : {}'.format(Qt.QT_VERSION_STR)
+    message += f'QT : {Qt.QT_VERSION_STR}'
     return message
 
 
@@ -172,7 +172,7 @@ def checkQgisVersion(minver: str, maxver: str) -> bool:
             major += 1
         if rev > 99:
             rev = 99
-        return int("{:d}{:02d}{:02d}".format(major, minor, rev))
+        return int(f"{major:d}{minor:02d}{rev:02d}")
 
     version = to_int(Qgis.QGIS_VERSION.split('-')[0])
     minver = to_int(minver) if minver else version
@@ -193,7 +193,7 @@ def find_plugins(pluginpath: str) -> Generator[str, None, None]:
 
         cp = configparser.ConfigParser()
         try:
-            with open(metadatafile, mode='rt') as f:
+            with open(metadatafile) as f:
                 cp.read_file(f)
             if not cp['general'].getboolean('server'):
                 logging.critical("%s is not a server plugin", plugin)
@@ -254,7 +254,7 @@ def install_logger_hook(verbose: bool = False) -> None:
 
     # Add a hook to qgis  message log
     def writelogmessage(message, tag, level):
-        arg = '{}: {}'.format(tag, message)
+        arg = f'{tag}: {message}'
         if level == Qgis.Warning:
             LOGGER.warning(arg)
         elif level == Qgis.Critical:

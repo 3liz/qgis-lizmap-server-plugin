@@ -51,7 +51,7 @@ def test_features_error(client):
     """
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}"
     rv = client.get(qs, PROJECT_FILE)
@@ -60,7 +60,7 @@ def test_features_error(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     # type feature and not Feature error
@@ -70,7 +70,7 @@ def test_features_error(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURES=["
     qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -99,7 +99,7 @@ def test_request_without_features(client):
     assert '0' in b['results'][0]
     assert b['results'][0]['0'] == 2
 
-    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS=[\"%s\", \"%s\"]" % (
+    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS=[\"{}\", \"{}\"]".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     rv = client.get(qs, PROJECT_FILE)
     b = _check_request(rv)
@@ -114,7 +114,7 @@ def test_request_without_features(client):
     assert '1' in b['results'][0]
     assert b['results'][0]['1'] == 2
 
-    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     rv = client.get(qs, PROJECT_FILE)
     b = _check_request(rv)
@@ -130,7 +130,7 @@ def test_request_without_features(client):
     assert b['results'][0]['b'] == 2
 
     # Request with lizmap headers and custom variables
-    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('@lizmap_user', safe=''), quote('@lizmap_user_groups', safe=''))
     headers = {'X-Lizmap-User-Groups': 'test1', 'X-Lizmap-User': 'Bretagne'}
     rv = client.get(qs, PROJECT_FILE, headers)
@@ -201,7 +201,7 @@ def test_request_with_features(client):
     """
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     rv = client.get(qs, PROJECT_FILE)
@@ -223,7 +223,7 @@ def test_request_with_features(client):
 
     # Make a second request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote('prop0', safe=''), quote('$x', safe=''))
     qs += "&FEATURES=["
     qs += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -258,7 +258,7 @@ def test_request_with_formscope(client):
     """
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote("current_value('prop0')", safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     qs += "&FORM_SCOPE=true"
@@ -281,7 +281,7 @@ def test_request_with_formscope(client):
 
     # Make a request without form scope but with current_value function
     qs = "?SERVICE=EXPRESSION&REQUEST=Evaluate&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&EXPRESSIONS={\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs += "&EXPRESSIONS={{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''), quote("current_value('prop0')", safe=''), quote('$x', safe=''))
     qs += "&FEATURE={\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
     rv = client.get(qs, PROJECT_FILE)

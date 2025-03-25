@@ -43,7 +43,7 @@ def test_features_error(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURE'] = "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}"
@@ -53,7 +53,7 @@ def test_features_error(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURE'] = "{\"type\":\"feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -63,7 +63,7 @@ def test_features_error(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURES'] = (
@@ -96,7 +96,7 @@ def test_request_without_features(client):
 
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "[\"%s\", \"%s\"]" % (
+    qs['STRINGS'] = "[\"{}\", \"{}\"]".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''))
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)
@@ -115,7 +115,7 @@ def test_request_without_features(client):
 
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''))
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
     b = _check_request(rv)
@@ -139,7 +139,7 @@ def test_request_with_features(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURE'] = "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -162,7 +162,7 @@ def test_request_with_features(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% prop0 %]', safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURES'] = (
@@ -200,7 +200,7 @@ def test_request_with_features_all(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% NAME_1 %]', safe=''),
         quote('[% round($area) %]', safe=''))
     qs['FEATURES'] = "ALL"
@@ -227,7 +227,7 @@ def test_request_with_form_scope(client):
     """
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote("[% current_value('prop0') %]", safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURE'] = "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -252,7 +252,7 @@ def test_request_with_form_scope(client):
     # One template has multiple expressions
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote("[% current_value('prop0') %]", safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURE'] = "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -279,7 +279,7 @@ def test_request_with_features_geojson(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote("[% prop0 %]", safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURE'] = "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -307,7 +307,7 @@ def test_request_with_features_geojson(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote("[% prop0 %]", safe=''),
         quote('[% $x %]', safe=''))
     qs['FEATURES'] = (
@@ -352,7 +352,7 @@ def test_request_with_features_all_geojson(client):
     # Make a request
     qs = dict(BASE_QUERY)
     qs['LAYER'] = 'france_parts'
-    qs['STRINGS'] = "{\"a\":\"%s\", \"b\":\"%s\", \"c\":\"%s\", \"d\":\"%s\"}" % (
+    qs['STRINGS'] = "{{\"a\":\"{}\", \"b\":\"{}\", \"c\":\"{}\", \"d\":\"{}\"}}".format(
         quote('[% 1 %]', safe=''), quote('[% 1 + 1 %]', safe=''), quote('[% NAME_1 %]', safe=''),
         quote('[% round($area) %]', safe=''))
     qs['FEATURES'] = "ALL"

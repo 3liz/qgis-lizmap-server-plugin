@@ -39,7 +39,7 @@ def test_virtuals_error(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"" % (
+    qs += "&VIRTUALS={{\"a\":\"{}\", \"b\":\"{}\"".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     rv = client.get(qs, projectfile)
     assert rv.status_code == 400
@@ -53,7 +53,7 @@ def test_request(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs += "&VIRTUALS={{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     rv = client.get(qs, projectfile)
     assert rv.status_code == 200
@@ -90,7 +90,7 @@ def test_request_with_filter(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs += "&VIRTUALS={{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     qs += "&FILTER=%s" % (
         quote("NAME_1 = 'Bretagne'", safe=''))
@@ -131,7 +131,7 @@ def test_request_with_filter_fields(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs += "&VIRTUALS={{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     qs += "&FILTER=%s" % (
         quote("NAME_1 = 'Bretagne'", safe=''))
@@ -172,7 +172,7 @@ def test_request_with_filter_fields_geometry(client):
 
     # Make a request
     qs = "?SERVICE=EXPRESSION&REQUEST=VirtualFields&MAP=france_parts.qgs&LAYER=france_parts"
-    qs += "&VIRTUALS={\"a\":\"%s\", \"b\":\"%s\"}" % (
+    qs += "&VIRTUALS={{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe=''))
     qs += "&FILTER=%s" % (
         quote("NAME_1 = 'Bretagne'", safe=''))
@@ -218,7 +218,7 @@ def test_request_limit(client):
         "REQUEST": "VirtualFields",
         "MAP": "france_parts.qgs",
         "LAYER": "france_parts",
-        "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+        "VIRTUALS": "{{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe='')),
         "LIMIT": "2",
     }
@@ -259,7 +259,7 @@ def test_request_order(client):
         "REQUEST": "VirtualFields",
         "MAP": "france_parts.qgs",
         "LAYER": "france_parts",
-        "VIRTUALS": "{\"a\":\"%s\", \"b\":\"%s\"}" % (
+        "VIRTUALS": "{{\"a\":\"{}\", \"b\":\"{}\"}}".format(
         quote('1', safe=''), quote('1 + 1', safe='')),
         "SORTING_ORDER": "DESC",
         "SORTING_FIELD": "NAME_1",

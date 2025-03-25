@@ -135,7 +135,7 @@ def _get_lizmap_config(config_path: str, last_modified: float) -> Union[Dict, No
     logger = Logger()
 
     # Get Lizmap config
-    with open(config_path, 'r') as cfg_file:
+    with open(config_path) as cfg_file:
         # noinspection PyBroadException
         try:
             cfg = json.loads(cfg_file.read())
