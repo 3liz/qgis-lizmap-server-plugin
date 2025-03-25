@@ -1,13 +1,12 @@
 import json
 
-from test.utils import _build_query_string, _check_request
+from test.utils import PROJECT_FILE, _build_query_string, _check_request
 from urllib.parse import quote
 
 __copyright__ = 'Copyright 2013, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
-PROJECT_FILE = "france_parts.qgs"
 BASE_QUERY = {
     'SERVICE': 'EXPRESSION',
     'REQUEST': 'replaceExpressionText',
@@ -76,7 +75,7 @@ def test_features_error(client):
     _check_request(rv, http_code=400)
 
 
-def test_request_without_features(client):
+def test_request_replace_without_features(client):
     """  Test Expression replaceExpressionText request without Feature or Features parameter
     """
     # Make a request
