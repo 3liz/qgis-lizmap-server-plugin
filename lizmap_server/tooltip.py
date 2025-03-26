@@ -113,7 +113,7 @@ class Tooltip:
                             layer.id(), fname))
                     return html
 
-                field_view = Tooltip._generate_value_relation(widget_config, name)
+                field_view = Tooltip._generate_value_relation(name)
 
             if widget_type == 'RelationReference':
                 relation = relation_manager.relation(widget_config['Relation'])
@@ -126,10 +126,7 @@ class Tooltip:
                             layer.id(), fname))
                     return html
 
-                display = referenced_layer.displayExpression()
-                layer_id = relation.referencedLayerId()
-                parent_pk = relation.resolveReferencedField(name)
-                field_view = Tooltip._generate_relation_reference(name, parent_pk, layer_id, display)
+                field_view = Tooltip._generate_relation_reference(name)
 
             if widget_type == 'ValueMap':
                 field_view = Tooltip._generate_value_map(widget_config, name)
@@ -269,27 +266,9 @@ class Tooltip:
 
     @staticmethod
     def _generate_relation_reference(
-        name: str,
-        parent_pk: str,
-        layer_id: str,
-        display_expression: str,
+        name: str
     ) -> str:
-        expression = f'''
-                    "{parent_pk}" = attribute(@parent, '{name}')
-                '''
-
-        field_view = '''
-                    aggregate(
-                        layer:='{}',
-                        aggregate:='concatenate',
-                        expression:=to_string({}),
-                        filter:={}
-                    )'''.format(
-            layer_id,
-            display_expression,
-            expression,
-        )
-        return field_view
+        return f'represent_value("{name}")'
 
     @staticmethod
     def _generate_field_name(name: str, fname: str, expression: str) -> str:
@@ -424,31 +403,8 @@ class Tooltip:
         return field_view
 
     @staticmethod
-    def _generate_value_relation(widget_config: dict, name: str) -> str:
-        vlid = widget_config['Layer']
-
-        expression = f'''"{widget_config['Key']}" = attribute(@parent, '{name}')'''
-
-        filter_exp = widget_config.get('FilterExpression', '').strip()
-        if filter_exp:
-            # replace @current_geometry only available in form by geometry(@parent) for aggregate
-            filter_exp = filter_exp.replace('@current_geometry', 'geometry(@parent)')
-            # replace current_value( only available in form by attribute(@parent, for aggregate
-            filter_exp = filter_exp.replace('current_value(', 'attribute(@parent, ')
-            expression += f' AND {filter_exp}'
-
-        field_view = '''
-                    aggregate(
-                        layer:='{}',
-                        aggregate:='concatenate',
-                        expression:=to_string("{}"),
-                        filter:={}
-                    )'''.format(
-                                vlid,
-                                widget_config['Value'],
-                                expression,
-                            )
-        return field_view
+    def _generate_value_relation(name: str) -> str:
+        return f'represent_value("{name}")'
 
     @staticmethod
     def _generate_text_label(label: str, expression: str) -> str:
