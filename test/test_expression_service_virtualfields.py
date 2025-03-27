@@ -308,3 +308,26 @@ def test_request_order(client):
 
     assert b['features'][0]['id'] == 'france_parts.2'
     assert b['features'][3]['id'] == 'france_parts.0'
+
+
+def test_request_safe_virtuals(client):
+    """  Test Expression VirtualFields request with some un-checked expressions
+    """
+    forbidden = quote("env('CI')", safe='')
+    allowed = quote("format_date(now(), 'yyyy')", safe='')
+
+    qs = dict(BASE, **{
+        "REQUEST": "VirtualFields",
+        "LAYER": "france_parts",
+        "VIRTUALS": "{{\"a\":\"{}\"}}".format(forbidden),
+        "SAFE_VIRTUALS": "{{\"b\":\"{}\", \"c\":\"{}\"}}".format(
+            forbidden,
+            allowed,
+        ),
+    })
+    qs = _build_query_string(qs)
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
+    assert b['features'][0]['properties']['a'] == 'True'
+    assert b['features'][0]['properties']['b'] == 'not allowed'
+    assert int(b['features'][0]['properties']['c']) >= 2000
