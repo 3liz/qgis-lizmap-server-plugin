@@ -35,18 +35,6 @@ qgis-server:
         "nightly-release",
       ]
 
-qgis-server-legacy:
-  stage: test
-  parallel:
-    matrix:
-      - QGIS_VERSION: [
-        "3.22",
-      ]
-  script:
-    - make tests FLAVOR=${QGIS_VERSION}
-  tags:
-    - factory-dind
-
 linter:
   image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
   stage: test
