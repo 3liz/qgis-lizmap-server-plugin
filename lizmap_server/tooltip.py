@@ -113,7 +113,7 @@ class Tooltip:
                             layer.id(), fname))
                     return html
 
-                field_view = Tooltip._generate_value_relation(name)
+                field_view = Tooltip._generate_represent_value(name)
 
             if widget_type == 'RelationReference':
                 relation = relation_manager.relation(widget_config['Relation'])
@@ -126,7 +126,7 @@ class Tooltip:
                             layer.id(), fname))
                     return html
 
-                field_view = Tooltip._generate_relation_reference(name)
+                field_view = Tooltip._generate_represent_value(name)
 
             if widget_type == 'ValueMap':
                 field_view = Tooltip._generate_value_map(widget_config, name)
@@ -265,9 +265,9 @@ class Tooltip:
         return result
 
     @staticmethod
-    def _generate_relation_reference(
-        name: str
-    ) -> str:
+    def _generate_represent_value(name: str) -> str:
+        """ Use represent_value which should cover many use cases about returning a human display string. """
+        # https://github.com/3liz/lizmap-plugin/issues/241
         return f'represent_value("{name}")'
 
     @staticmethod
@@ -401,10 +401,6 @@ class Tooltip:
                         '{date_format}'
                     )'''
         return field_view
-
-    @staticmethod
-    def _generate_value_relation(name: str) -> str:
-        return f'represent_value("{name}")'
 
     @staticmethod
     def _generate_text_label(label: str, expression: str) -> str:
