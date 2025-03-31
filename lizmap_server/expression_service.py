@@ -36,6 +36,7 @@ from lizmap_server.core import (
     get_server_fid,
     write_json_response,
 )
+from lizmap_server.definitions.safe_expressions import ALLOWED_SAFE_EXPRESSIONS, NOT_ALLOWED_EXPRESSION
 from lizmap_server.exception import ExpressionServiceError
 from lizmap_server.logger import Logger
 from lizmap_server.tools import to_bool
@@ -94,7 +95,7 @@ class ExpressionService(QgsService):
             elif reqparam == 'GETFEATUREWITHFORMSCOPE':
                 self.get_feature_with_form_scope(params, response, project)
             elif reqparam == 'VIRTUALFIELDS':
-                self.virtualFields(params, response, project)
+                self.virtual_fields(params, response, project)
             else:
                 raise ExpressionServiceError(
                     "Bad request error",
@@ -772,13 +773,14 @@ class ExpressionService(QgsService):
         return
 
     @staticmethod
-    def virtualFields(params: Dict[str, str], response: QgsServerResponse, project: QgsProject) -> None:
+    def virtual_fields(params: Dict[str, str], response: QgsServerResponse, project: QgsProject) -> None:
         """ Get virtual fields for features
 
         In parameters:
             LAYER=wms-layer-name
             VIRTUALS={"key1": "first expression", "key2": "second expression"}
             // optionals
+            SAFE_VIRTUALS={"key1": "first expression", "key2": "second expression"}
             FILTER=An expression to filter layer
             FIELDS=list of requested field separated by comma
             WITH_GEOMETRY=False
@@ -787,6 +789,7 @@ class ExpressionService(QgsService):
             SORTING_FIELD=field name to sort by
         """
         logger = Logger()
+
         layer_name = params.get('LAYER', '')
         if not layer_name:
             raise ExpressionServiceError(
@@ -811,22 +814,11 @@ class ExpressionService(QgsService):
                 "Invalid 'VirtualFields' REQUEST: VIRTUALS parameter is mandatory",
                 400)
 
-        # try to load virtuals dict
-        try:
-            vir_json = json.loads(virtuals)
-        except Exception:
-            logger.critical(
-                f"JSON loads virtuals '{virtuals}' exception:\n{traceback.format_exc()}")
-            raise ExpressionServiceError(
-                "Bad request error",
-                f"Invalid 'VirtualFields' REQUEST: VIRTUALS '{virtuals}' are not well formed",
-                400)
+        vir_json = ExpressionService.check_json_virtuals('VIRTUALS', virtuals)
 
-        if not isinstance(vir_json, dict):
-            raise ExpressionServiceError(
-                "Bad request error",
-                f"Invalid 'VirtualFields' REQUEST: VIRTUALS '{virtuals}' are not well formed",
-                400)
+        safe_virtuals = params.get('SAFE_VIRTUALS')
+        safe_vir_json = ExpressionService.check_json_virtuals('SAFE_VIRTUALS', safe_virtuals)
+        # TODO, check that subset of safe virtuals does not overlap with virtuals
 
         # create expression context
         exp_context = QgsExpressionContext()
@@ -835,35 +827,48 @@ class ExpressionService(QgsService):
         exp_context.appendScope(QgsExpressionContextUtils.layerScope(layer))
 
         # create distance area context
-        da = QgsDistanceArea()
-        da.setSourceCrs(layer.crs(), project.transformContext())
-        da.setEllipsoid(project.ellipsoid())
+        distance_area = QgsDistanceArea()
+        distance_area.setSourceCrs(layer.crs(), project.transformContext())
+        distance_area.setEllipsoid(project.ellipsoid())
 
         # parse virtuals
         exp_map = {}
         exp_parser_errors = []
-        for k, e in vir_json.items():
-            exp = QgsExpression(e)
-            exp.setGeomCalculator(da)
-            exp.setDistanceUnits(project.distanceUnits())
-            exp.setAreaUnits(project.areaUnits())
-
-            if exp.hasParserError():
-                exp_parser_errors.append(f'Error "{e}": {exp.parserErrorString()}')
-                continue
-
-            if not exp.isValid():
-                exp_parser_errors.append(f'Expression not valid "{e}"')
+        for field, expression in vir_json.items():
+            exp, error = ExpressionService.check_expression(expression, distance_area, project)
+            if error:
+                exp_parser_errors.append(error)
                 continue
 
             exp.prepare(exp_context)
-            exp_map[k] = exp
+            exp_map[field] = exp
+
+        for field, expression in safe_vir_json.items():
+            exp, error = ExpressionService.check_expression(expression, distance_area, project)
+            if error:
+                exp_parser_errors.append(error)
+                continue
+
+            for member in exp.referencedFunctions():
+                if member not in ALLOWED_SAFE_EXPRESSIONS:
+                    allowed = ",".join(ALLOWED_SAFE_EXPRESSIONS)
+                    logger.warning(
+                        f"Project {project.fileName()}, "
+                        f"layer {layer_name}, "
+                        f"input expression '{expression}' has been discarded from evaluation, "
+                        f"replaced by '{NOT_ALLOWED_EXPRESSION}'. "
+                        f"Only '{allowed}' are allowed.",
+                    )
+                    exp = QgsExpression(NOT_ALLOWED_EXPRESSION)
+
+            exp.prepare(exp_context)
+            exp_map[field] = exp
 
         # expression parser errors found
         if exp_parser_errors:
             raise ExpressionServiceError(
                 "Bad request error",
-                "Invalid VIRTUALS for 'VirtualFields':\n{}".format('\n'.join(exp_parser_errors)),
+                "Invalid VIRTUALS or SAFE_VIRTUALS for 'VirtualFields':\n{}".format('\n'.join(exp_parser_errors)),
                 400)
 
         req = QgsFeatureRequest()
@@ -872,7 +877,7 @@ class ExpressionService(QgsService):
         req_filter = params.get('FILTER', '')
         if req_filter:
             req_exp = QgsExpression(req_filter)
-            req_exp.setGeomCalculator(da)
+            req_exp.setGeomCalculator(distance_area)
             req_exp.setDistanceUnits(project.distanceUnits())
             req_exp.setAreaUnits(project.areaUnits())
 
@@ -951,17 +956,59 @@ class ExpressionService(QgsService):
 
             # Evaluate expressions for virtual fields
             errors = {}
-            for k, exp in exp_map.items():
+            for field, exp in exp_map.items():
                 value = exp.evaluate(exp_context)
                 if exp.hasEvalError():
-                    extra[k] = None
-                    errors[k] = exp.evalErrorString()
+                    extra[field] = None
+                    errors[field] = exp.evalErrorString()
                 else:
-                    extra[k] = json.loads(QgsJsonUtils.encodeValue(value))
-                    errors[k] = exp.expression()
+                    extra[field] = json.loads(QgsJsonUtils.encodeValue(value))
+                    errors[field] = exp.expression()
 
             response.write(separator + json_exporter.exportFeature(feat, extra, fid))
             response.flush()
             separator = ',\n'
         response.write(']}')
         return
+
+    @classmethod
+    def check_json_virtuals(cls, name: str, virtuals: str) -> dict:
+        """ Load virtuals dictionary from string to JSON."""
+        if not virtuals:
+            return {}
+
+        try:
+            virtual_json = json.loads(virtuals)
+        except Exception:
+            logger = Logger()
+            logger.critical(
+                f"JSON loads {name} '{virtuals}' exception:\n{traceback.format_exc()}")
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid 'VirtualFields' REQUEST: VIRTUALS '{virtuals}' are not well formed",
+                400)
+
+        if not isinstance(virtual_json, dict):
+            raise ExpressionServiceError(
+                "Bad request error",
+                f"Invalid 'VirtualFields' REQUEST: VIRTUALS '{virtuals}' are not well formed",
+                400)
+
+        return virtual_json
+
+    @classmethod
+    def check_expression(
+            cls, expression_str: str, distance_area: QgsDistanceArea, project: QgsProject) -> [QgsExpression, str]:
+        """ Check if an expression as a string has an error or not."""
+        expression = QgsExpression(expression_str)
+        expression.setGeomCalculator(distance_area)
+        expression.setDistanceUnits(project.distanceUnits())
+        expression.setAreaUnits(project.areaUnits())
+
+        if expression.hasParserError():
+            return None, f'Error "{expression_str}": {expression.parserErrorString()}'
+
+        if not expression.isValid():
+            return None, f'Expression not valid "{expression_str}"'
+
+        return expression, ''
