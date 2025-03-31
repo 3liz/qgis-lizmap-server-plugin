@@ -328,6 +328,7 @@ def test_request_safe_virtuals(client):
     qs = _build_query_string(qs)
     rv = client.get(qs, PROJECT_FILE)
     b = _check_request(rv)
-    assert b['features'][0]['properties']['a'] == 'True'
+    # On local, and GitHub Action, it's 'True', while on GitLab, it's 'true'.
+    assert str(b['features'][0]['properties']['a']).lower() == 'true'
     assert b['features'][0]['properties']['b'] == 'not allowed'
     assert int(b['features'][0]['properties']['c']) >= 2000
