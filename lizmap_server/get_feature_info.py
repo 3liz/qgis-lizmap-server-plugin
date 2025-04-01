@@ -86,7 +86,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             project: QgsProject,
             relation_manager: QgsRelationManager,
             xml: str,
-            bootstrap_5: bool,
+            css_framework: str,
     ) -> List[Result]:
         """ Parse the XML and check for each layer according to the Lizmap CFG file. """
         features = []
@@ -128,11 +128,19 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
             # Need to eval the html_content
             html_content = Tooltip.create_popup_node_item_from_form(
-                layer, root, 0, [], '', relation_manager, bootstrap_5)
+                layer, root, 0, [], '', relation_manager, css_framework == 'BOOTSTRAP5')
             html_content = Tooltip.create_popup(html_content)
 
-            # Maybe we can avoid the CSS on all features ?
-            html_content += Tooltip.css()
+            # If CSS_FRAMEWORK is empty (empty string), it means :
+            # LWC <= 3.7.X
+            # LWC between 3.8.0 and 3.8.6 included
+            # We include so the CSS
+            # Starting from 3.8.7, the CSS is included into LWC itself
+            # Because the Lizmap server 2.13.0 is a hard dependency to LWC 3.8.7, the CSS will be obviously provided by
+            # LWC core, so no call to Tooltip::css_3_8_6() on the server side, only in desktop.
+            if css_framework == '':
+                # Maybe we can avoid the CSS on all features ?
+                html_content += Tooltip.css()
 
             features.append(Result(layer, feature_id, html_content))
             Logger.info(
@@ -183,11 +191,11 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
         xml = request.body().data().decode("utf-8")
 
-        bootstrap_5 = params.get('CSS_FRAMEWORK', '').upper() == 'BOOTSTRAP5'
+        css_framework = params.get('CSS_FRAMEWORK', '')
 
         # noinspection PyBroadException
         try:
-            features = self.feature_list_to_replace(cfg, project, relation_manager, xml, bootstrap_5)
+            features = self.feature_list_to_replace(cfg, project, relation_manager, xml, css_framework)
         except Exception as e:
             if to_bool(os.getenv("CI")):
                 logger.log_exception(e)
