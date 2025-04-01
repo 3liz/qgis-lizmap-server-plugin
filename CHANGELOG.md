@@ -2,7 +2,13 @@
 
 ## Unreleased
 
+## 2.13.0 - 2025-04-01
+
 * Raise to QGIS Server 3.28 minimum
+* Upgrade Python coding standards
+* Allow some virtuals fields to be discarded if not considered safe, used in Lizmap Web Client 3.9
+* Drag & Drop popup - improve interface (mimic Lizmap editing form) & display NULL value fields
+* Update configuration when used with QJazz https://github.com/3liz/qjazz
 
 ## 2.12.0 - 2025-01-06
 
