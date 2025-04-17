@@ -37,7 +37,7 @@ class TestLegend(unittest.TestCase):
 
         # Rule 1 with symbol
         # noinspection PyUnresolvedReferences
-        rule_1 = QgsRuleBasedRenderer.Rule(QgsSymbol.defaultSymbol(QgsWkbTypes.PointGeometry), label='rule-1')
+        rule_1 = QgsRuleBasedRenderer.Rule(QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry), label='rule-1')
         root_rule.appendChild(rule_1)
 
         # Sub-rule to rule 1
@@ -47,7 +47,7 @@ class TestLegend(unittest.TestCase):
 
         # Rule 2 with symbol
         # noinspection PyUnresolvedReferences
-        rule_2 = QgsRuleBasedRenderer.Rule(QgsSymbol.defaultSymbol(QgsWkbTypes.PointGeometry), label='rule-2')
+        rule_2 = QgsRuleBasedRenderer.Rule(QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry), label='rule-2')
         root_rule.appendChild(rule_2)
 
         # Sub-rule to rule 2

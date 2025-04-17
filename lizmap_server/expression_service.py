@@ -499,7 +499,7 @@ class ExpressionService(QgsService):
                 if Qgis.versionInt() < 33800:
                     field = QgsField(str(k), QVariant.String)
                 else:
-                    field = QgsField(str(k), QMetaType.QString)
+                    field = QgsField(str(k), QMetaType.Type.QString)
                 geojson_fields.append(field)
         else:
             exporter = None
@@ -743,7 +743,7 @@ class ExpressionService(QgsService):
         # With geometry
         with_geom = to_bool(params.get('WITH_GEOMETRY'))
         if not with_geom:
-            req.setFlags(QgsFeatureRequest.NoGeometry)
+            req.setFlags(QgsFeatureRequest.Flag.NoGeometry)
 
         # Fields
         pk_attributes = layer.primaryKeyAttributes()
@@ -924,7 +924,7 @@ class ExpressionService(QgsService):
         # With geometry
         with_geom = to_bool(params.get('WITH_GEOMETRY'))
         if not with_geom:
-            req.setFlags(QgsFeatureRequest.NoGeometry)
+            req.setFlags(QgsFeatureRequest.Flag.NoGeometry)
 
         # Fields
         pk_attributes = layer.primaryKeyAttributes()

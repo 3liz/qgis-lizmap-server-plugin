@@ -41,7 +41,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
     def warning_icon(cls) -> str:
         """ Warning icon as base 64. """
         buffer = QBuffer()
-        buffer.open(QIODevice.WriteOnly)
+        buffer.open(QIODevice.OpenModeFlag.WriteOnly)
         qp = QImage(":/images/themes/default/mIconWarning.svg")
         qp.save(buffer, "PNG")
         return bytes(buffer.data().toBase64().data()).decode()

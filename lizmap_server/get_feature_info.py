@@ -241,7 +241,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 if expression:
                     expression_request = QgsFeatureRequest(QgsExpression(expression))
                     if not geometry_result:
-                        expression_request.setFlags(QgsFeatureRequest.NoGeometry)
+                        expression_request.setFlags(QgsFeatureRequest.Flag.NoGeometry)
                     feature = QgsFeature()
                     result.layer.getFeatures(expression_request).nextFeature(feature)
                 else:

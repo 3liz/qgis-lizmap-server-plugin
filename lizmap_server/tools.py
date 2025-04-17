@@ -38,7 +38,7 @@ def version() -> str:
         QgsMessageLog.logMessage(
             "Error, an UnicodeDecodeError occurred while reading the metadata.txt. Is the locale "
             "correctly set on the server ?",
-            "Lizmap", Qgis.Critical)
+            "Lizmap", Qgis.MessageLevel.Critical)
         return 'NULL'
     else:
         return config["general"]["version"]
@@ -53,7 +53,7 @@ def check_environment_variable() -> bool:
             'https://docs.lizmap.com/current/en/install/pre_requirements.html#lizmap-server-plugin '
             'An environment variable must be enabled to have Lizmap Web Client ≥ 3.5 working.',
             "Lizmap",
-            Qgis.Critical,
+            Qgis.MessageLevel.Critical,
         )
         return False
 
