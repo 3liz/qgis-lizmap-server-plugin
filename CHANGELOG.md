@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.13.1 - 2025-05-05
+
+* For "Value Relation" and "Relation Reference", use `represent_value` expression instead.
+* Improve PyQt6 compatibility
+
 ## 2.13.0 - 2025-04-01
 
 * Raise to QGIS Server 3.28 minimum
