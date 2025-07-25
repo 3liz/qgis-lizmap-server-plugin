@@ -55,19 +55,22 @@ class Context(ContextABC):
 
         rv = None
 
-        match co_status:
-            case Co.UNCHANGED | Co.NEEDUPDATE:
-                rv = md.project
-            case Co.NEW:
-                raise ProjectCacheError(403, f"Requested project not in cache: {uri}")
-            case Co.NOTFOUND:
-                # Unexistent project
-                raise ProjectCacheError(404, f"Requested project not found: {uri}")
-            case Co.REMOVED:
-                # Do not return a removed project
-                # Since layer's data may not exist
-                # anymore
-                raise ProjectCacheError(410, f"Requested removed project: {uri}")
+        # Do not use match since we must keep compatibility with Python >= 3.7
+        # TODO replace if/elif by match when QGIS 3.34 will be the minimum version
+        # match co_status:
+        if co_status in (Co.UNCHANGED, Co.NEEDUPDATE):
+            rv = md.project
+        elif co_status == Co.NEW:
+            raise ProjectCacheError(403, f"Requested project not in cache: {uri}")
+        elif co_status == Co.NOTFOUND:
+            # Unexistent project
+            raise ProjectCacheError(404, f"Requested project not found: {uri}")
+        elif co_status == Co.REMOVED:
+            # Do not return a removed project
+            # Since layer's data may not exist
+            # anymore
+            raise ProjectCacheError(410, f"Requested removed project: {uri}")
+
         return rv
 
     def catalog(self, search_path: Optional[str] = None) -> List[CatalogItem]:
