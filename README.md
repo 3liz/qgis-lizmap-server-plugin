@@ -5,7 +5,7 @@
 
 ## Environment variables
 
-* `QGIS_SERVER_LIZMAP_REVEAL_SETTINGS`, read 
+* `QGIS_SERVER_LIZMAP_REVEAL_SETTINGS`, read
   [docs.lizmap.com documentation](https://docs.lizmap.com/current/en/install/pre_requirements.html#qgis-server-plugins)
 * `STRICT_BING_TOS_CHECK` and `STRICT_GOOGLE_TOS_CHECK`, if set to `TRUE` (the default value), an API key will be
   checked and required for these layers. If no API key provided in the Lizmap plugin, these layers will be discarded.
@@ -19,7 +19,7 @@
 * All published versions are available [plugins.qgis.org](https://plugins.qgis.org/plugins/lizmap_server/).
 * We **highly** recommend to use [qgis-plugin-manager](https://pypi.org/project/qgis-plugin-manager/) to download and install.
     * `qgis-plugin-manager install 'Lizmap server'`
-    * and then **follow** the documentation about the **environment variable** for **security** in the 
+    * and then **follow** the documentation about the **environment variable** for **security** in the
       [Lizmap documentation](https://docs.lizmap.com/current/en/install/pre_requirements.html#installation).
 * Latest release link with the full changelog from the [release page](https://github.com/3liz/qgis-lizmap-server-plugin/releases)
 
@@ -76,6 +76,20 @@ on the QGIS server side.
 ### Tests
 
 ```bash
+# Create a venv
+python3 -m venv env
+
+# Activate venv
+source env/bin/activate
+
+# Get deps
+make install-dev
+make install-test
+
+# Linter
+make lint
+
+# Run tests with full stack
 make tests
 ```
 
