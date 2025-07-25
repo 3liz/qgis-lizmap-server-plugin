@@ -2,6 +2,11 @@ __copyright__ = 'Copyright 2022, 3Liz'
 __license__ = 'GPL version 3'
 __email__ = 'info@3liz.org'
 
+# noinspection PyUnresolvedReferences
+from qgis.core import QgsExpression  # noqa: F401
+# noinspection PyUnresolvedReferences
+from .qgis_expression import layer_renderer_used_attributes  # noqa: F401
+
 
 # noinspection PyPep8Naming
 def classFactory(iface):

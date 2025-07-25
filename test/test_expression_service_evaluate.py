@@ -403,3 +403,116 @@ def test_request_with_form_scope(client):
 
     assert 'c' in b['results'][0]
     assert b['results'][0]['c'] is None
+
+
+def test_lizmap_python_expressions(client):
+    """
+    Test the expressions provided by the plugin
+    """
+    # Use the legend.qgs project
+    project_file = 'lizmap_expressions.qgs'
+
+    # Test for simple unique symbol
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": project_file,
+        "LAYER": 'unique_symbol',
+        "EXPRESSION": quote(
+            "layer_renderer_used_attributes('unique_symbol')",
+            safe='',
+        ),
+    }
+    qs_built = _build_query_string(qs)
+    rv = client.get(qs_built, project_file)
+    b = _check_request(rv)
+    assert 'status' in b
+    assert b['status'] == 'success'
+    assert 'results' in b
+    assert len(b['results']) == 1
+    assert '0' in b['results'][0]
+    assert b['results'][0]['0'] == []
+
+    # Test for simple unique symbol with expression based color
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": project_file,
+        "LAYER": 'unique_symbol_expression_based_color',
+        "EXPRESSION": quote(
+            "layer_renderer_used_attributes('unique_symbol_expression_based_color')",
+            safe='',
+        ),
+    }
+    qs_built = _build_query_string(qs)
+    rv = client.get(qs_built, project_file)
+    b = _check_request(rv)
+    assert 'status' in b
+    assert b['status'] == 'success'
+    assert 'results' in b
+    assert len(b['results']) == 1
+    assert '0' in b['results'][0]
+    assert b['results'][0]['0'] == ['NAME_1']
+
+    # Test for categorized
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": project_file,
+        "LAYER": 'categorized',
+        "EXPRESSION": quote(
+            "layer_renderer_used_attributes('categorized')",
+            safe='',
+        ),
+    }
+    qs_built = _build_query_string(qs)
+    rv = client.get(qs_built, project_file)
+    b = _check_request(rv)
+    assert 'status' in b
+    assert b['status'] == 'success'
+    assert 'results' in b
+    assert len(b['results']) == 1
+    assert '0' in b['results'][0]
+    assert b['results'][0]['0'] == ['NAME_1']
+
+    # Test for rule based renderer with only one field used
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": project_file,
+        "LAYER": 'rule_based',
+        "EXPRESSION": quote(
+            "layer_renderer_used_attributes('rule_based')",
+            safe='',
+        ),
+    }
+    qs_built = _build_query_string(qs)
+    rv = client.get(qs_built, project_file)
+    b = _check_request(rv)
+    assert 'status' in b
+    assert b['status'] == 'success'
+    assert 'results' in b
+    assert len(b['results']) == 1
+    assert '0' in b['results'][0]
+    assert b['results'][0]['0'] == ['NAME_1']
+
+    # Test for rule based renderer with multiple field used
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": project_file,
+        "LAYER": 'rule_based_with_multiple_fields',
+        "EXPRESSION": quote(
+            "layer_renderer_used_attributes('rule_based_with_multiple_fields')",
+            safe='',
+        ),
+    }
+    qs_built = _build_query_string(qs)
+    rv = client.get(qs_built, project_file)
+    b = _check_request(rv)
+    assert 'status' in b
+    assert b['status'] == 'success'
+    assert 'results' in b
+    assert len(b['results']) == 1
+    assert '0' in b['results'][0]
+    assert b['results'][0]['0'].sort() == ['Region', 'NAME_1', 'TYPE_1'].sort()

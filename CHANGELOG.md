@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* Add Python based **expressions**. At present, only one expression has been added.
+  * `layer_renderer_used_attributes(layer_identifier)` which returns the list of fields
+    used by the layer renderer. It will be called by Lizmap Web Client tooltip feature,
+    which needs the list of fields used in symbology, as it is required by OpenLayers
+    to render the geometries with the SLD style when fields are used in rules.
+
 ## 2.13.1 - 2025-05-05
 
 * For "Value Relation" and "Relation Reference", use `represent_value` expression instead.
