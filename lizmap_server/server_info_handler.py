@@ -7,7 +7,7 @@ import sys
 import traceback
 import warnings
 
-from typing import Union
+from typing import Optional
 
 from qgis.core import Qgis
 from qgis.PyQt import Qt
@@ -191,7 +191,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         }
         self.write(data, context)
 
-    def support_custom_headers(self) -> Union[None, bool]:
+    def support_custom_headers(self) -> Optional[bool]:
         """ Check if this QGIS Server supports custom headers.
 
          Returns None if the check is not requested with the GET parameter CHECK_CUSTOM_HEADERS
