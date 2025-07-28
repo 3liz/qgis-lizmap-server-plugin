@@ -30,6 +30,9 @@ ignore = [
     "RUF100",
 ]
 
+[tool.ruff.per-file-target-version]
+"lizmap_server/context/qjazz.py" = "py312"
+
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "T201",
