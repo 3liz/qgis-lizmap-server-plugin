@@ -15,7 +15,16 @@ def test_layer_error_without_layer(client):
         "MAP": PROJECT_FILE,
     }
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
-    _check_request(rv, http_code=400)
+    b = _check_request(rv, http_code=400)
+
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'] == 'Invalid \'Evaluate\' REQUEST: LAYER parameter is mandatory'
 
 
 def test_layer_error_with_layer_error(client):
@@ -28,8 +37,16 @@ def test_layer_error_with_layer_error(client):
         "LAYER": "UNKNOWN_LAYER",
     }
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
-    _check_request(rv, http_code=400)
+    b = _check_request(rv, http_code=400)
 
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'].startswith('Invalid LAYER parameter for \'Evaluate\'')
 
 def test_expression_error(client):
     """ Test Expression Evaluate request with Expression parameter error. """
@@ -41,8 +58,38 @@ def test_expression_error(client):
         "LAYER": "france_parts",
     }
     rv = client.get(_build_query_string(qs), PROJECT_FILE)
-    _check_request(rv, http_code=400)
+    b = _check_request(rv, http_code=400)
 
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'] == 'Invalid \'Evaluate\' REQUEST: EXPRESSION or EXPRESSIONS parameter is mandatory'
+
+    # Make a request with an invalid expression
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": PROJECT_FILE,
+        "LAYER": "france_parts",
+        "EXPRESSIONS": "{{\"a\":\"{}\"}}".format(
+            quote('foobar()', safe=''),
+        ),
+    }
+    rv = client.get(_build_query_string(qs), PROJECT_FILE)
+    b = _check_request(rv, http_code=400)
+
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'].startswith('Invalid EXPRESSIONS for \'Evaluate\'')
 
 def test_features_error(client):
     """  Test Expression Evaluate request with Feature or Features parameter error
@@ -64,7 +111,16 @@ def test_features_error(client):
     qs = _build_query_string(qs)
     rv = client.get(qs, PROJECT_FILE)
 
-    _check_request(rv, http_code=400)
+    b = _check_request(rv, http_code=400)
+
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'].startswith('Invalid \'Evaluate\' REQUEST: FEATURES')
 
     # Make a request
     qs = {
@@ -84,7 +140,16 @@ def test_features_error(client):
     # type feature and not Feature error
     rv = client.get(qs, PROJECT_FILE)
 
-    _check_request(rv, http_code=400)
+    b = _check_request(rv, http_code=400)
+
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'].startswith('Invalid \'Evaluate\' REQUEST: FEATURES')
 
     # Make a request
     qs = {
@@ -107,7 +172,16 @@ def test_features_error(client):
     qs = _build_query_string(qs)
     rv = client.get(qs, PROJECT_FILE)
 
-    _check_request(rv, http_code=400)
+    b = _check_request(rv, http_code=400)
+
+    assert 'status' in b
+    assert b['status'] == 'fail'
+
+    assert 'code' in b
+    assert b['code'] == 'Bad request error'
+
+    assert 'message' in b
+    assert b['message'].startswith('Invalid \'Evaluate\' REQUEST: FEATURES')
 
 
 def test_request_expression_without_features(client):
@@ -297,6 +371,9 @@ def test_request_with_features(client):
     assert 'd' in b['results'][0]
     assert b['results'][0]['d'] == 102.0
 
+    assert 'features' in b
+    assert b['features'] == 1
+
     # Make a second request
     features = "["
     features += "{\"type\":\"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [102.0, 0.5]}, \"properties\": {\"prop0\": \"value0\"}}"
@@ -340,6 +417,9 @@ def test_request_with_features(client):
     assert 'd' in b['results'][1]
     assert b['results'][1]['d'] == 105.0
 
+    assert 'features' in b
+    assert b['features'] == 2
+
 
 def test_request_with_form_scope(client):
     """  Test Expression Evaluate request without Feature or Features and Form_Scope parameters
@@ -377,6 +457,9 @@ def test_request_with_form_scope(client):
     assert 'd' in b['results'][0]
     assert b['results'][0]['d'] == 102.0
 
+    assert 'features' in b
+    assert b['features'] == 1
+
     # Make a request without form scope but with current_value function
     qs = {
         "SERVICE": "EXPRESSION",
@@ -403,6 +486,36 @@ def test_request_with_form_scope(client):
 
     assert 'c' in b['results'][0]
     assert b['results'][0]['c'] is None
+
+    assert 'features' in b
+    assert b['features'] == 1
+
+    # Make a request
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "Evaluate",
+        "MAP": PROJECT_FILE,
+        "LAYER": "france_parts",
+        "EXPRESSIONS": "{{\"jforms_view_edition-tab2\":\"{}\"}}".format(
+            quote(' to_string(\\"has_photo\\") = \'true\' OR \\"has_photo\\" = \'t\'', safe=''),
+        ),
+        "FEATURE": "{\"type\":\"Feature\", \"geometry\": null, \"properties\": {\"has_photo\": \"f\"}}",
+        "FORM_SCOPE": True,
+    }
+    qs = _build_query_string(qs)
+    rv = client.get(qs, PROJECT_FILE)
+    b = _check_request(rv)
+
+    assert 'status' in b
+    assert b['status'] == 'success'
+
+    assert 'results' in b
+    assert len(b['results']) == 1
+    assert 'jforms_view_edition-tab2' in b['results'][0]
+    assert not b['results'][0]['jforms_view_edition-tab2']
+
+    assert 'features' in b
+    assert b['features'] == 1
 
 
 def test_lizmap_python_expressions(client):

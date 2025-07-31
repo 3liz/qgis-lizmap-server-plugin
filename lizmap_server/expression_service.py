@@ -325,6 +325,7 @@ class ExpressionService(QgsService):
                     error[k] = exp.expression()
             body['results'].append(result)
             body['errors'].append(error)
+            body['features'] += 1
 
         write_json_response(body, response)
         return
