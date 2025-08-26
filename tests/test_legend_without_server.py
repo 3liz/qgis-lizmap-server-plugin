@@ -10,15 +10,14 @@ from qgis.core import (
 
 from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
 
-__copyright__ = 'Copyright 2024, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
+__copyright__ = "Copyright 2024, 3Liz"
+__license__ = "GPL version 3"
+__email__ = "info@3liz.org"
 
 
 class TestLegend(unittest.TestCase):
-
     def test_regexp_feature_count(self):
-        """ Test the regexp about the feature count. """
+        """Test the regexp about the feature count."""
         result = GetLegendGraphicFilter.match_label_feature_count("A label [22]")
         self.assertEqual(result.group(1), "A label")
 
@@ -29,15 +28,18 @@ class TestLegend(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_duplicated_labels(self):
-        """ Test the legend with multiple sub-rules in the rule based rendered. """
+        """Test the legend with multiple sub-rules in the rule based rendered."""
         # noinspection PyTypeChecker
         root_rule = QgsRuleBasedRenderer.Rule(None)
 
-        same_label = 'same-label'
+        same_label = "same-label"
 
         # Rule 1 with symbol
         # noinspection PyUnresolvedReferences
-        rule_1 = QgsRuleBasedRenderer.Rule(QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry), label='rule-1')
+        rule_1 = QgsRuleBasedRenderer.Rule(
+            QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry),
+            label="rule-1",
+        )
         root_rule.appendChild(rule_1)
 
         # Sub-rule to rule 1
@@ -47,7 +49,10 @@ class TestLegend(unittest.TestCase):
 
         # Rule 2 with symbol
         # noinspection PyUnresolvedReferences
-        rule_2 = QgsRuleBasedRenderer.Rule(QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry), label='rule-2')
+        rule_2 = QgsRuleBasedRenderer.Rule(
+            QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry),
+            label="rule-2",
+        )
         root_rule.appendChild(rule_2)
 
         # Sub-rule to rule 2
@@ -70,7 +75,7 @@ class TestLegend(unittest.TestCase):
             self.assertEqual(0, symbol.scaleMinDenom)
             if Qgis.QGIS_VERSION_INT >= 32800:
                 # I'm not sure since when, just looking at CI results
-                self.assertEqual('TRUE', symbol.expression)
+                self.assertEqual("TRUE", symbol.expression)
             else:
-                self.assertEqual('', symbol.expression)
-            self.assertIn(symbol.title, ('rule-1', 'same-label', 'rule-2'))
+                self.assertEqual("", symbol.expression)
+            self.assertIn(symbol.title, ("rule-1", "same-label", "rule-2"))
