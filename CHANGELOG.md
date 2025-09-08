@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 2.13.2 - 2025-09-08
+
+* Fix default categorized rendering when no `LEGEND_ON` and `LEGEND_OFF`
 * Add Python based **expressions**. At present, only one expression has been added.
   * `layer_renderer_used_attributes(layer_identifier)` which returns the list of fields
     used by the layer renderer. It will be called by Lizmap Web Client tooltip feature,
