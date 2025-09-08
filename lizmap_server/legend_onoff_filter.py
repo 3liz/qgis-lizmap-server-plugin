@@ -5,7 +5,12 @@ __copyright__ = 'Copyright 2022, Gis3w'
 
 # File adapted by @rldhont, 3Liz
 
-from qgis.core import Qgis, QgsMapLayer, QgsProject
+from qgis.core import (
+    Qgis,
+    QgsMapLayer,
+    QgsProject,
+    QgsVectorLayer,
+)
 from qgis.server import (
     QgsAccessControlFilter,
     QgsServerFilter,
@@ -49,9 +54,6 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         handler = self.iface.requestHandler()
         params = handler.parameterMap()
 
-        if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
-            return rights
-
         styles = params.get('STYLES', '').split(',')
 
         if len(styles) == 0:
@@ -92,6 +94,14 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             self._setup_legend(layer, params['LEGEND_ON'], True)
         if 'LEGEND_OFF' in params:
             self._setup_legend(layer, params['LEGEND_OFF'], False)
+
+        if 'LEGEND_ON' not in params \
+            and 'LEGEND_OFF' not in params \
+            and layer.type() == QgsMapLayer.LayerType.VectorLayer:
+            layer: QgsVectorLayer
+            if layer.renderer().type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
+                for key in layer.renderer().legendKeys():
+                    layer.renderer().checkLegendSymbolItem(key, True)
 
         return rights
 
