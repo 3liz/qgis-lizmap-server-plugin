@@ -7,7 +7,8 @@ updates:
       interval: "cron"
       cronjob: "0 6 5 */4 *"
     assignees:
-      - "Gustry"
+      - "dmarteau"
+      - "mdouchin"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -15,4 +16,5 @@ updates:
       interval: "cron"
       cronjob: "0 6 5 */4 *"
     assignees:
-      - "Gustry"
+      - "dmarteau"
+      - "mdouchin"
