@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.13.3 - 2025-09-10
+
 * Fix vector layer renderer could be `None`
 
 ## 2.13.2 - 2025-09-08
