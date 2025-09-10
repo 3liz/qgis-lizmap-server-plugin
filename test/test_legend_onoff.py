@@ -29,6 +29,17 @@ BASE_QUERY = {
 }
 
 
+def test_unique_symbol(client):
+    """ Test unique symbol for layer. """
+    project = client.get_project(PROJECT)
+
+    qs = dict(BASE_QUERY)
+    qs['LAYERS'] = 'unique_symbol'
+    rv = client.get_with_project(_build_query_string(qs), project)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('image/png') == 0
+
+
 def test_categorized_symbol(client):
     """ Test categorized symbol for layer. """
     project = client.get_project(PROJECT)
@@ -205,3 +216,37 @@ def test_simple_rule_based(client):
     colors.sort(key=lambda color: color[0], reverse=True)
     # less colors because 1 feature displayed
     assert len(colors) < default_color_numbers, f'not {len(colors)} < {default_color_numbers}'
+
+
+def test_valid_raster_layer(client):
+    """ Test valid raster layer. """
+    project = client.get_project(PROJECT)
+
+    qs = dict(BASE_QUERY)
+    qs['LAYERS'] = 'raster'
+    rv = client.get_with_project(_build_query_string(qs), project)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('image/png') == 0
+
+
+def test_invalid_layer_symbol_layer(client):
+    """ Test unique symbol for layer. """
+    PROJECT_INVALID = "legend_invalid.qgs"
+    project = client.get_project(PROJECT_INVALID)
+
+    qs = dict(BASE_QUERY)
+    qs['LAYERS'] = 'unique_symbol'
+    rv = client.get_with_project(_build_query_string(qs), project)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('image/png') == 0
+
+
+def test_no_geom_layer(client):
+    """ Test no geometry for layer. """
+    project = client.get_project(PROJECT)
+
+    qs = dict(BASE_QUERY)
+    qs['LAYERS'] = 'no_geom'
+    rv = client.get_with_project(_build_query_string(qs), project)
+    assert rv.status_code == 200
+    assert rv.headers.get('Content-Type', '').find('image/png') == 0
