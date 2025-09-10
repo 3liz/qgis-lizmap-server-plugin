@@ -99,7 +99,10 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             and 'LEGEND_OFF' not in params \
             and layer.type() == QgsMapLayer.LayerType.VectorLayer:
             layer: QgsVectorLayer
-            if layer.renderer().type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
+            if layer.renderer() \
+                and layer.renderer().type() in (
+                    "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
+                ):
                 for key in layer.renderer().legendKeys():
                     layer.renderer().checkLegendSymbolItem(key, True)
 

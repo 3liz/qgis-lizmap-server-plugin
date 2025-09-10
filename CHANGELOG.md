@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix vector layer renderer could be `None`
+
 ## 2.13.2 - 2025-09-08
 
 * Fix default categorized rendering when no `LEGEND_ON` and `LEGEND_OFF`
