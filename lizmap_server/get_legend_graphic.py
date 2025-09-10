@@ -130,7 +130,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
             # From QGIS source code :
             # https://github.com/qgis/QGIS/blob/71499aacf431d3ac244c9b75c3d345bdc53572fb/src/core/symbology/qgsrendererregistry.cpp#L33
-            if layer.renderer().type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
+            if layer.renderer() \
+                and layer.renderer().type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
                 body = handler.body()
                 # noinspection PyTypeChecker
                 json_data = json.loads(bytes(body))
