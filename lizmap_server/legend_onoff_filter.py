@@ -103,8 +103,8 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
                 and layer.renderer().type() in (
                     "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
                 ):
-                for key in layer.renderer().legendKeys():
-                    layer.renderer().checkLegendSymbolItem(key, True)
+                for item in layer.renderer().legendSymbolItems():
+                    layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
 
         return rights
 
