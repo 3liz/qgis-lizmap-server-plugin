@@ -1,9 +1,55 @@
+[project]
+name = "Lizmap-server-plugin"
+authors = [
+    { name = "3liz", email = "info@3liz.com" }
+]
+requires-python = ">=3.9"
+license = "GPL-2.0-only"
+license-files = ["LICENSE"]
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://docs.lizmap.com/current/fr/install/pre_requirements.html#lizmap-qgis-server-plugin"
+repository = "https://github.com/3liz/qgis-lizmap-server-plugin"
+"Bug Reports" = "https://github.com/3liz/qgis-lizmap-server-plugin/issues"
+
+[dependency-groups]
+dev = [
+    {include-group = "tests"},
+    {include-group = "lint"},
+]
+tests = [
+    "pytest >= 5.3",
+    "xmldiff",
+    "Pillow",
+]
+lint = [
+    "ruff",
+    "mypy",
+    "bandit",
+    "vulture",
+]
+packaging = [
+    "qgis-plugin-ci>=2.7.0",
+]
+
+
 # Ruff configuration
 # See https://doc.astral.sh/ruff/configuration
 
 [tool.ruff]
-line-length = 120
-target-version = "py37"
+line-length = 110
+target-version = "py39"
 exclude = [
     ".venv",
     ".local",
@@ -27,7 +73,11 @@ extend-select = [
 ignore = [
     "ANN002",
     "ANN003",
+    # TODO: temporary ignore linter errors until
+    # https://github.com/3liz/qgis-lizmap-server-plugin/pull/118 
+    # lands
     "RUF100",
+    "E501", # Line too long
 ]
 
 [tool.ruff.per-file-target-version]
@@ -35,10 +85,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
-    "T201",
-    "E501",
-]
-"test/*" = [
     "T201",
     "E501",
 ]
@@ -53,12 +99,6 @@ ignore = [
 known-third-party = [
     "qgis",
 ]
-#combine-as-imports = true
-#split-on-trailing-comma = true
-#multi-line-output = 3
-#include-trailing-comma = true
-#use-parentheses = true
-#ensure-newline-before-comments = true
 
 [tool.ruff.lint.flake8-annotations]
 ignore-fully-untyped = true
@@ -69,3 +109,13 @@ suppress-dummy-args = true
 plugin_path = "lizmap_server"
 github_organization_slug = "3liz"
 project_slug = "qgis-lizmap-server-plugin"
+
+#
+# Mypy
+#
+[tool.mypy]
+python_version = "3.9"
+
+[[tool.mypy.overrides]]
+module = "qgis.*"
+ignore_missing_imports = true

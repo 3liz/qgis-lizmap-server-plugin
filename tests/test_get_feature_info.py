@@ -1,16 +1,12 @@
 import logging
 import xml.etree.ElementTree as ET
 
-from test.utils import _build_query_string, _check_request
+from tests.utils import _build_query_string, _check_request
 
 from qgis.core import Qgis
 from xmldiff import main as xml_diff
 
-LOGGER = logging.getLogger('server')
-
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
+LOGGER = logging.getLogger("server")
 
 PROJECT = "get_feature_info.qgs"
 BBOX = "48.331869%2C-2.847776%2C48.971191%2C-0.659558"
@@ -53,12 +49,12 @@ LAYER_FORM = f"LAYERS={LAYER_FORM_SHORTNAME}&QUERY_LAYERS={LAYER_FORM_SHORTNAME}
 
 
 def test_no_get_feature_info_default_popup(client):
-    """ Test the get feature info without a feature with default layer. """
+    """Test the get feature info without a feature with default layer."""
     qs = BASE_QUERY + NO_FEATURE + DEFAULT_POPUP
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('text/xml') == 0
-    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    assert rv.headers.get("Content-Type", "").find("text/xml") == 0
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
     expected = f'''
     <GetFeatureInfoResponse>
         <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}/>
@@ -69,12 +65,12 @@ def test_no_get_feature_info_default_popup(client):
 
 
 def test_single_get_feature_info_default_popup(client):
-    """ Test the get feature info with a single feature with default layer. """
+    """Test the get feature info with a single feature with default layer."""
     qs = BASE_QUERY + SINGLE_FEATURE + DEFAULT_POPUP
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('text/xml') == 0
-    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    assert rv.headers.get("Content-Type", "").find("text/xml") == 0
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
     expected = f'''
     <GetFeatureInfoResponse>
         <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}>
@@ -96,13 +92,13 @@ def test_single_get_feature_info_default_popup(client):
 
 
 def test_single_get_feature_info_default_popup_user(client):
-    """ Test the get feature info with a single feature with default layer. """
+    """Test the get feature info with a single feature with default layer."""
     qs = BASE_QUERY + SINGLE_FEATURE + DEFAULT_POPUP
-    headers = {'X-Lizmap-User-Groups': 'test1', 'X-Lizmap-User': 'Bretagne'}
+    headers = {"X-Lizmap-User-Groups": "test1", "X-Lizmap-User": "Bretagne"}
     rv = client.get(qs, PROJECT, headers)
     assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('text/xml') == 0
-    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    assert rv.headers.get("Content-Type", "").find("text/xml") == 0
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
     expected = f'''
     <GetFeatureInfoResponse>
         <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}>
@@ -124,13 +120,13 @@ def test_single_get_feature_info_default_popup_user(client):
 
 
 def test_single_get_feature_info_qgis_popup(client):
-    """ Test the get feature info with a single feature with QGIS maptip. """
+    """Test the get feature info with a single feature with QGIS maptip."""
     qs = BASE_QUERY + SINGLE_FEATURE + QGIS_POPUP + "WITH_MAPTIP=true&"
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('text/xml') == 0
+    assert rv.headers.get("Content-Type", "").find("text/xml") == 0
 
-    title_attribute = f'title="{LAYER_QGIS_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    title_attribute = f'title="{LAYER_QGIS_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
 
     # Note the line <TH>maptip</TH>
     expected = f'''
@@ -153,25 +149,25 @@ def test_single_get_feature_info_qgis_popup(client):
 
 
 def test_single_get_feature_info_form_popup(client):
-    """ Test the get feature info with a single feature with QGIS form. """
+    """Test the get feature info with a single feature with QGIS form."""
     qs = BASE_QUERY + SINGLE_FEATURE + QGIS_FORM
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
-    assert rv.headers.get('Content-Type', '').find('text/xml') == 0
+    assert rv.headers.get("Content-Type", "").find("text/xml") == 0
 
     # Let's check only the XML first
-    root = ET.fromstring(rv.content.decode('utf-8'))
-    map_tip = ''
+    root = ET.fromstring(rv.content.decode("utf-8"))
+    map_tip = ""
     for layer in root:
         for feature in layer:
             item = root.find(".//Attribute[@name='maptip']")
             map_tip = item.attrib.get("value")
             feature.remove(item)
 
-    xml_lines = ET.tostring(root, encoding='utf8', method='xml').decode("utf-8").split('\n')
-    xml_string = '\n'.join(xml_lines[1:])
+    xml_lines = ET.tostring(root, encoding="utf8", method="xml").decode("utf-8").split("\n")
+    xml_string = "\n".join(xml_lines[1:])
 
-    title_attribute = f'title="{LAYER_QGIS_FORM}"' if Qgis.QGIS_VERSION_INT >= 33600 else ''
+    title_attribute = f'title="{LAYER_QGIS_FORM}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
 
     expected = f'''
     <GetFeatureInfoResponse>
@@ -195,14 +191,14 @@ def test_single_get_feature_info_form_popup(client):
 
 
 def test_single_get_feature_info_form_shortname_popup(client):
-    """ Test the get feature info with a single feature with QGIS form and a shortname. """
+    """Test the get feature info with a single feature with QGIS form and a shortname."""
     qs = BASE_QUERY + SINGLE_FEATURE + LAYER_FORM + "WITH_MAPTIP=true&"
 
     rv = client.get(qs, PROJECT)
     root = _check_request(rv, content_type="text/xml")
 
     # Let's check only the XML first
-    map_tip = ''
+    map_tip = ""
     for layer in root:
         for feature in layer:
             item = root.find(".//Attribute[@name='maptip']")
@@ -214,7 +210,7 @@ def test_single_get_feature_info_form_shortname_popup(client):
 
 
 def test_single_get_feature_info_ascii(client):
-    """ Test the Get Feature Info with different filters. """
+    """Test the Get Feature Info with different filters."""
     qs = {
         "SERVICE": "WMS",
         "REQUEST": "GetFeatureInfo",
@@ -242,16 +238,16 @@ def test_single_get_feature_info_ascii(client):
     data = _check_request(rv)
 
     expected = {
-        'features': [
+        "features": [
             {
-                'geometry': None,
-                'id': 'accents.3',
-                'properties': {
-                    'NAME_1': "Bret'agne",
+                "geometry": None,
+                "id": "accents.3",
+                "properties": {
+                    "NAME_1": "Bret'agne",
                 },
-                'type': 'Feature',
+                "type": "Feature",
             },
         ],
-        'type': 'FeatureCollection',
+        "type": "FeatureCollection",
     }
     assert expected == data, data

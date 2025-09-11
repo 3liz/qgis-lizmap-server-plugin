@@ -1,55 +1,101 @@
 SHELL:=bash
 
-COMMITID=$(shell git rev-parse --short HEAD)
+PYTHON_MODULE=lizmap_server
 
-REGISTRY_URL ?= 3liz
+TESTS=tests
 
-ifdef REGISTRY_URL
-	REGISTRY_PREFIX=$(REGISTRY_URL)/
+-include .localconfig.mk
+
+#
+# Configure
+#
+
+ifeq ($(USE_UV), 1)
+UV_RUN ?= uv run
 endif
 
-FLAVOR:=3.28
+REQUIREMENTS= \
+	dev \
+	tests \
+	packaging \
+	$(NULL)
 
-BECOME_USER:=$(shell id -u)
+.PHONY: uv-required update-requirements
 
-QGIS_IMAGE=$(REGISTRY_PREFIX)qgis-platform:$(FLAVOR)
+# Require uv (https://docs.astral.sh/uv/) for extracting
+# infos from project's dependency-groups
+update-requirements: check-uv-install
+	@for group in $(REQUIREMENTS); do \
+		echo "Updating requirements for '$$group'"; \
+		uv export --format requirements.txt \
+			--no-annotate \
+			--no-editable \
+			--no-hashes \
+			--only-group $$group \
+			-q -o requirements/$$group.txt; \
+	done
 
-LOCAL_HOME ?= $(shell pwd)
 
-SRCDIR=$(shell realpath .)
+.PHONY: uv-required upda
 
-PYTHON_PKG=lizmap_server
-TESTDIR=test
+#
+# Static analysis
+#
 
-tests:
-	@mkdir -p $$(pwd)/.local $(LOCAL_HOME)/.cache
-	@echo Do not forget to run docker pull $(QGIS_IMAGE) from time to time
-	@docker run --rm --name qgis-server-lizmap-test-$(FLAVOR)-$(COMMITID) -w /src/test/ \
-		-u $(BECOME_USER) \
-		-v $(SRCDIR):/src \
-		-v $$(pwd)/.local:/.local \
-		-v $(LOCAL_HOME)/.cache:/.cache \
-		-e PIP_CACHE_DIR=/.cache \
-		-e QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE \
-		-e PYTEST_ADDOPTS="$(TEST_OPTS) --assert=plain" \
-		$(QGIS_IMAGE) ./run-tests.sh
-
-.PHONY: test
-
-install-tests: install-dev
-
-install-dev:
-	pip install -U --upgrade-strategy=eager -r requirements/dev.txt
-
-export QGIS_SERVER_LIZMAP_REVEAL_SETTINGS=TRUE
-test: lint
-	cd test && pytest -v --qgis-plugins=..
+LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
 lint:
-	@ruff check --output-format=concise $(PYTHON_PKG) $(TESTDIR)
-
-lint-preview:
-	@ruff check --preview $(PYTHON_PKG) $(TESTDIR)
+	 $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
 
 lint-fix:
-	@ruff check --fix --preview $(PYTHON_PKG) $(TESTDIR)
+	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)
+
+format:
+	@ $(UV_RUN) format $(LINT_TARGETS) 
+
+typecheck:
+	@ $(UV_RUN) mypy $(LINT_TARGETS)
+
+scan:
+	@ $(UV_RUN) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)
+
+#
+# Tests
+#
+
+test:
+	cd tests && $(UV_RUN) pytest -v
+
+
+check-uv-install:
+	@which uv > /dev/null || { \
+		echo "You must install uv (https://docs.astral.sh/uv/)"; \
+		exit 1; \
+	}
+
+#
+# Test using docker image
+#
+QGIS_VERSION ?= 3.40
+QGIS_IMAGE_REPOSITORY ?= 3liz/qgis-platform
+QGIS_IMAGE_TAG ?= $(QGIS_IMAGE_REPOSITORY):$(QGIS_VERSION)
+docker-test:
+	docker run --quiet --rm --name qgis-lizmap-server-tests \
+		--network host \
+		--user $$(id -u):$$(id -g) \
+		--mount type=bind,source=$$(pwd),target=/src \
+		--workdir /src \
+		--env QGIS_VERSION=$(QGIS_VERSION) \
+		$(QGIS_IMAGE_TAG) .docker/run-tests.sh
+
+#
+# Code managment
+#
+
+# Display a summary of codes annotations
+show-annotation-%:
+	@grep -nR --color=auto --include=*.py '# $*' lizmap/ || true
+
+# Output variable
+echo-variable-%:
+	@echo "$($*)"

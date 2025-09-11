@@ -12,6 +12,8 @@ venv/
 __output__
 __pycache__
 
+.docker-venv-*
+
 *.qgz
 
 # QGIS-Plugin-CI

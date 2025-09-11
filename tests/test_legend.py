@@ -1,16 +1,12 @@
 import logging
 
-from test.utils import _build_query_string, _check_request
+from .utils import _build_query_string, _check_request
 
 from qgis.core import Qgis
 
 from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
 
 LOGGER = logging.getLogger('server')
-
-__copyright__ = 'Copyright 2023, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
 
 PROJECT = "legend.qgs"
 PROJECT_INVALID = "legend_invalid.qgs"

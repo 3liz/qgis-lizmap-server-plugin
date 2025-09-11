@@ -17,9 +17,9 @@ stages:
   stage: test
   script:
     - source ~/.bashrc
-    - make install-tests FLAVOR=$QGIS_FLAVOR
+    - make install-tests
     - pip list -l
-    - make test FLAVOR=$QGIS_FLAVOR
+    - make lint test
   tags:
     - factory-plain
 
@@ -29,20 +29,11 @@ qgis-server:
   parallel:
     matrix:
       - QGIS_FLAVOR: [
-        "3.28",
         "3.34",
         "3.40",
+        "3.44",
         "nightly-release",
       ]
-
-linter:
-  image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
-  stage: test
-  script:
-    - source ~/.bashrc
-    - make install-tests lint FLAVOR=$QGIS_FLAVOR
-  tags:
-    - factory-plain
 
 version:
   stage: test
