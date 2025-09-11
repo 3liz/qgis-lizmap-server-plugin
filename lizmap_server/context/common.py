@@ -87,12 +87,6 @@ class ContextABC(ABC):
         ...
 
     @abstractmethod
-    def catalog(self, search_path: Optional[str] = None) -> List[CatalogItem]:
-        """ Return the projects catalog
-        """
-        ...
-
-    @abstractmethod
     def installed_plugins(
         self,
         keys: Sequence[str],

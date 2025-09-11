@@ -1,19 +1,17 @@
 from functools import cached_property
 from typing import Dict, Iterator, List, Optional, Sequence, Tuple
 
-from qjazz_contrib.core.qgis import QgisPluginService
-from qjazz_contrib.core import logger
+from qjazz_core.qgis import QgisPluginService
+from qjazz_core import logger
 from qjazz_cache.prelude import CacheEntry, CacheManager, ProjectMetadata
 from qjazz_cache.prelude import CheckoutStatus as Co
 
 from qgis.core import QgsProject
 
 from .common import (
-    CatalogItem,
     ContextABC,
     ProjectCacheError,
     ServerMetadata,
-    to_iso8601,
 )
 
 
@@ -70,19 +68,6 @@ class Context(ContextABC):
                 raise ProjectCacheError(410, f"Requested removed project: {uri}")
 
         return rv
-
-    def catalog(self, search_path: Optional[str] = None) -> List[CatalogItem]:
-        """ Return the catalog of projects
-        """
-        return [
-            CatalogItem(
-                uri=md.uri,
-                name=md.name,
-                storage=md.storage,
-                last_modified=to_iso8601(md.last_modified),
-                public_uri=public_path,
-            ) for md, public_path in self._cm.collect_projects(search_path)
-        ]
 
     def installed_plugins(
         self,
