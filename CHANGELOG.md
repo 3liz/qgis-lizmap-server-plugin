@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.13.4 - 2025-09-11
+
+* Fix: `legendKeys` has been added in QGIS 3.32 replaced by `legendSymbolItems`
+
 ## 2.13.3 - 2025-09-10
 
 * Fix vector layer renderer could be `None`
