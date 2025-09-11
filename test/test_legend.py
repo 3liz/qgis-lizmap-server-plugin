@@ -334,3 +334,14 @@ def test_invalid_layer_categorized_symbol_layer_feature_count(client):
     assert b['nodes'][0].get('icon') == GetLegendGraphicFilter.warning_icon()
     assert 'icon' in b['nodes'][0]
     assert 'symbols' not in b['nodes'][0]
+
+
+def test_no_geom_layer(client):
+    """ Test no geometry for layer. """
+    qs = dict(BASE_QUERY)
+    qs['LAYER'] = 'no_geom'
+    rv = client.get(_build_query_string(qs), PROJECT)
+    b = _check_request(rv)
+    #  {'nodes': [], 'title': ''}
+    assert b['title'] == ''
+    assert len(b['nodes']) == 0, b
