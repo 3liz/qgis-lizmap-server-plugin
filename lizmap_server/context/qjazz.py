@@ -91,11 +91,11 @@ class Context(ContextABC):
         """ Return server metadata
         """
         from importlib import metadata
-        from qjazz_contrib.core import manifest
+        from qjazz_core import manifest
 
         commit = manifest.get_manifest().commit_id
 
-        version = metadata.version('qjazz_contrib')
+        version = metadata.version('qjazz-contrib')
         return ServerMetadata(
             name=SERVER_CONTEXT_NAME,
             commit_id=commit,
