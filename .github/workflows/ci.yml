@@ -2,8 +2,9 @@ name: Tests 🎳
 
 on:
   push:
-    tags:
-      - "*"
+    tags: 
+      - '*'
+      - '!2.13.*'
     branches:
       - master
   pull_request:
