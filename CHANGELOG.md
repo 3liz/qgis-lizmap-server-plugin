@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 2.14.0 - 2025-09-18
+
+* Raise to QGIS Server 3.34 minimum
+* Raise to Python 3.9 minimum
+* Improve support for QJazz
+* Tests: Sanitize/simplify python code
+
 ## 2.13.4 - 2025-09-11
 
 * Fix: `legendKeys` has been added in QGIS 3.32 replaced by `legendSymbolItems`
