@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Improve support for QJazz
+
 ## 2.13.4 - 2025-09-11
 
 * Fix: `legendKeys` has been added in QGIS 3.32 replaced by `legendSymbolItems`
