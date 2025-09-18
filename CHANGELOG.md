@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.13.5 - 2025-09-18
+
 * Improve support for QJazz
 
 ## 2.13.4 - 2025-09-11
