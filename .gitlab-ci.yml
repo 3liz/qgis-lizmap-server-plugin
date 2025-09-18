@@ -3,6 +3,7 @@ variables:
   FACTORY_PACKAGE_TYPE: plugin
 
 stages:
+- lint
 - test
 - build
 - package-infra
@@ -12,14 +13,26 @@ stages:
 - deploy
 - release
 
+# ------------
+# Lint
+# ------------
+lint:
+  image: ${REGISTRY_URL}/factory-ci-runner:qgis-release
+  stage: lint
+  script:
+    - make lint
+  tags:
+    - factory-plain
+
+# ------------
+# Tests
+# ------------
+
 .tests:
   image: ${REGISTRY_URL}/factory-ci-runner:qgis-${QGIS_FLAVOR}
   stage: test
   script:
-    - source ~/.bashrc
-    - make install-tests
-    - pip list -l
-    - make lint test
+    - make test
   tags:
     - factory-plain
 

@@ -11,7 +11,11 @@ TESTS=tests
 #
 
 ifeq ($(USE_UV), 1)
-UV_RUN ?= uv run
+ifdef VIRTUAL_ENV
+# Always prefer active environment
+ACTIVE_VENV=--active
+endif
+UV_RUN ?= uv run $(ACTIVE_VENV)
 endif
 
 REQUIREMENTS= \
@@ -45,7 +49,7 @@ update-requirements: check-uv-install
 LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
 lint:
-	 $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
+	@ $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
 
 lint-fix:
 	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)
