@@ -21,6 +21,7 @@ endif
 REQUIREMENTS= \
 	dev \
 	tests \
+	lint \
 	packaging \
 	$(NULL)
 
@@ -48,8 +49,10 @@ update-requirements: check-uv-install
 
 LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
-lint:
+lint:: 
 	@ $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
+
+lint:: typecheck
 
 lint-fix:
 	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)

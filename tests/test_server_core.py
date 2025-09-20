@@ -12,10 +12,6 @@ from lizmap_server.core import (
 from lizmap_server.get_feature_info import GetFeatureInfoFilter
 from lizmap_server.tools import to_bool
 
-__copyright__ = "Copyright 2020, 3Liz"
-__license__ = "GPL version 3"
-__email__ = "info@3liz.org"
-
 
 class TestServerCore(unittest.TestCase):
     def test_config_value_to_boolean(self):

@@ -1,6 +1,4 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
+
 
 from qgis.core import QgsExpression, QgsMapLayer, QgsProject, QgsVectorLayer
 from qgis.server import QgsAccessControlFilter, QgsServerInterface
@@ -350,7 +348,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
                 # depending on the filter_by_user boolean variable
                 groups_or_user = groups
                 if filter_polygon_config.is_filtered_by_user():
-                    groups_or_user = tuple([user_login])
+                    groups_or_user = (user_login,)
                 polygon_filter, _ = filter_polygon_config.subset_sql(groups_or_user)
 
         except Exception as e:

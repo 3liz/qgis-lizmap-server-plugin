@@ -20,7 +20,7 @@ from qgis.server import (
     QgsServerRequest,
 )
 
-from .utils import OWSResponse
+from .utils import Client, OWSResponse
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -46,7 +46,7 @@ def pytest_report_header(config):
     return message
 
 
-def pytest_sessionstart(session):
+def pytest_sessionstart(session: pytest.Session):
     """Start qgis application"""
     global qgis_application
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
@@ -72,7 +72,7 @@ def pytest_sessionstart(session):
 
 
 @pytest.fixture(scope="session")
-def client(request):
+def client(request: pytest.FixtureRequest) -> Client:
     """Return a qgis server instance"""
 
     class _Client:
@@ -91,7 +91,7 @@ def client(request):
             # Load plugins
             load_plugins(self.server.serverInterface(), rootdir.parent)
 
-        def getplugin(self, name: str) -> Any:  # noqa ANN401
+        def getplugin(self, name: str) -> Any:
             """Return the instance of the plugin"""
             return server_plugins.get(name)
 
@@ -149,7 +149,7 @@ def client(request):
 ##
 
 
-def checkQgisVersion(minver: str, maxver: str) -> bool:
+def checkQgisVersion(minver: Optional[str], maxver: Optional[str]) -> bool:
     def to_int(ver):
         major, *ver = ver.split(".")
         major = int(major)

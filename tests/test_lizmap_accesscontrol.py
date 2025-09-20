@@ -3,8 +3,12 @@ import logging
 import os
 
 from pathlib import Path
-from tests.conftest import client as cl
-from tests.utils import OWSResponse, _build_query_string, _check_request
+from tests.utils import (
+    Client,
+    OWSResponse,
+    _build_query_string,
+    _check_request,
+)
 
 from qgis.core import QgsVectorLayer
 
@@ -552,7 +556,7 @@ def test_layer_filter_login(client):
     assert len(layers) == 0
 
 
-def _make_get_capabilities_tos_layers(client: cl, strict: bool) -> OWSResponse:
+def _make_get_capabilities_tos_layers(client: Client, strict: bool) -> OWSResponse:
     """Make the GetCapabilities request for TOS layers."""
     os.environ[strict_tos_check_key(GOOGLE_KEY)] = str(strict)
     os.environ[strict_tos_check_key(BING_KEY)] = str(strict)

@@ -1,19 +1,21 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import binascii
 
 from enum import Enum, auto
 from functools import lru_cache
-from typing import Tuple, Union
+from typing import (
+    Optional,
+    Tuple,
+    Union,
+)
 
 from qgis.core import (
+    QgsAbstractProviderConnection,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsDataSourceUri,
     QgsFeatureRequest,
     QgsGeometry,
+    QgsMapLayer,
     QgsProject,
     QgsProviderConnectionException,
     QgsProviderRegistry,
@@ -44,7 +46,7 @@ class FilterType(Enum):
 class FilterByPolygon:
 
     def __init__(
-            self, config: dict, layer: QgsVectorLayer, editing: bool = False,
+            self, config: Optional[dict], layer: QgsVectorLayer, editing: bool = False,
             filter_type: FilterType = FilterType.PlainSqlQuery,
     ):
         """Constructor for the filter by polygon.
@@ -54,7 +56,7 @@ class FilterByPolygon:
         :param editing: If the filter must be used only for editing
         :param filter_type: If we generate a QGIS expression or a plain SQL with spatial relationship or not.
         """
-        self.connection = None
+        self.connection: Optional[QgsAbstractProviderConnection] = None
         # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
         # Using this flag will transform or not the ST_Intersect/ST_Contains into an IN by making the query
         # straight to PostGIS.
@@ -68,22 +70,41 @@ class FilterByPolygon:
         self.layer = layer
 
         # Will be filled if the current layer is filtered
-        self.primary_key = None
-        self.filter_mode = None
-        self.spatial_relationship = None
-        self.use_centroid = None
+        self._primary_key: Optional[str] = None
+        self.filter_mode: Optional[str] = None
+        self.spatial_relationship: Optional[str] = None
+        self.use_centroid = False
 
         # Will be filled with the polygon layer
-        self.polygon = None
-        self.group_field = None
+        self._polygon: Optional[QgsMapLayer] = None
+
+        self.group_field: Optional[str] = None
         self.filter_by_user = False
 
         # Read the configuration
         self._parse()
 
+    # Ensure that polygon is defined
+    @property
+    def polygon(self) -> QgsMapLayer:
+        # Assert precondition
+        if not self._polygon:
+            raise AssertionError("polygon is not defined")
+
+        return self._polygon
+
+    # Ensure that primary_key is defined
+    @property
+    def primary_key(self) -> str:
+        # Assert precondition
+        if not self._primary_key:
+            raise AssertionError("primary_key is not defined")
+
+        return self._primary_key
+
     def is_filtered(self) -> bool:
         """If the configuration is filtering the given layer."""
-        return self.primary_key is not None
+        return self._primary_key is not None
 
     def is_filtered_by_user(self) -> bool:
         """If the filter by polygon is configured with the "filter by user" flag
@@ -106,17 +127,17 @@ class FilterByPolygon:
 
         for layer in layers:
             if layer.get("layer") == self.layer.id():
-                self.primary_key = layer.get('primary_key')
+                self._primary_key = layer.get('primary_key')
                 self.filter_mode = layer.get('filter_mode')
                 self.spatial_relationship = layer.get('spatial_relationship')
                 self.use_centroid = layer.get('use_centroid', False)
                 break
 
-        if self.primary_key is None:
+        if self._primary_key is None:
             return None
 
-        config = self.config.get("config")
-        self.polygon = self.project.mapLayer(config['polygon_layer_id'])
+        config = self.config["config"]
+        self._polygon = self.project.mapLayer(config['polygon_layer_id'])
         self.group_field = config.get("group_field")
 
         # Filter by groups or by user (check the "filter_by_user" flag)
@@ -124,7 +145,7 @@ class FilterByPolygon:
 
     def is_valid(self) -> bool:
         """ If the configuration is valid or not."""
-        if not self.polygon or not self.polygon.isValid():
+        if not self._polygon or not self._polygon.isValid():
             Logger.critical("The polygon layer for filtering is not valid.")
             return False
 
@@ -186,6 +207,10 @@ class FilterByPolygon:
                 "Layer is editing only AND we are in an editing session. Continue to find the subset string")
 
         # We need to have a cache for this, valid for the combo polygon layer id & user_groups
+        # Check precondition
+        if not self.polygon:
+            raise AssertionError("polygon not defined")
+
         # as it will be done for each WMS or WFS query
         if self.polygon.providerType() == 'postgres':
             polygon = self._polygon_for_groups_with_sql_query(groups_or_user)
