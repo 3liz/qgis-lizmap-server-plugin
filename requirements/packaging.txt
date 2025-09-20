@@ -5,9 +5,9 @@ certifi==2025.8.3
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
 charset-normalizer==3.4.3
 click==8.1.8 ; python_full_version < '3.10'
-click==8.2.1 ; python_full_version >= '3.10'
+click==8.3.0 ; python_full_version >= '3.10'
 colorama==0.4.6 ; sys_platform == 'win32'
-cryptography==45.0.7
+cryptography==46.0.1
 deprecated==1.2.18
 future==1.0.0
 gitdb==4.0.12
@@ -26,7 +26,7 @@ pyseeyou==1.0.2
 python-slugify==8.0.4
 pyyaml==6.0.2
 qgis-plugin-ci==2.8.10
-regex==2025.9.1
+regex==2025.9.18
 requests==2.32.5
 six==1.17.0
 smmap==5.0.2

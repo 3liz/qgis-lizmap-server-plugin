@@ -38,6 +38,7 @@ lint = [
     "mypy",
     "bandit",
     "vulture",
+    "lxml-stubs",
 ]
 packaging = [
     "qgis-plugin-ci>=2.7.0",
@@ -73,10 +74,6 @@ extend-select = [
 ignore = [
     "ANN002",
     "ANN003",
-    # TODO: temporary ignore linter errors until
-    # https://github.com/3liz/qgis-lizmap-server-plugin/pull/118 
-    # lands
-    "RUF100",
     "E501", # Line too long
 ]
 
@@ -116,6 +113,24 @@ project_slug = "qgis-lizmap-server-plugin"
 [tool.mypy]
 python_version = "3.9"
 
+# ===================
+# See https://github.com/python/mypy/issues/19892
+exclude = ["lizmap_server/context/qjazz.py"]
+
+[[tool.mypy.overrides]]
+module = "lizmap_server.context.qjazz"
+follow_imports = "skip"
+# ===================
+
 [[tool.mypy.overrides]]
 module = "qgis.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "osgeo.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "xmldiff.*"
+ignore_missing_imports = true
+
