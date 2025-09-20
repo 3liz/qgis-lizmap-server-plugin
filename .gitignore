@@ -29,3 +29,5 @@ test/data/*.asc.aux.xml
 
 .activate
 .bash_aliases
+.localconfig.mk
+
