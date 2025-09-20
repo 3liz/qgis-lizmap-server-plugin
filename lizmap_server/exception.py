@@ -1,6 +1,6 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
+from typing import (
+    Tuple,
+)
 
 from qgis.PyQt.QtCore import QByteArray
 from qgis.PyQt.QtXml import QDomDocument
@@ -48,7 +48,7 @@ class LizmapFilterException(QgsServerException):
         self.response_code = response_code
         self.version = version
 
-    def formatResponse(self) -> (QByteArray, str):
+    def formatResponse(self) -> Tuple[QByteArray, str]:
         doc = QDomDocument()
         root = doc.createElement('ServiceExceptionReport')
         root.setAttribute('version', self.version)

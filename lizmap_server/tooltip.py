@@ -8,7 +8,6 @@
 import logging
 import re
 
-from typing import Union
 
 from qgis.core import (
     QgsAttributeEditorContainer,
@@ -25,10 +24,6 @@ from qgis.PyQt.QtXml import QDomDocument
 
 LOGGER = logging.getLogger('Lizmap')
 SPACES = '  '
-
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
 
 
 class Tooltip:
@@ -306,7 +301,7 @@ class Tooltip:
         return text
 
     @staticmethod
-    def _generate_value_map(widget_config: Union[list, dict], name: str) -> str:
+    def _generate_value_map(widget_config: dict, name: str) -> str:
         def escape_value(value: str) -> str:
             """Change ' to ’ for the HStore function. """
             return value.replace("'", "’")

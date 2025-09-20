@@ -74,6 +74,7 @@ extend-select = [
 ignore = [
     "ANN002",
     "ANN003",
+    "ANN401",
     "E501", # Line too long
 ]
 
@@ -113,14 +114,22 @@ project_slug = "qgis-lizmap-server-plugin"
 [tool.mypy]
 python_version = "3.9"
 
-# ===================
-# See https://github.com/python/mypy/issues/19892
-exclude = ["lizmap_server/context/qjazz.py"]
+exclude = [
+    "lizmap_server/context/py_qgis_server.py",
+    "lizmap_server/context/qjazz.py",
+]
 
 [[tool.mypy.overrides]]
 module = "lizmap_server.context.qjazz"
 follow_imports = "skip"
-# ===================
+
+[[tool.mypy.overrides]]
+module = "lizmap_server.context.py_qgis_server"
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "py_qgis_server.*"
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "qgis.*"

@@ -1,11 +1,14 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import json
 import traceback
 
-from typing import Dict
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Optional,
+    Tuple,
+    TypedDict,
+)
 
 from qgis.core import (
     Qgis,
@@ -40,6 +43,13 @@ from lizmap_server.definitions.safe_expressions import ALLOWED_SAFE_EXPRESSIONS,
 from lizmap_server.exception import ExpressionServiceError
 from lizmap_server.logger import Logger
 from lizmap_server.tools import to_bool
+
+
+class Body(TypedDict):
+    status: str
+    results: list
+    errors: list
+    features: int
 
 
 class ExpressionService(QgsService):
@@ -103,8 +113,8 @@ class ExpressionService(QgsService):
                     "'GetFeatureWithFormScope', 'VirtualFields'; found '{}'".format(reqparam),
                     400)
 
-        except ExpressionServiceError as err:
-            err.formatResponse(response)
+        except ExpressionServiceError as e:
+            e.formatResponse(response)
         except Exception as e:
             Logger.log_exception(e)
             err = ExpressionServiceError("Internal server error", "Internal 'lizmap' service error")
@@ -180,13 +190,17 @@ class ExpressionService(QgsService):
         da.setEllipsoid(project.ellipsoid())
 
         # parse expressions
-        exp_map = {}
-        exp_parser_errors = []
-        exp_items = []
+        exp_map: dict = {}
+        exp_parser_errors: list = []
+
+        exp_items: Iterable[Tuple[Any, Any]]
         if isinstance(exp_json, list):
             exp_items = enumerate(exp_json)
         elif isinstance(exp_json, dict):
             exp_items = exp_json.items()
+        else:
+            exp_items = ()
+
         for k, e in exp_items:
             exp = QgsExpression(e)
             exp.setGeomCalculator(da)
@@ -216,10 +230,10 @@ class ExpressionService(QgsService):
         if not features:
             feature = params.get('FEATURE', '')
             if feature:
-                features = '[' + feature + ']'
+                features = f"[{feature}]"
 
         # create the body
-        body = {
+        body: Body = {
             'status': 'success',
             'results': [],
             'errors': [],
@@ -228,8 +242,8 @@ class ExpressionService(QgsService):
 
         # without features just evaluate expression with layer context
         if not features:
-            result = {}
-            error = {}
+            result: dict = {}
+            error: dict = {}
             for k, exp in exp_map.items():
                 value = exp.evaluate(exp_context)
                 if exp.hasEvalError():
@@ -237,6 +251,7 @@ class ExpressionService(QgsService):
                     error[k] = exp.evalErrorString()
                 else:
                     result[k] = json.loads(QgsJsonUtils.encodeValue(value))
+
             body['results'].append(result)
             body['errors'].append(error)
             write_json_response(body, response)
@@ -411,16 +426,19 @@ class ExpressionService(QgsService):
 
         # organized strings
         str_map = {}
-        str_items = []
+        str_items: Iterable[Tuple[Any, Any]]
         if isinstance(str_json, list):
             str_items = enumerate(str_json)
         elif isinstance(str_json, dict):
             str_items = str_json.items()
+        else:
+            str_items = ()
+
         for k, s in str_items:
             str_map[k] = s
 
         # create the body
-        body = {
+        body: Body = {
             'status': 'success',
             'results': [],
             'errors': [],
@@ -949,7 +967,7 @@ class ExpressionService(QgsService):
         for feat in layer.getFeatures(req):
             fid = layer_name + '.' + get_server_fid(feat, pk_attributes)
 
-            extra = {}
+            extra: dict = {}
 
             # Update context
             exp_context.setFeature(feat)
@@ -973,7 +991,7 @@ class ExpressionService(QgsService):
         return
 
     @classmethod
-    def check_json_virtuals(cls, name: str, virtuals: str) -> dict:
+    def check_json_virtuals(cls, name: str, virtuals: Optional[str]) -> dict:
         """ Load virtuals dictionary from string to JSON."""
         if not virtuals:
             return {}
@@ -999,7 +1017,11 @@ class ExpressionService(QgsService):
 
     @classmethod
     def check_expression(
-            cls, expression_str: str, distance_area: QgsDistanceArea, project: QgsProject) -> [QgsExpression, str]:
+        cls,
+        expression_str: str,
+        distance_area: QgsDistanceArea,
+        project: QgsProject,
+    ) -> Tuple[QgsExpression, str]:
         """ Check if an expression as a string has an error or not."""
         expression = QgsExpression(expression_str)
         expression.setGeomCalculator(distance_area)

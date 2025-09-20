@@ -2,17 +2,22 @@ import io
 import json
 import xml.etree.ElementTree as ET
 
-from typing import Dict, Union
+from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Optional,
+    Protocol,
+    Union,
+)
 
 import lxml.etree
 
 from PIL import Image
+from qgis.core import QgsProject
 from qgis.server import QgsBufferServerResponse
 from urllib.parse import urlencode
 
-__copyright__ = "Copyright 2024, 3Liz"
-__license__ = "GPL version 3"
-__email__ = "info@3liz.org"
 
 NAMESPACES = {
     "xlink": "http://www.w3.org/1999/xlink",
@@ -34,10 +39,10 @@ BASE = {
 class OWSResponse:
     def __init__(self, resp: QgsBufferServerResponse) -> None:
         self._resp = resp
-        self._xml = None
+        self._xml: Optional[lxml.etree._Element] = None
 
     @property
-    def xml(self) -> "xml":
+    def xml(self) -> Optional[lxml.etree._Element]:
         if self._xml is None and self._resp.headers().get("Content-Type", "").find("text/xml") == 0:
             self._xml = lxml.etree.fromstring(self.content)
         return self._xml
@@ -54,7 +59,7 @@ class OWSResponse:
     def headers(self) -> Dict[str, str]:
         return self._resp.headers()
 
-    def xpath(self, path: str) -> lxml.etree.Element:
+    def xpath(self, path: str) -> Any:
         assert self.xml is not None
         return self.xml.xpath(path, namespaces=NAMESPACES)
 
@@ -78,7 +83,7 @@ def _check_request(
     result: OWSResponse,
     content_type: str = "application/json",
     http_code: int = 200,
-) -> Union[dict, ET.Element, Image.Image]:
+) -> Optional[Union[dict, ET.Element, Image.Image]]:
     """Check the output and return the content."""
     assert result.status_code == http_code, f"HTTP code {result.status_code}, expected {http_code}"
     assert result.headers.get("Content-Type", "").lower().find(content_type) == 0, f"Headers {result.headers}"
@@ -93,3 +98,26 @@ def _check_request(
 
     if content_type in ("image/png",):
         return Image.open(io.BytesIO(result.content))
+
+    return None
+
+
+class Client(Protocol):
+    def getplugin(self, name: str) -> Any: ...
+    def getprojectpath(self, name: str) -> Path: ...
+    def get_project(self, name: str) -> QgsProject: ...
+    def get(
+        self,
+        query: str,
+        project: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> OWSResponse:
+        ...
+
+    def get_with_project(
+        self,
+        query: str,
+        project: QgsProject,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> OWSResponse:
+        ...

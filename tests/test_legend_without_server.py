@@ -10,10 +10,6 @@ from qgis.core import (
 
 from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
 
-__copyright__ = "Copyright 2024, 3Liz"
-__license__ = "GPL version 3"
-__email__ = "info@3liz.org"
-
 
 class TestLegend(unittest.TestCase):
     def test_regexp_feature_count(self):
