@@ -1,7 +1,3 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import configparser
 import os
 
@@ -17,11 +13,8 @@ Tools for Lizmap.
 
 def to_bool(val: Union[str, int, float, bool, None]) -> bool:
     """ Convert lizmap config value to boolean """
-    if isinstance(val, str):
-        # For string, compare lower value to True string
-        return val.lower() in ('yes', 'true', 't', '1')
-    else:
-        return bool(val)
+    # For string, compare lower value to True string
+    return val.lower() in ('yes', 'true', 'y', 't', '1') if isinstance(val, str) else bool(val)
 
 
 def version() -> str:

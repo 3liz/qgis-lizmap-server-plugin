@@ -1,13 +1,15 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import json
 import os
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import (
+    Dict,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from qgis.core import (
     Qgis,
@@ -22,7 +24,7 @@ from lizmap_server.logger import Logger
 from lizmap_server.tools import to_bool
 
 
-def write_json_response(data: Dict[str, str], response: QgsServerResponse, code: int = 200) -> None:
+def write_json_response(data: Mapping[str, object], response: QgsServerResponse, code: int = 200) -> None:
     """ Write data as JSON response. """
     response.setStatusCode(code)
     response.setHeader("Content-Type", "application/json")
@@ -48,7 +50,7 @@ def find_vector_layer_from_params(params, project):
 
 def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
     """ Find layer with name, short name or layer ID. """
-    found = None
+    found: Optional[QgsMapLayer] = None
     for layer in project.mapLayers().values():
 
         # check name
@@ -72,10 +74,8 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
     if not found:
         Logger.warning(
             f"The layer '{layer_name}' has not been found in the project '{project.fileName()}'")
-        return None
 
-    found: QgsMapLayer
-    if not found.isValid():
+    elif not found.isValid():
         Logger.warning(
             f"The layer '{layer_name}' has been found but it is not valid in the project "
             f"'{project.fileName()}'",
@@ -103,7 +103,7 @@ def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
     return '@@'.join([str(feature.attribute(pk)) for pk in pk_attributes])
 
 
-def get_lizmap_config(qgis_project_path: str) -> Union[Dict, None]:
+def get_lizmap_config(qgis_project_path: str) -> Optional[dict]:
     """ Get the lizmap config based on QGIS project path """
 
     logger = Logger()
@@ -128,7 +128,7 @@ def get_lizmap_config(qgis_project_path: str) -> Union[Dict, None]:
 
 
 @lru_cache(maxsize=100)
-def _get_lizmap_config(config_path: str, last_modified: float) -> Union[Dict, None]:
+def _get_lizmap_config(config_path: str, last_modified: float) -> Optional[dict]:
     """ Get the lizmap config based on QGIS project path with cache. """
     # Last modified is only for LRU cache
     _ = last_modified
@@ -296,7 +296,7 @@ def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
 def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
     """ Get Lizmap user login provided by the request """
     # Defined override
-    override = None
+    override = False
 
     logger = Logger()
 
@@ -309,11 +309,9 @@ def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
         if override_filter is not None:
             override = to_bool(override_filter)
             logger.info("Lizmap override filter in request headers")
+            return override
     else:
         logger.info("No request headers provided")
-
-    if override is not None:
-        return override
 
     logger.info("No lizmap override filter in request headers")
 

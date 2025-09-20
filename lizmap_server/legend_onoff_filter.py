@@ -1,7 +1,6 @@
 __author__ = 'elpaso@itopen.it'
 __date__ = '2022-10-27'
-__license__ = "GPL version 3"
-__copyright__ = 'Copyright 2022, Gis3w'
+
 
 # File adapted by @rldhont, 3Liz
 
@@ -9,7 +8,6 @@ from qgis.core import (
     Qgis,
     QgsMapLayer,
     QgsProject,
-    QgsVectorLayer,
 )
 from qgis.server import (
     QgsAccessControlFilter,
@@ -98,7 +96,6 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         if 'LEGEND_ON' not in params \
             and 'LEGEND_OFF' not in params \
             and layer.type() == QgsMapLayer.LayerType.VectorLayer:
-            layer: QgsVectorLayer
             if layer.renderer() \
                 and layer.renderer().type() in (
                     "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
@@ -147,7 +144,7 @@ class LegendOnOffFilter(QgsServerFilter):
                 layer.renderer().checkLegendSymbolItem(key, True)
 
     @exception_handler
-    def responseComplete(self):
+    def responseComplete(self) -> None:
         """Restore legend customized renderers"""
 
         handler = self.serverInterface().requestHandler()
@@ -161,7 +158,6 @@ class LegendOnOffFilter(QgsServerFilter):
         if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
             return
 
-        # noinspection PyArgumentList
         project: QgsProject = QgsProject.instance()
 
         if 'LEGEND_ON' in params:

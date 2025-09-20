@@ -1,7 +1,6 @@
 __author__ = 'elpaso@itopen.it'
 __date__ = '2022-10-27'
-__license__ = "GPL version 3"
-__copyright__ = 'Copyright 2022, Gis3w'
+
 
 # File adapted by @rldhont and @Gustry, 3Liz
 
@@ -47,7 +46,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         return bytes(buffer.data().toBase64().data()).decode()
 
     @exception_handler
-    def responseComplete(self):
+    def responseComplete(self) -> None:
         handler = self.serverInterface().requestHandler()
         logger = Logger()
         if not handler:
@@ -90,7 +89,6 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if not layer:
             return
 
-        layer: QgsMapLayer
         if not layer.isValid():
             logger.warning(
                 f"Layer '{layer_name}' is not valid, returning a warning icon in the legend for project "
@@ -112,8 +110,6 @@ class GetLegendGraphicFilter(QgsServerFilter):
         if layer.type() != QgsMapLayer.LayerType.VectorLayer:
             logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
             return
-
-        layer: QgsVectorLayer
 
         try:
             current_style = layer.styleManager().currentStyle()
@@ -142,7 +138,11 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
                 new_symbols = []
 
-                categories = self._extract_categories(layer, show_feature_count, project.homePath())
+                categories = self._extract_categories(
+                    layer,
+                    show_feature_count,
+                    project.homePath(),
+                )
 
                 for idx in range(len(symbols)):
                     symbol = symbols[idx]
@@ -193,12 +193,15 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
     @classmethod
     def _extract_categories(
-            cls, layer: QgsVectorLayer, show_feature_count: bool = False, project_path: str = "",
+        cls,
+        layer: QgsVectorLayer,
+        show_feature_count: bool = False,
+        project_path: str = "",
     ) -> dict:
         """ Extract categories from the layer legend. """
         # TODO Annotations QGIS 3.22 [str, Category]
         renderer = layer.renderer()
-        categories = {}
+        categories: dict = {}
         for item in renderer.legendSymbolItems():
 
             # Calculate title if show_feature_count is activated

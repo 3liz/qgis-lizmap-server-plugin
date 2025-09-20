@@ -10,12 +10,14 @@ TESTS=tests
 # Configure
 #
 
-ifeq ($(USE_UV), 1)
+# Check if uv is available
+$(eval UV_PATH=$(shell which uv))
+ifdef UV_PATH
 ifdef VIRTUAL_ENV
 # Always prefer active environment
 ACTIVE_VENV=--active
 endif
-UV_RUN ?= uv run $(ACTIVE_VENV)
+UV_RUN=uv run $(ACTIVE_VENV)
 endif
 
 REQUIREMENTS= \
@@ -49,8 +51,10 @@ update-requirements: check-uv-install
 
 LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
-lint:
+lint:: 
 	@ $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
+
+lint:: typecheck
 
 lint-fix:
 	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)
