@@ -176,27 +176,26 @@ class LizmapService(QgsService):
                     }
                     write_json_response(body, response)
                     return
-                else:
-                    # Get Lizmap user groups provided by the request
-                    groups = get_lizmap_groups(self.server_iface.requestHandler())
 
-                    # polygon_filter is set, we have a value to filter
-                    # pass the tuple of groups or the tuple of the user
-                    # depending on the filter_by_user boolean variable
-                    groups_or_user = groups
-                    if filter_polygon_config.is_filtered_by_user():
-                        user_login = get_lizmap_user_login(self.server_iface.requestHandler())
-                        groups_or_user = (user_login,)
+                # Get Lizmap user groups provided by the request
+                groups = get_lizmap_groups(self.server_iface.requestHandler())
 
-                    # Get the subset SQL
-                    sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
-                    body = {
-                        'status': 'success',
-                        'filter': sql,
-                        'polygons': polygons,
-                    }
-                    write_json_response(body, response)
-                    return
+                # polygon_filter is set, we have a value to filter
+                # pass the tuple of groups or the tuple of the user
+                # depending on the filter_by_user boolean variable
+                groups_or_user = groups
+                if filter_polygon_config.is_filtered_by_user():
+                    user_login = get_lizmap_user_login(self.server_iface.requestHandler())
+                    groups_or_user = (user_login,)
+
+                # Get the subset SQL
+                sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
+                body = {
+                    'status': 'success',
+                    'filter': sql,
+                    'polygons': polygons,
+                }
+                write_json_response(body, response)
 
         except Exception as e:
             logger.log_exception(e)

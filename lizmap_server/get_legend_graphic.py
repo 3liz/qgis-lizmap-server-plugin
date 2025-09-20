@@ -225,7 +225,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 )
                 expression = ''
 
-            if item.label() in categories.keys():
+            if item.label() in categories:
                 logger.warning(
                     f"The label key '{item.label()}' is not unique, expect the legend to be broken in the project "
                     f"'{project_path}', layer '{layer.name()}'.",

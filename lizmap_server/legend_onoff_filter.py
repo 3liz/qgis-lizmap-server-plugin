@@ -98,13 +98,14 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
         if 'LEGEND_ON' not in params \
             and 'LEGEND_OFF' not in params \
-            and layer.type() == QgsMapLayer.LayerType.VectorLayer:
-            if layer.renderer() \
-                and layer.renderer().type() in (
-                    "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
-                ):
-                for item in layer.renderer().legendSymbolItems():
-                    layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
+            and layer.type() == QgsMapLayer.LayerType.VectorLayer \
+            and layer.renderer() \
+            and layer.renderer().type() in (
+                "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
+            ):
+
+            for item in layer.renderer().legendSymbolItems():
+                layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
 
         return rights
 

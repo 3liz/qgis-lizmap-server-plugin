@@ -13,15 +13,15 @@ PROFILE = False
 
 
 def info(message: str):
-    QgsMessageLog.logMessage(str(message), PLUGIN, Qgis.MessageLevel.Info)
+    QgsMessageLog.logMessage(message, PLUGIN, Qgis.MessageLevel.Info)
 
 
 def warning(message: str):
-    QgsMessageLog.logMessage(str(message), PLUGIN, Qgis.MessageLevel.Warning)
+    QgsMessageLog.logMessage(message, PLUGIN, Qgis.MessageLevel.Warning)
 
 
 def critical(message: str):
-    QgsMessageLog.logMessage(str(message), PLUGIN, Qgis.MessageLevel.Critical)
+    QgsMessageLog.logMessage(message, PLUGIN, Qgis.MessageLevel.Critical)
 
 
 def log_exception(e: BaseException):
@@ -45,7 +45,7 @@ def profiling(func):
             end = time.time()
             info(f"{func.__name__} ran in {round(end - start, 2)}s")
             return result
-        else:
-            return func(*args, **kwargs)
+
+        return func(*args, **kwargs)
 
     return wrapper

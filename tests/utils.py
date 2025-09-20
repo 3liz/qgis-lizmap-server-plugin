@@ -93,8 +93,8 @@ def _check_request(
 
         if content_type in ("application/json", "application/vnd.geo+json"):
             return json.loads(content)
-        else:
-            return ET.fromstring(content)
+
+        return ET.fromstring(content)
 
     if content_type in ("image/png",):
         return Image.open(io.BytesIO(result.content))

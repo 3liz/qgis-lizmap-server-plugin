@@ -43,33 +43,30 @@ class Tooltip:
 
     @classmethod
     def friendly_name(cls, name: str, alias: str) -> str:
-        fname = alias if alias else name
-        fname = fname.replace("'", "’")
-        return fname
+        return (alias if alias else name).replace("'", "’")
 
     @staticmethod
     def create_popup_node_item_from_form(
-            layer: QgsVectorLayer,
-            node: QgsAttributeEditorElement,
-            level: int,
-            headers: list,
-            html: str,
-            relation_manager: QgsRelationManager,
-            bootstrap_5: bool = False,
-            ) -> str:
+        layer: QgsVectorLayer,
+        node: QgsAttributeEditorElement,
+        level: int,
+        headers: list,
+        html: str,
+        relation_manager: QgsRelationManager,
+        bootstrap_5: bool = False,
+    ) -> str:
         regex = re.compile(r"[^a-zA-Z0-9_]", re.IGNORECASE)
         a = ''
         h = ''
 
-        if isinstance(node, QgsAttributeEditorElement):
-            # for text widgets
-            # TODO QGIS_VERSION_INT 3.32 change to "Qgis.AttributeEditorType.TextElement"
-            if node.type() == 6:
-                label = node.name()
-                expression = node.toDomElement(QDomDocument()).text()
+        # for text widgets
+        # TODO QGIS_VERSION_INT 3.32 change to "Qgis.AttributeEditorType.TextElement"
+        if isinstance(node, QgsAttributeEditorElement) and node.type() == 6:
+            label = node.name()
+            expression = node.toDomElement(QDomDocument()).text()
 
-                a += '\n' + SPACES * level
-                a += Tooltip._generate_text_label(label, expression)
+            a += '\n' + SPACES * level
+            a += Tooltip._generate_text_label(label, expression)
 
         if isinstance(node, QgsAttributeEditorField):
             if node.idx() < 0:
@@ -267,7 +264,7 @@ class Tooltip:
 
     @staticmethod
     def _generate_field_name(name: str, fname: str, expression: str) -> str:
-        text = '''
+        return '''
                     [%
                     concat(
                         '<div class="control-group ',
@@ -298,7 +295,6 @@ class Tooltip:
             fname,
             expression,
         )
-        return text
 
     @staticmethod
     def _generate_value_map(widget_config: dict, name: str) -> str:
@@ -307,7 +303,7 @@ class Tooltip:
             return value.replace("'", "’")
 
         if isinstance(widget_config['map'], list):
-            values = dict()
+            values = {}
             for row in widget_config['map']:
                 if '<NULL>' not in list(row.keys()):
                     reverted = {escape_value(y): escape_value(x) for x, y in row.items()}
@@ -326,12 +322,12 @@ class Tooltip:
 
         # noinspection PyCallByClass,PyArgumentList
         hstore = QgsHstoreUtils.build(values)
-        field_view = f'''
-                    map_get(
-                        hstore_to_map('{hstore}'),
-                        replace("{name}", '\\'', '’')
-                    )'''
-        return field_view
+        # field_view
+        return f'''
+                map_get(
+                    hstore_to_map('{hstore}'),
+                    replace("{name}", '\\'', '’')
+                )'''
 
     @staticmethod
     def _generate_external_resource(widget_config: dict, name: str, fname: str) -> str:
@@ -390,26 +386,23 @@ class Tooltip:
             # Fallback to ISO 8601, when the widget has not been configured yet
             date_format = "yyyy-MM-dd"
 
-        field_view = f'''
-                    format_date(
-                        "{name}",
-                        '{date_format}'
-                    )'''
-        return field_view
+        # field_view
+        return f'''
+            format_date(
+                "{name}",
+                '{date_format}'
+            )'''
 
     @staticmethod
     def _generate_text_label(label: str, expression: str) -> str:
-        text = f'''
-                    <p><strong>{label}</strong>
-                    <div class="field">{expression}</div>
-                    </p>
-                    '''
-        return text
+        return f'''
+            <p><strong>{label}</strong>
+            <div class="field">{expression}</div>
+            </p>
+            '''
 
-    @staticmethod
-    def css() -> str:
-        """ CSS for LWC <= 3.7. """
-        css = '''<style>
+    # CSS for LWC <= 3.7.
+    css = '''<style>
     div.popup_lizmap_dd {
         margin: 2px;
     }
@@ -447,98 +440,7 @@ class Tooltip:
     }
 
 </style>\n'''
-        return css
 
-    @staticmethod
-    def css_3_8_6() -> str:
-        """ CSS for LWC from 3.8.0 to 3.8.6. """
-        css = '''<style>
-/* Flat style for editing forms & drag-and-drop designed popup */
-div.popup_lizmap_dd ul.nav-tabs {
-  border-bottom: 1px solid var(--color-contrasted-elements);
-}
-
-div.popup_lizmap_dd .nav-tabs > li > a {
-  color: var(--color-text-primary);
-  padding: 5px;
-  border: none;
-}
-
-div.popup_lizmap_dd .nav > li > a:hover,
-div.popup_lizmap_dd .nav > li > a:focus {
-  text-decoration: none;
-}
-
-div.popup_lizmap_dd .nav-tabs > li > a:hover,
-div.popup_lizmap_dd .nav-tabs > li > a:focus {
-  background: none;
-  border: none;
-  border-bottom: 3px solid var(--color-contrasted-elements);
-  color: var(--color-text-primary);
-  cursor: pointer;
-}
-
-div.popup_lizmap_dd .nav-tabs > li.active > a,
-div.popup_lizmap_dd .nav-tabs > li.active > a:hover,
-div.popup_lizmap_dd .nav-tabs > li.active > a:focus {
-  background: none;
-  border: none;
-  border-bottom: 3px solid var(--color-contrasted-elements);
-  color: var(--color-text-primary);
-  cursor: auto;
-}
-
-div.popup_lizmap_dd div.tab-pane {
-  border-left: 1px solid var(--color-contrasted-elements);
-  border-right: 1px solid var(--color-contrasted-elements);
-  border-bottom: 1px solid var(--color-contrasted-elements);
-  padding: 5px;
-  padding-bottom: 10px;
-  margin-bottom: 5px;
-}
-
-div.popup_lizmap_dd div.tab-pane.attribute-layer-child-content {
-  border: none;
-}
-
-div.popup_lizmap_dd #tabform {
-  border: none;
-}
-
-div.popup_lizmap_dd legend {
-  color: var(--color-text-primary);
-  border-bottom: none;
-  padding: 5px;
-  width: unset;
-  max-width: 100%;
-  margin-bottom: 0;
-}
-
-div.popup_lizmap_dd fieldset {
-  padding: 10px;
-  padding-top: 0;
-  margin: 0 5px;
-  border: 1px solid var(--color-contrasted-elements-light);
-  border-radius: 5px;
-  background: rgb(255 255 255 / 20%);
-}
-/* Minor adaptation for popup compared to editing form */
-div.popup_lizmap_dd {
-  font-size: 12px;
-}
-div.popup_lizmap_dd .form-horizontal .control-group {
-  margin-bottom: 0px !important;
-}
-div.popup_lizmap_dd label {
-  padding-top: 0px !important;
-  font-size: 12px !important;
-  width: 130px !important;
-}
-div.popup_lizmap_dd .controls {
-  margin-left: 140px !important;
-}
-</style>\n'''
-        return css
 
 # BE CAREFUL
 # This file MUST BE an exact copy between

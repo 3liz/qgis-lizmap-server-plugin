@@ -21,15 +21,6 @@ class DataclassEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-@dataclass
-class CatalogItem:
-    uri: str
-    name: str
-    storage: str
-    last_modified: str
-    public_uri: str
-
-
 @dataclass(frozen=True)
 class ServerMetadata:
     name: str

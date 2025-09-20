@@ -511,7 +511,7 @@ class ExpressionService(QgsService):
             exporter = QgsJsonExporter()
             exporter.setSourceCrs(layer.crs())
             geojson_fields = QgsFields()
-            for k in str_map.keys():
+            for k in str_map:
                 if Qgis.versionInt() < 33800:
                     field = QgsField(str(k), QVariant.String)
                 else:
@@ -762,7 +762,7 @@ class ExpressionService(QgsService):
 
         # Fields
         pk_attributes = layer.primaryKeyAttributes()
-        attribute_list = [i for i in pk_attributes]
+        attribute_list = list(pk_attributes)
         fields = layer.fields()
         r_fields = [f.strip() for f in params.get('FIELDS', '').split(',') if f]
         for f in r_fields:
@@ -941,7 +941,7 @@ class ExpressionService(QgsService):
 
         # Fields
         pk_attributes = layer.primaryKeyAttributes()
-        attribute_list = [i for i in pk_attributes]
+        attribute_list = list(pk_attributes)
         fields = layer.fields()
         r_fields = [f.strip() for f in params.get('FIELDS', '').split(',') if f]
         for f in r_fields:

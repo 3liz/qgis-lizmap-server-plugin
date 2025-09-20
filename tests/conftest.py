@@ -37,13 +37,12 @@ def set_env():
 
 
 def pytest_report_header(config):
-    message = (
+    return (
         f"QGIS : {Qgis.QGIS_VERSION_INT}\n"
         f"Python GDAL : {gdal.VersionInfo('VERSION_NUM')}\n"
         f"Python : {sys.version}\n"
         f"QT : {Qt.QT_VERSION_STR}"
     )
-    return message
 
 
 def pytest_sessionstart(session: pytest.Session):

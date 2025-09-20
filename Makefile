@@ -43,8 +43,6 @@ update-requirements: check-uv-install
 	done
 
 
-.PHONY: uv-required upda
-
 #
 # Static analysis
 #

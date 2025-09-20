@@ -37,7 +37,6 @@ lint = [
     "ruff",
     "mypy",
     "bandit",
-    "vulture",
     "lxml-stubs",
 ]
 packaging = [
@@ -70,11 +69,17 @@ extend-select = [
     "T",
     "COM",
     "RUF",
+    "C4",
+    "SIM",
+    "TC",
+    "RET",
 ]
 ignore = [
     "ANN002",
     "ANN003",
     "ANN401",
+    "SIM108", # Use ternary operator
+    # XXX Fix 
     "E501", # Line too long
 ]
 

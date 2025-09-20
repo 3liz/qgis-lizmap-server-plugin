@@ -137,7 +137,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             # LWC core, so no call to Tooltip::css_3_8_6() on the server side, only in desktop.
             if css_framework == '':
                 # Maybe we can avoid the CSS on all features ?
-                html_content += Tooltip.css()
+                html_content += Tooltip.css
 
             features.append(Result(layer, feature_id, html_content))
             logger.info(

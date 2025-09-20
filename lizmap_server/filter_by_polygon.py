@@ -116,14 +116,14 @@ class FilterByPolygon:
         """Read the configuration and fill variables"""
         # Leave as quick as possible
         if not self.layer.isSpatial():
-            return None
+            return
 
         if self.config is None:
-            return None
+            return
 
         layers = self.config.get('layers')
         if not layers:
-            return None
+            return
 
         for layer in layers:
             if layer.get("layer") == self.layer.id():
@@ -134,7 +134,7 @@ class FilterByPolygon:
                 break
 
         if self._primary_key is None:
-            return None
+            return
 
         config = self.config["config"]
         self._polygon = self.project.mapLayer(config['polygon_layer_id'])
@@ -179,8 +179,7 @@ class FilterByPolygon:
             except QgsProviderConnectionException as e:
                 logger.log_exception(e)
 
-        results = self.connection.executeSql(sql)
-        return results
+        return self.connection.executeSql(sql)
 
     @logger.profiling
     def subset_sql(self, groups_or_user: tuple) -> Tuple[str, str]:
@@ -229,7 +228,7 @@ class FilterByPolygon:
             wkt=polygon.asWkt(6 if self.polygon.crs().isGeographic() else 2),
         )
 
-        use_st_intersect = False if self.spatial_relationship == 'contains' else True
+        use_st_intersect = self.spatial_relationship != "contains"
 
         if self.filter_type == FilterType.QgisExpression:
             qgis_expression = self._format_qgis_expression_relationship(
@@ -478,12 +477,11 @@ c.user_group && (
         else:
             geom_field = f"\"{geom_field}\""
 
-        sql = f"""
+        return f"""
 ST_{'Intersects' if use_st_intersect else 'Contains'}(
     {geom},
     {geom_field}
 )"""
-        return sql
 
     @classmethod
     def _format_qgis_expression_relationship(
@@ -513,12 +511,11 @@ ST_{'Intersects' if use_st_intersect else 'Contains'}(
         else:
             current_geometry = "$geometry"
 
-        expression = f"""
+        return f"""
 {'intersects' if use_st_intersect else 'contains'}(
     {geom},
     {current_geometry}
 )"""
-        return expression
 
     @classmethod
     def _format_table_name(cls, uri: QgsDataSourceUri) -> str:

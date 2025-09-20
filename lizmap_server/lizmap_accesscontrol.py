@@ -466,6 +466,4 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             value_filters.append(' OR '.join(filters))
 
         # Build filter for all values
-        layer_filter = ' OR '.join(value_filters)
-
-        return layer_filter
+        return ' OR '.join(value_filters)

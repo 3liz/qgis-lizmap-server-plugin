@@ -113,7 +113,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 
         # Lizmap Cloud allocated ressources
         allocated_ressources = os.getenv("LZM_ALLOCATION_MODE", "")
-        if allocated_ressources != "" and DATA_PLOTLY not in plugins.keys():
+        if allocated_ressources != "" and DATA_PLOTLY not in plugins:
             if allocated_ressources == "shared":
                 version = 'Not available on the "Basic" Lizmap Cloud plan'
             else:
@@ -148,18 +148,18 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
             tag = ""
 
         if server_metadata:
-            qgis_server_meta = dict(
-                found=True,
-                name=server_metadata.name,
-                version=server_metadata.version,
-                build_id=server_metadata.build_id,
-                commit_id=server_metadata.commit_id,
-                stable=server_metadata.is_stable,
-                git_repository_url=self._context.git_repository_url,
-                documentation_url=self._context.documentation_url,
-            )
+            qgis_server_meta = {
+                "found": True,
+                "name": server_metadata.name,
+                "version": server_metadata.version,
+                "build_id": server_metadata.build_id,
+                "commit_id": server_metadata.commit_id,
+                "stable": server_metadata.is_stable,
+                "git_repository_url": self._context.git_repository_url,
+                "documentation_url": self._context.documentation_url,
+            }
         else:
-            qgis_server_meta = dict(found=False, version="not used")
+            qgis_server_meta = {"found": False, "version": "not used"}
 
         data = {
             # Only the "qgis_server" section is forwarded in LWC source code
