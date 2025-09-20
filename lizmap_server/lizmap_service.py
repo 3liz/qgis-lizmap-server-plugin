@@ -111,8 +111,8 @@ class LizmapService(QgsService):
         project: QgsProject,
     ) -> None:
         """ The subset string to use a on a layer."""
-        flag, layer = find_vector_layer_from_params(params, project)
-        if not flag:
+        layer = find_vector_layer_from_params(params, project)
+        if not layer:
             raise ServiceError("Bad request error", "Invalid LAYER parameter", 400)
 
         body = {
