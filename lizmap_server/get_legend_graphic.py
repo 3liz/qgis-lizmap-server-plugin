@@ -1,6 +1,7 @@
-__author__ = 'elpaso@itopen.it'
-__date__ = '2022-10-27'
-
+"""
+@author: elpaso@itopen.it
+@date: 2022-10-27
+"""
 
 # File adapted by @rldhont and @Gustry, 3Liz
 
@@ -45,7 +46,6 @@ class GetLegendGraphicFilter(QgsServerFilter):
         qp.save(buffer, "PNG")
         return bytes(buffer.data().toBase64().data()).decode()
 
-    @logger.exception_handler
     def responseComplete(self) -> None:
         handler = self.serverInterface().requestHandler()
         if not handler:
@@ -182,10 +182,13 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
                 handler.clearBody()
                 handler.appendBody(json.dumps(json_data).encode('utf8'))
-        except Exception as ex:
+        # TODO handle proper exception
+        except Exception:
             logger.critical(
-                'Error getting layer "{}" when setting up legend graphic for json output when configuring '
-                'OWS call: {}'.format(layer_name, str(ex)))
+                f"Error getting layer '{layer_name}' when setting up legend graphic for "
+                "json output when configuring "
+                "OWS call: {traceback.format_exc()}",
+            )
         finally:
             if layer and style and current_style and style != current_style:
                 layer.styleManager().setCurrentStyle(current_style)

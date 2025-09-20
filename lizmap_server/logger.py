@@ -1,14 +1,12 @@
 
 
 import functools
-import os
 import time
 import traceback
 
 
 from qgis.core import Qgis, QgsMessageLog
 
-from lizmap_server.tools import to_bool
 
 PLUGIN = 'Lizmap'
 PROFILE = False
@@ -34,20 +32,6 @@ def log_exception(e: BaseException):
             traceback=traceback.format_exc(),
         ),
     )
-
-
-# TODO: no exception should go unhandled
-def exception_handler(func):
-    """ Decorator to catch all exceptions. """
-    def inner_function(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except Exception as e:
-            if to_bool(os.getenv("CI")):
-                log_exception(e)
-                raise
-            log_exception(e)
-    return inner_function
 
 
 def profiling(func):

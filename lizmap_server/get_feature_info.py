@@ -1,7 +1,6 @@
 
 
 import json
-import os
 import xml.etree.ElementTree as ET
 
 from collections import namedtuple
@@ -146,7 +145,6 @@ class GetFeatureInfoFilter(QgsServerFilter):
                     feature_id, layer_name))
         return features
 
-    @logger.exception_handler
     def responseComplete(self):
         """ Intercept the GetFeatureInfo and add the form maptip if needed. """
         request = self.serverInterface().requestHandler()
@@ -194,10 +192,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
         try:
             features = self.feature_list_to_replace(cfg, project, relation_manager, xml, css_framework)
         except Exception as e:
-            if to_bool(os.getenv("CI")):
-                logger.log_exception(e)
-                raise
-
+            # TODO handle proper exception
             logger.critical(
                 "Error while reading the XML response GetFeatureInfo for project {}, returning default "
                 "response".format(project_path))
@@ -290,10 +285,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             logger.info(f"GetFeatureInfo replaced for project {project_path}")
 
         except Exception as e:
-            if to_bool(os.getenv("CI")):
-                logger.log_exception(e)
-                raise
-
+            # TODO handle proper exception
             logger.critical(
                 "Error while rewriting the XML response GetFeatureInfo, returning default response")
             logger.log_exception(e)

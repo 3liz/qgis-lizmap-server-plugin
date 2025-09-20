@@ -1,8 +1,11 @@
-__author__ = 'elpaso@itopen.it'
-__date__ = '2022-10-27'
-
+"""
+@author: elpaso@itopen.it
+@date: 2022-10-27
+"""
 
 # File adapted by @rldhont, 3Liz
+
+import traceback
 
 from qgis.core import (
     Qgis,
@@ -141,23 +144,25 @@ class LegendOnOffFilter(QgsServerFilter):
             for key in keys:
                 layer.renderer().checkLegendSymbolItem(key, True)
 
-    @logger.exception_handler
     def responseComplete(self) -> None:
         """Restore legend customized renderers"""
+        try:
+            handler = self.serverInterface().requestHandler()
+            if not handler:
+                logger.critical('LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.')
+                return
 
-        handler = self.serverInterface().requestHandler()
-        if not handler:
-            logger.critical('LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.')
-            return
+            params = handler.parameterMap()
 
-        params = handler.parameterMap()
+            if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
+                return
 
-        if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
-            return
+            project: QgsProject = QgsProject.instance()
 
-        project: QgsProject = QgsProject.instance()
-
-        if 'LEGEND_ON' in params:
-            self._reset_legend(params['LEGEND_ON'], project)
-        if 'LEGEND_OFF' in params:
-            self._reset_legend(params['LEGEND_OFF'], project)
+            if 'LEGEND_ON' in params:
+                self._reset_legend(params['LEGEND_ON'], project)
+            if 'LEGEND_OFF' in params:
+                self._reset_legend(params['LEGEND_OFF'], project)
+        except Exception:
+            # TODO handle proper exception
+            logger.critical(traceback.format_exc())
