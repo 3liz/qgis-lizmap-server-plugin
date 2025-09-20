@@ -8,7 +8,7 @@ from qgis.core import Qgis, QgsNetworkAccessManager
 from qgis.PyQt.QtCore import QByteArray, QDateTime, QUrl
 from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 
-from lizmap_server.logger import Logger
+from lizmap_server import logger
 from lizmap_server.tools import to_bool, version
 
 MIN_SECONDS = 3600
@@ -120,7 +120,6 @@ class Plausible:
         if not is_lizcloud:
             return True
 
-        logger = Logger()
         message = (
             f"Request HTTP OS process '{os.getpid()}' sent to '{plausible_url}' with domain '{plausible_domain} : ")
         if r.error() == QNetworkReply.NetworkError.NoError:

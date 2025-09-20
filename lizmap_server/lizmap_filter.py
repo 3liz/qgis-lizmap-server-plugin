@@ -3,21 +3,20 @@
 from qgis.core import QgsProject
 from qgis.server import QgsServerFilter, QgsServerInterface
 
-from lizmap_server.core import get_lizmap_config, get_lizmap_groups
-from lizmap_server.exception import LizmapFilterException
-from lizmap_server.logger import Logger
+from .core import get_lizmap_config, get_lizmap_groups
+from .exception import LizmapFilterException
+from . import logger
 
 
 class LizmapFilter(QgsServerFilter):
 
     def __init__(self, server_iface: QgsServerInterface) -> None:
-        Logger.info('LizmapFilter.init')
+        logger.info('LizmapFilter.init')
         super().__init__(server_iface)
 
         self.iface = server_iface
 
     def requestReady(self):
-        logger = Logger()
         # noinspection PyBroadException
         try:
             # Check first the headers to avoid unnecessary config file reading

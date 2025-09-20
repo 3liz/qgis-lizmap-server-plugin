@@ -24,7 +24,7 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QVariant
 
-from lizmap_server.logger import Logger, profiling
+from lizmap_server import logger
 from lizmap_server.tools import to_bool
 
 # TODO implement LRU cache with this variable
@@ -146,23 +146,23 @@ class FilterByPolygon:
     def is_valid(self) -> bool:
         """ If the configuration is valid or not."""
         if not self._polygon or not self._polygon.isValid():
-            Logger.critical("The polygon layer for filtering is not valid.")
+            logger.critical("The polygon layer for filtering is not valid.")
             return False
 
         if self.polygon.fields().indexOf(self.group_field) < 0:
-            Logger.critical(
+            logger.critical(
                 "The field {} used for filtering does not exist in {}".format(
                     self.group_field, self.polygon.name()))
             return False
 
         if not self.layer.isValid():
-            Logger.critical(
+            logger.critical(
                 "The field {} used for filtering does not exist in {}".format(
                     self.primary_key, self.layer.name()))
             return False
 
         if self.layer.fields().indexOf(self.primary_key) < 0:
-            Logger.critical(
+            logger.critical(
                 "The field {} used for filtering does not exist in {}".format(
                     self.primary_key, self.layer.name()))
 
@@ -177,12 +177,12 @@ class FilterByPolygon:
             try:
                 self.connection.executeSql("SET application_name='QGIS Lizmap Server : Filter By Polygon';")
             except QgsProviderConnectionException as e:
-                Logger.log_exception(e)
+                logger.log_exception(e)
 
         results = self.connection.executeSql(sql)
         return results
 
-    @profiling
+    @logger.profiling
     def subset_sql(self, groups_or_user: tuple) -> Tuple[str, str]:
         """ Get the SQL subset string for the current groups of the user or the user.
 
@@ -193,17 +193,17 @@ class FilterByPolygon:
         # Disabled, sometimes featureCount is expansive it seems ?
         # if self.layer.featureCount() == 0:
         #     # Layer is empty, let's go faster ...
-        #     Logger.info(
+        #     logger.info(
         #         "Layer {} is empty, returning default NO_FEATURES {}".format(self.layer.name(), NO_FEATURES))
         #     return NO_FEATURES, ''
 
         if self.filter_mode == 'editing':
             if not self.editing:
-                Logger.info(
+                logger.info(
                     "Layer is editing only BUT we are not in an editing session. Return all features.")
                 return ALL_FEATURES, ''
 
-            Logger.info(
+            logger.info(
                 "Layer is editing only AND we are in an editing session. Continue to find the subset string")
 
         # We need to have a cache for this, valid for the combo polygon layer id & user_groups
@@ -216,10 +216,10 @@ class FilterByPolygon:
             polygon = self._polygon_for_groups_with_sql_query(groups_or_user)
         else:
             polygon = self._polygon_for_groups_with_qgis_api(groups_or_user)
-        # Logger.info("LRU Cache _polygon_for_groups : {}".format(self._polygon_for_groups.cache_info()))
+        # logger.info("LRU Cache _polygon_for_groups : {}".format(self._polygon_for_groups.cache_info()))
 
         if polygon.isEmpty():
-            Logger.info(f"The polygon is empty, returning default NO_FEATURES {NO_FEATURES}")
+            logger.info(f"The polygon is empty, returning default NO_FEATURES {NO_FEATURES}")
             # Let's try to free the connection
             self.connection = None
             return NO_FEATURES, ''
@@ -268,10 +268,10 @@ class FilterByPolygon:
 
         # Still here ? So we use the slow method with QGIS API
         subset = self._features_ids_with_qgis_api(polygon)
-        # Logger.info("LRU Cache _layer_not_postgres : {}".format(self._layer_not_postgres.cache_info()))
+        # logger.info("LRU Cache _layer_not_postgres : {}".format(self._layer_not_postgres.cache_info()))
         return subset, ewkt
 
-    @profiling
+    @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_qgis_api(self, groups_or_user: tuple) -> QgsGeometry:
         """ All features from the polygon layer corresponding to the user groups or the user """
@@ -298,7 +298,7 @@ array_intersect(
 
         return QgsGeometry().collectGeometry(polygon_geoms)
 
-    @profiling
+    @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_sql_query(self, groups_or_user: tuple) -> QgsGeometry:
         """ All features from the polygon layer corresponding to the user groups
@@ -346,7 +346,7 @@ c.user_group && (
                 geom=uri.geometryColumn(),
                 table_name=FilterByPolygon._format_table_name(uri),
             )
-            Logger.info(
+            logger.info(
                 f"Requesting the database about polygons for the current groups or user with : \n{sql}")
 
             results = self.sql_query(uri, sql)
@@ -363,13 +363,13 @@ c.user_group && (
             return geom
         except Exception as e:
             # Let's be safe
-            Logger.log_exception(e)
-            Logger.critical(
+            logger.log_exception(e)
+            logger.critical(
                 "The filter_by_polygon._polygon_for_groups_with_sql_query failed when requesting PostGIS.\n"
                 "Using the QGIS API")
             return self._polygon_for_groups_with_qgis_api(groups_or_user)
 
-    @profiling
+    @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _features_ids_with_qgis_api(self, polygons: QgsGeometry) -> str:
         """ List all features using the QGIS API.
@@ -381,7 +381,7 @@ c.user_group && (
 
         # Build the spatial index
         index = QgsSpatialIndex()
-        Logger.info(
+        logger.info(
             "Building index on {} having CRS {}. The CRS of the polygon is {}".format(
                 self.layer.name(),
                 self.layer.crs().authid(),
@@ -394,7 +394,7 @@ c.user_group && (
         polygons.transform(transform)
         candidates = index.intersects(polygons.boundingBox())
         if not candidates:
-            Logger.info(
+            logger.info(
                 f"Not features in the index matching the bounding box, return the default value {NO_FEATURES}")
             return NO_FEATURES
 
@@ -411,10 +411,10 @@ c.user_group && (
             else:
                 raise Exception("Spatial relationship unknown")
 
-        # Logger.info("Unique ids = {}".format(','.join([str(f) for f in unique_ids])))
+        # logger.info("Unique ids = {}".format(','.join([str(f) for f in unique_ids])))
         return self._format_sql_in(self.primary_key, unique_ids)
 
-    @profiling
+    @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _features_ids_with_sql_query(self, st_intersect: str) -> str:
         """ List all features using a SQL query.
@@ -430,7 +430,7 @@ c.user_group && (
             table_name=FilterByPolygon._format_table_name(uri),
             st_intersect=st_intersect,
         )
-        Logger.info(
+        logger.info(
             f"Requesting the database about IDs to filter with {sql[0:90]}...")
 
         results = self.sql_query(uri, sql)
@@ -442,7 +442,7 @@ c.user_group && (
     def _format_sql_in(cls, primary_key: str, values: Union[list, Tuple]) -> str:
         """Format the SQL IN statement."""
         if not values:
-            Logger.info(f'No values, returning default NO VALUES {NO_FEATURES}')
+            logger.info(f'No values, returning default NO VALUES {NO_FEATURES}')
             return NO_FEATURES
 
         cleaned = []

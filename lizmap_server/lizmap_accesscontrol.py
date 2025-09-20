@@ -18,7 +18,7 @@ from lizmap_server.filter_by_polygon import (
     FilterByPolygon,
     FilterType,
 )
-from lizmap_server.logger import Logger, profiling
+from lizmap_server import logger
 from lizmap_server.tools import to_bool
 from lizmap_server.tos_definitions import (
     BING_DOMAIN,
@@ -38,14 +38,14 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         self._strict_google = strict_tos_check(GOOGLE_KEY)
         self._strict_bing = strict_tos_check(BING_KEY)
 
-        Logger.info(f"LayerAccessControl : Google {self._strict_google}, Bing {self._strict_bing}")
+        logger.info(f"LayerAccessControl : Google {self._strict_google}, Bing {self._strict_bing}")
 
     # def layerFilterExpression(self, layer: QgsVectorLayer) -> str:
     #     """ Return an additional expression filter """
     #     # Disabling Lizmap layer filter expression for QGIS Server <= 3.16.1 and <= 3.10.12
     #     # Fix in QGIS Server https://github.com/qgis/QGIS/pull/40556 3.18.0, 3.16.2, 3.10.13
     #     if 31013 <= Qgis.QGIS_VERSION_INT < 31099 or 31602 <= Qgis.QGIS_VERSION_INT:
-    #         Logger.info("Lizmap layerFilterExpression")
+    #         logger.info("Lizmap layerFilterExpression")
     #         filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.QgisExpression)
     #         if filter_exp:
     #             return filter_exp
@@ -55,12 +55,12 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
     #     message = (
     #         "Lizmap layerFilterExpression disabled, you should consider upgrading QGIS Server to >= "
     #         "3.10.13 or >= 3.16.2")
-    #     Logger.critical(message)
+    #     logger.critical(message)
     #     return ALL_FEATURES
 
     def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
         """ Return an additional subset string (typically SQL) filter """
-        Logger.info("Lizmap layerFilterSubsetString")
+        logger.info("Lizmap layerFilterSubsetString")
         # We should have a safe SQL query.
         # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
         filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.SafeSqlQuery)
@@ -85,7 +85,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Discard invalid layers for other services than WMS
         if not layer.isValid() and request_handler.parameter('service').upper() != 'WMS':
-            Logger.info(f"layerPermission: Layer {layer_name} is invalid in {project.fileName()}!")
+            logger.info(f"layerPermission: Layer {layer_name} is invalid in {project.fileName()}!")
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             return rights
 
@@ -109,7 +109,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         is_google = GOOGLE_DOMAIN in datasource
         is_bing = BING_DOMAIN in datasource
         if is_google or is_bing:
-            Logger.info(f"Layer '{layer_name}' has been detected as an external layer which might need a API key.")
+            logger.info(f"Layer '{layer_name}' has been detected as an external layer which might need a API key.")
 
         # Get Lizmap config
         cfg = get_lizmap_config(self.iface.configFilePath())
@@ -129,7 +129,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         api_key = cfg['options'].get('googleKey', '')
         if is_google and not api_key and strict_tos_check(GOOGLE_KEY):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
-            Logger.warning(
+            logger.warning(
                 f"The layer '{layer_name}' is protected by a licence, but the API key is not provided. Discarding the "
                 f"layer in the project {project.baseName()}.",
             )
@@ -138,7 +138,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         api_key = cfg['options'].get('bingKey', '')
         if is_bing and not api_key and strict_tos_check(BING_KEY):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
-            Logger.warning(
+            logger.warning(
                 f"The layer '{layer_name}' is protected by a licence, but the API key is not provided. Discarding the "
                 f"layer in the project {project.baseName()}.",
             )
@@ -198,19 +198,19 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             else:
                 # The layer has no editionLayers config defined
                 # Reset edition rights
-                Logger.info(
+                logger.info(
                     f"No edition config defined for layer: {layer_name} ({layer_id})")
                 rights.canInsert = rights.canUpdate = rights.canDelete = False
         else:
             # No editionLayers defined
             # Reset edition rights
-            Logger.info("Lizmap config has no editionLayers")
+            logger.info("Lizmap config has no editionLayers")
             rights.canInsert = rights.canUpdate = rights.canDelete = False
 
         # Check Lizmap layer config
         if layer_name not in cfg_layers or not cfg_layers[layer_name]:
             # Lizmap layer config not defined
-            Logger.info(f"Lizmap config has no layer: {layer_name}")
+            logger.info(f"Lizmap config has no layer: {layer_name}")
             # Default layer rights applied
             return rights
 
@@ -218,7 +218,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         cfg_layer = cfg_layers[layer_name]
         if 'group_visibility' not in cfg_layer or not cfg_layer['group_visibility']:
             # Lizmap config has no options
-            Logger.info(f"No Lizmap layer group visibility for: {layer_name}")
+            logger.info(f"No Lizmap layer group visibility for: {layer_name}")
             # Default layer rights applied
             return rights
 
@@ -230,13 +230,13 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # rights is applied
         for g in groups:
             if g in group_visibility:
-                Logger.info(
+                logger.info(
                     f"Group {g} is in Lizmap layer group visibility for: {layer_name}")
                 return rights
 
         # The lizmap user groups provided gy the request are not
         # authorized to get access to the layer
-        Logger.info(
+        logger.info(
             f"Groups {', '.join(groups)} is in Lizmap layer group visibility for: {layer_name}")
         rights.canRead = False
         rights.canInsert = rights.canUpdate = rights.canDelete = False
@@ -293,7 +293,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         return default_cache_key
 
-    @profiling
+    @logger.profiling
     def get_lizmap_layer_filter(self, layer: QgsVectorLayer, filter_type: FilterType) -> str:
         """ Get lizmap layer filter based on login filter """
 
@@ -338,7 +338,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             polygon_filter = ALL_FEATURES
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
-                    Logger.critical(
+                    logger.critical(
                         "The filter by polygon configuration is not valid.\n All features are hidden : "
                         "{}".format(NO_FEATURES))
                     return NO_FEATURES
@@ -352,14 +352,14 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
                 polygon_filter, _ = filter_polygon_config.subset_sql(groups_or_user)
 
         except Exception as e:
-            Logger.log_exception(e)
-            Logger.critical(
+            logger.log_exception(e)
+            logger.critical(
                 "An error occurred when trying to read the filtering by polygon.\nAll features are hidden : "
                 "{}".format(NO_FEATURES))
             return NO_FEATURES
 
         if polygon_filter:
-            Logger.info(f"The polygon filter subset string is not null : {polygon_filter}")
+            logger.info(f"The polygon filter subset string is not null : {polygon_filter}")
 
         # Get layer login filter
         cfg_layer_login_filter = get_lizmap_layer_login_filter(cfg, layer_name)

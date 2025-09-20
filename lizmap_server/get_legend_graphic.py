@@ -15,8 +15,8 @@ from qgis.PyQt.QtCore import QBuffer, QIODevice
 from qgis.PyQt.QtGui import QImage
 from qgis.server import QgsServerFilter
 
+from lizmap_server import logger
 from lizmap_server.core import find_layer
-from lizmap_server.logger import Logger, exception_handler
 from lizmap_server.tools import to_bool
 
 Category = namedtuple(
@@ -45,10 +45,9 @@ class GetLegendGraphicFilter(QgsServerFilter):
         qp.save(buffer, "PNG")
         return bytes(buffer.data().toBase64().data()).decode()
 
-    @exception_handler
+    @logger.exception_handler
     def responseComplete(self) -> None:
         handler = self.serverInterface().requestHandler()
-        logger = Logger()
         if not handler:
             logger.critical(
                 'GetLegendGraphicFilter plugin cannot be run in multithreading mode, skipping.')
@@ -217,14 +216,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
             expression, result = renderer.legendKeyToExpression(item.ruleKey(), layer)
             if not result:
-                Logger.warning(
+                logger.warning(
                     f"The expression in the project '{project_path}', layer '{layer.name()}' has not "
                     f"been generated correctly, setting the expression to an empty string",
                 )
                 expression = ''
 
             if item.label() in categories.keys():
-                Logger.warning(
+                logger.warning(
                     f"The label key '{item.label()}' is not unique, expect the legend to be broken in the project "
                     f"'{project_path}', layer '{layer.name()}'.",
                 )

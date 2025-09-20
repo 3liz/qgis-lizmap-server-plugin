@@ -32,17 +32,17 @@ from qgis.server import (
     QgsService,
 )
 
-from lizmap_server.core import (
+from .core import (
     find_vector_layer,
     get_lizmap_groups,
     get_lizmap_user_login,
     get_server_fid,
     write_json_response,
 )
-from lizmap_server.definitions.safe_expressions import ALLOWED_SAFE_EXPRESSIONS, NOT_ALLOWED_EXPRESSION
-from lizmap_server.exception import ExpressionServiceError
-from lizmap_server.logger import Logger
-from lizmap_server.tools import to_bool
+from .definitions.safe_expressions import ALLOWED_SAFE_EXPRESSIONS, NOT_ALLOWED_EXPRESSION
+from .exception import ExpressionServiceError
+from .tools import to_bool
+from . import logger
 
 
 class Body(TypedDict):
@@ -116,7 +116,7 @@ class ExpressionService(QgsService):
         except ExpressionServiceError as e:
             e.formatResponse(response)
         except Exception as e:
-            Logger.log_exception(e)
+            logger.log_exception(e)
             err = ExpressionServiceError("Internal server error", "Internal 'lizmap' service error")
             err.formatResponse(response)
 
@@ -138,8 +138,6 @@ class ExpressionService(QgsService):
             "properties": {}}]
             FORM_SCOPE=boolean to add formScope based on provided features
         """
-
-        logger = Logger()
         layer_name = params.get('LAYER', '')
         if not layer_name:
             raise ExpressionServiceError(
@@ -367,7 +365,6 @@ class ExpressionService(QgsService):
             FORM_SCOPE=boolean to add formScope based on provided features
             FORMAT=GeoJSON to get response as GeoJSON
         """
-        logger = Logger()
         layer_name = params.get('LAYER', '')
         if not layer_name:
             raise ExpressionServiceError(
@@ -582,7 +579,6 @@ class ExpressionService(QgsService):
             FIELDS=list of requested field separated by comma
             WITH_GEOMETRY=False
         """
-        logger = Logger()
         layer_name = params.get('LAYER', '')
         if not layer_name:
             raise ExpressionServiceError(
@@ -807,8 +803,6 @@ class ExpressionService(QgsService):
             SORTING_ORDER=asc or desc, default = asc
             SORTING_FIELD=field name to sort by
         """
-        logger = Logger()
-
         layer_name = params.get('LAYER', '')
         if not layer_name:
             raise ExpressionServiceError(
@@ -999,7 +993,6 @@ class ExpressionService(QgsService):
         try:
             virtual_json = json.loads(virtuals)
         except Exception:
-            logger = Logger()
             logger.critical(
                 f"JSON loads {name} '{virtuals}' exception:\n{traceback.format_exc()}")
             raise ExpressionServiceError(

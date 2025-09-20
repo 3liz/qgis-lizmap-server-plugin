@@ -103,7 +103,7 @@ docker-test:
 
 # Display a summary of codes annotations
 show-annotation-%:
-	@grep -nR --color=auto --include=*.py '# $*' lizmap/ || true
+	@grep -nR --color=auto --include=*.py '# $*' lizmap_server/ || true
 
 # Output variable
 echo-variable-%:

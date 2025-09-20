@@ -16,7 +16,7 @@ from qgis.server import (
 )
 
 from lizmap_server.core import find_vector_layer
-from lizmap_server.logger import Logger, exception_handler
+from lizmap_server import logger
 
 
 class LegendOnOffAccessControl(QgsAccessControlFilter):
@@ -122,8 +122,6 @@ class LegendOnOffFilter(QgsServerFilter):
         if not qs or ':' not in qs:
             return
 
-        logger = Logger()
-
         for legend_layer in qs.split(';'):
             layer_name, key_list = legend_layer.split(':')
             if layer_name == '' or key_list == '':
@@ -143,12 +141,11 @@ class LegendOnOffFilter(QgsServerFilter):
             for key in keys:
                 layer.renderer().checkLegendSymbolItem(key, True)
 
-    @exception_handler
+    @logger.exception_handler
     def responseComplete(self) -> None:
         """Restore legend customized renderers"""
 
         handler = self.serverInterface().requestHandler()
-        logger = Logger()
         if not handler:
             logger.critical('LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.')
             return

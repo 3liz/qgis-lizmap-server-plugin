@@ -11,7 +11,7 @@ from qgis.server import (
     QgsService,
 )
 
-from lizmap_server.core import (
+from .core import (
     find_vector_layer_from_params,
     get_lizmap_config,
     get_lizmap_groups,
@@ -21,15 +21,15 @@ from lizmap_server.core import (
     is_editing_context,
     write_json_response,
 )
-from lizmap_server.exception import ServiceError
-from lizmap_server.filter_by_polygon import (
+from .exception import ServiceError
+from .filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
     FilterType,
 )
-from lizmap_server.logger import Logger, profiling
-from lizmap_server.tools import version
+from .tools import version
+from . import logger
 
 
 class LizmapServiceError(ServiceError):
@@ -43,7 +43,6 @@ class LizmapService(QgsService):
     def __init__(self, server_iface: QgsServerInterface) -> None:
         super().__init__()
         self.server_iface = server_iface
-        self.logger = Logger()
 
     # QgsService inherited
 
@@ -96,15 +95,15 @@ class LizmapService(QgsService):
         except LizmapServiceError as e:
             e.formatResponse(response)
         except Exception as e:
-            self.logger.critical(f"Unhandled exception:\n{traceback.format_exc()}")
-            self.logger.critical(str(e))
+            logger.critical(f"Unhandled exception:\n{traceback.format_exc()}")
+            logger.critical(str(e))
             err = LizmapServiceError(
                 "Internal server error",
                 "Internal 'lizmap' service error",
             )
             err.formatResponse(response)
 
-    @profiling
+    @logger.profiling
     def polygon_filter(
         self,
         params: Dict[str, str],
@@ -168,7 +167,7 @@ class LizmapService(QgsService):
             )
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
-                    Logger.critical(
+                    logger.critical(
                         "The filter by polygon configuration is not valid.\n All features are hidden.")
                     body = {
                         'status': 'success',
@@ -200,8 +199,8 @@ class LizmapService(QgsService):
                     return
 
         except Exception as e:
-            Logger.log_exception(e)
-            Logger.critical(
+            logger.log_exception(e)
+            logger.critical(
                 "An error occurred when trying to read the filtering by polygon.\nAll features are hidden.")
             body = {
                 'status': 'success',
