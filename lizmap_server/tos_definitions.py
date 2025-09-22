@@ -1,6 +1,4 @@
-__copyright__ = 'Copyright 2024, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
+
 
 import os
 
@@ -20,7 +18,4 @@ def strict_tos_check_key(provider: str) -> str:
 
 def strict_tos_check(provider: str) -> bool:
     """ Check the environment variable for this provider. """
-    env = os.getenv(strict_tos_check_key(provider))
-    if env is None:
-        env = True
-    return to_bool(env)
+    return to_bool(os.getenv(strict_tos_check_key(provider), True))

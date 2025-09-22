@@ -14,10 +14,6 @@ from qgis.utils import qgsfunction
 LOGGER = logging.getLogger('Lizmap')
 SPACES = '  '
 
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 
 @qgsfunction(
     args='auto', group='Lizmap',

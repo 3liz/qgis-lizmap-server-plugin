@@ -1,7 +1,3 @@
-__copyright__ = 'Copyright 2021, 3Liz'
-__license__ = 'GPL version 3'
-__email__ = 'info@3liz.org'
-
 import traceback
 
 from typing import Dict
@@ -63,8 +59,12 @@ class LizmapService(QgsService):
         """
         return "1.0.0"
 
-    def executeRequest(self, request: QgsServerRequest, response: QgsServerResponse,
-                       project: QgsProject) -> None:
+    def executeRequest(
+        self,
+        request: QgsServerRequest,
+        response: QgsServerResponse,
+        project: QgsProject,
+    ):
         """ Execute a 'LIZMAP' request
         """
 
@@ -93,17 +93,24 @@ class LizmapService(QgsService):
                         req_param),
                     400)
 
-        except LizmapServiceError as err:
-            err.formatResponse(response)
+        except LizmapServiceError as e:
+            e.formatResponse(response)
         except Exception as e:
             self.logger.critical(f"Unhandled exception:\n{traceback.format_exc()}")
             self.logger.critical(str(e))
-            err = LizmapServiceError("Internal server error", "Internal 'lizmap' service error")
+            err = LizmapServiceError(
+                "Internal server error",
+                "Internal 'lizmap' service error",
+            )
             err.formatResponse(response)
 
     @profiling
     def polygon_filter(
-            self, params: Dict[str, str], response: QgsServerResponse, project: QgsProject) -> None:
+        self,
+        params: Dict[str, str],
+        response: QgsServerResponse,
+        project: QgsProject,
+    ) -> None:
         """ The subset string to use a on a layer."""
         flag, layer = find_vector_layer_from_params(params, project)
         if not flag:
@@ -180,7 +187,7 @@ class LizmapService(QgsService):
                     groups_or_user = groups
                     if filter_polygon_config.is_filtered_by_user():
                         user_login = get_lizmap_user_login(self.server_iface.requestHandler())
-                        groups_or_user = tuple([user_login])
+                        groups_or_user = (user_login,)
 
                     # Get the subset SQL
                     sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
@@ -211,7 +218,7 @@ class LizmapService(QgsService):
         _ = project
 
         # create the body
-        body = {
+        body: dict = {
             'qgis': {},
             'gdalogr': {},
             'services': [],

@@ -9,9 +9,6 @@ from lizmap_server.tos_definitions import (
     strict_tos_check_key,
 )
 
-__copyright__ = "Copyright 2021, 3Liz"
-__license__ = "GPL version 3"
-__email__ = "info@3liz.org"
 
 QUERY = "/lizmap/server.json"
 KEY = "QGIS_SERVER_LIZMAP_REVEAL_SETTINGS"
