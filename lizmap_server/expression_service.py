@@ -102,7 +102,9 @@ class ExpressionService(QgsService):
             elif reqparam == 'GETFEATUREWITHFORMSCOPE':
                 self.get_feature_with_form_scope(params, response, project)
             elif reqparam == 'VIRTUALFIELDS':
-                self.virtual_fields(params, response, project)
+                self.virtual_fields(
+                    params, response, project, self.server_iface,
+                )
             else:
                 raise ExpressionServiceError(
                     "Bad request error",
@@ -809,7 +811,10 @@ class ExpressionService(QgsService):
         return
 
     @staticmethod
-    def virtual_fields(params: Dict[str, str], response: QgsServerResponse, project: QgsProject) -> None:
+    def virtual_fields(
+        params: Dict[str, str], response: QgsServerResponse,
+        project: QgsProject, server_iface: QgsServerInterface,
+        ) -> None:
         """ Get virtual fields for features
 
         In parameters:
@@ -970,6 +975,12 @@ class ExpressionService(QgsService):
         for f in r_fields:
             attribute_list.append(fields.indexOf(f))
 
+        # set extra subset string provided by access control plugins
+        subset_sql = layer.subsetString()
+        extra_sql = server_iface.accessControls().extraSubsetString(layer)
+        if extra_sql:
+            layer.setSubsetString(f'({subset_sql}) AND ({extra_sql})' if subset_sql else extra_sql)
+
         # response
         response.setStatusCode(200)
         response.setHeader("Content-Type", "application/json")
@@ -1005,6 +1016,11 @@ class ExpressionService(QgsService):
             response.flush()
             separator = ',\n'
         response.write(']}')
+
+        # reset subset string before ending request
+        if extra_sql:
+            layer.setSubsetString(subset_sql)
+
         return
 
     @classmethod
