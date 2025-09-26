@@ -69,7 +69,6 @@ class LizmapService(QgsService):
 
         params = request.parameters()
 
-        # noinspection PyBroadException
         try:
             req_param = params.get('REQUEST', '').upper()
 

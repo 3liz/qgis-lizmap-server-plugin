@@ -20,6 +20,7 @@ def to_bool(val: Union[str, int, float, bool, None]) -> bool:
 
 def version() -> str:
     """ Returns the Lizmap current version. """
+    # TODO Use the canonical way to read package resources
     file_path = Path(__file__).parent.joinpath('metadata.txt')
     config = configparser.ConfigParser()
     try:
