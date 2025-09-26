@@ -344,3 +344,143 @@ def test_request_safe_virtuals(client):
     assert str(b["features"][0]["properties"]["a"]).lower() == "true"
     assert b["features"][0]["properties"]["b"] == "not allowed"
     assert int(b["features"][0]["properties"]["c"]) >= 2000
+
+
+def test_request_access_control(client):
+    """Test Expression VirtualFields request with access control"""
+    # Project with config with group filter
+    project_file = "france_parts_liz_filter_group.qgs"
+
+    qs = dict(
+        BASE,
+        **{
+            "REQUEST": "VirtualFields",
+            "LAYER": "france_parts",
+            "VIRTUALS": '{{"a":"{}", "b":"{}"}}'.format(
+                quote("1", safe=""),
+                quote("1 + 1", safe=""),
+            ),
+        },
+    )
+    qs["MAP"] = project_file
+
+    # make request without headers
+    rv = client.get(_build_query_string(qs), project_file)
+    assert rv.status_code == 200
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
+
+    # make request with headers - 1 group = 1 feature
+    headers = {"X-Lizmap-User-Groups": "Bretagne"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 1
+
+    # make request with headers - 3 groups = 2 features
+    headers = {"X-Lizmap-User-Groups": "Bretagne, Centre, test1"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 2
+
+    # make request with headers - 1 group = 0 feature
+    headers = {"X-Lizmap-User-Groups": "test1"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 0
+
+    # make request without headers to check filter reset
+    rv = client.get(_build_query_string(qs), project_file)
+    assert rv.status_code == 200
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
+
+    # Project with config with login filter
+    project_file = "france_parts_liz_filter_login.qgs"
+    qs["MAP"] = project_file
+
+    # make request without headers
+    rv = client.get(_build_query_string(qs), project_file)
+    assert rv.status_code == 200
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
+
+    # make request with headers - 1 login = 1 feature
+    headers = {"X-Lizmap-User-Groups": "test1", "X-Lizmap-User": "Bretagne"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 1
+
+    # make request with headers - 1 login = 0 feature
+    headers = {"X-Lizmap-User-Groups": "Bretagne, Centre, test1", "X-Lizmap-User": "test"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 0
+
+    # make request without headers to check filter reset
+    rv = client.get(_build_query_string(qs), project_file)
+    assert rv.status_code == 200
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    b = json.loads(rv.content.decode("utf-8"))
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
