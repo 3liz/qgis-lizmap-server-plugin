@@ -27,6 +27,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QMetaType, QTextCodec, QVariant
 from qgis.server import (
     QgsRequestHandler,
+    QgsServerInterface,
     QgsServerRequest,
     QgsServerResponse,
     QgsService,
@@ -53,6 +54,10 @@ class Body(TypedDict):
 
 
 class ExpressionService(QgsService):
+
+    def __init__(self, server_iface: QgsServerInterface) -> None:
+        super().__init__()
+        self.server_iface = server_iface
 
     def name(self) -> str:
         """ Service name
@@ -101,7 +106,9 @@ class ExpressionService(QgsService):
             if reqparam == 'EVALUATE':
                 self.evaluate(params, response, project)
             elif reqparam == 'REPLACEEXPRESSIONTEXT':
-                self.replace_expression_text(params, response, project)
+                self.replace_expression_text(
+                    params, response, project, self.server_iface,
+                )
             elif reqparam == 'GETFEATUREWITHFORMSCOPE':
                 self.get_feature_with_form_scope(params, response, project)
             elif reqparam == 'VIRTUALFIELDS':
@@ -347,7 +354,9 @@ class ExpressionService(QgsService):
 
     @staticmethod
     def replace_expression_text(
-            params: Dict[str, str], response: QgsServerResponse, project: QgsProject) -> None:
+            params: Dict[str, str], response: QgsServerResponse,
+            project: QgsProject, server_iface: QgsServerInterface,
+        ) -> None:
         """ Replace expression texts against layer or features
 
         In parameters:
@@ -406,6 +415,12 @@ class ExpressionService(QgsService):
                 f"Invalid 'ReplaceExpressionText' REQUEST: STRINGS '{strings}' are not well formed",
                 400)
 
+        # set extra subset string provided by access control plugins
+        subset_sql = layer.subsetString()
+        extra_sql = server_iface.accessControls().extraSubsetString(layer)
+        if extra_sql:
+            layer.setSubsetString(f'({subset_sql}) AND ({extra_sql})' if subset_sql else extra_sql)
+
         # get features
         features = params.get('FEATURES', '')
         if not features:
@@ -453,6 +468,9 @@ class ExpressionService(QgsService):
                 result[k] = json.loads(QgsJsonUtils.encodeValue(value))
             body['results'].append(result)
             write_json_response(body, response)
+            # reset subset string before ending request
+            if extra_sql:
+                layer.setSubsetString(subset_sql)
             return
 
         # Check features
@@ -463,6 +481,9 @@ class ExpressionService(QgsService):
             try:
                 geojson = json.loads(features)
             except Exception:
+                # reset subset string before raising error
+                if extra_sql:
+                    layer.setSubsetString(subset_sql)
                 logger.critical(
                     f"JSON loads features '{features}' exception:\n{traceback.format_exc()}")
                 raise ExpressionServiceError(
@@ -471,12 +492,18 @@ class ExpressionService(QgsService):
                     400)
 
             if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
+                # reset subset string before raising error
+                if extra_sql:
+                    layer.setSubsetString(subset_sql)
                 raise ExpressionServiceError(
                     "Bad request error",
                     f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
                     400)
 
             if ('type' not in geojson[0]) or geojson[0]['type'] != 'Feature':
+                # reset subset string before raising error
+                if extra_sql:
+                    layer.setSubsetString(subset_sql)
                 raise ExpressionServiceError(
                     "Bad request error",
                     ("Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed: type not defined or not "
@@ -496,6 +523,9 @@ class ExpressionService(QgsService):
 
         # features not well-formed
         if not feature_list:
+            # reset subset string before raising error
+            if extra_sql:
+                layer.setSubsetString(subset_sql)
             raise ExpressionServiceError(
                 "Bad request error",
                 ("Invalid FEATURES for 'ReplaceExpressionText': not GeoJSON features array "
@@ -566,6 +596,11 @@ class ExpressionService(QgsService):
             )
         else:
             write_json_response(body, response)
+
+        # reset subset string before ending request
+        if extra_sql:
+            layer.setSubsetString(subset_sql)
+
         return
 
     @staticmethod

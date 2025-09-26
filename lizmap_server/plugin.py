@@ -52,7 +52,7 @@ class LizmapServer:
 
         # Register service
         try:
-            service_registry.registerService(ExpressionService())
+            service_registry.registerService(ExpressionService(self.server_iface))
         except Exception as e:
             self.logger.critical(f'Error loading service "expression" : {e}')
             raise

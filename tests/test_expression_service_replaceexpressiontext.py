@@ -376,7 +376,7 @@ def test_request_with_features_geojson(client):
 
 
 def test_request_with_features_all_geojson(client):
-    """Test Expression replaceExpressionText request with Feature or Features parameter"""
+    """Test Expression replaceExpressionText request with FEATURES=ALL and FORMAT=GeoJSON."""
     # Make a request
     qs = dict(BASE_QUERY)
     qs["LAYER"] = "france_parts"
@@ -407,3 +407,121 @@ def test_request_with_features_all_geojson(client):
     assert b["features"][0]["properties"]["c"] == "Basse-Normandie"
     assert "d" in b["features"][0]["properties"]
     assert b["features"][0]["properties"]["d"] == "27186051602"
+
+
+def test_request_with_features_all_access_control(client):
+    """Test request with FEATURES=ALL, FORMAT=GeoJSON and access control."""
+    # Project with config with group filter
+    project_file = "france_parts_liz_filter_group.qgs"
+
+    # Build query string
+    qs = dict(BASE_QUERY)
+    qs["MAP"] = project_file
+    qs["LAYER"] = "france_parts"
+    qs["STRINGS"] = '{{"a":"{}", "b":"{}", "c":"{}", "d":"{}"}}'.format(
+        quote("[% 1 %]", safe=""),
+        quote("[% 1 + 1 %]", safe=""),
+        quote("[% NAME_1 %]", safe=""),
+        quote("[% round($area) %]", safe=""),
+    )
+    qs["FEATURES"] = "ALL"
+    qs["FORMAT"] = "GeoJSON"
+
+    # make request without headers
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
+
+    # make request with headers - 1 group = 1 feature
+    headers = {"X-Lizmap-User-Groups": "Bretagne"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 1
+
+    # make request with headers - 3 groups = 2 features
+    headers = {"X-Lizmap-User-Groups": "Bretagne, Centre, test1"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 2
+
+    # make request with headers - 1 group = 0 feature
+    headers = {"X-Lizmap-User-Groups": "test1"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 0
+
+    # make request without headers to check filter reset
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
+
+    # Project with config with login filter
+    project_file = "france_parts_liz_filter_login.qgs"
+    qs["MAP"] = project_file
+
+    # make request without headers
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
+
+    # make request with headers - 1 login = 1 feature
+    headers = {"X-Lizmap-User-Groups": "test1", "X-Lizmap-User": "Bretagne"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 1
+
+    # make request with headers - 1 login = 0 feature
+    headers = {"X-Lizmap-User-Groups": "Bretagne, Centre, test1", "X-Lizmap-User": "test"}
+    rv = client.get(_build_query_string(qs), project_file, headers)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 0
+
+    # make request without headers to check filter reset
+    rv = client.get(_build_query_string(qs), project_file)
+    b = _check_request(rv, content_type="application/vnd.geo+json")
+
+    assert "type" in b
+    assert b["type"] == "FeatureCollection"
+
+    assert "features" in b
+    assert len(b["features"]) == 4
