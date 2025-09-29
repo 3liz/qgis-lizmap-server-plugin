@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Fix: Use access control to filter Expression ReplaceExpressionText
+* Fix: Use access control to filter Expression VirtualFields
+* Enforce type annotations and code enhancement
+
 ## 2.14.0 - 2025-09-18
 
 * Raise to QGIS Server 3.34 minimum
