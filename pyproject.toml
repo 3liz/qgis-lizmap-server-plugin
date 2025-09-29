@@ -25,6 +25,7 @@ repository = "https://github.com/3liz/qgis-lizmap-server-plugin"
 
 [dependency-groups]
 dev = [
+    "coverage[toml]",
     {include-group = "tests"},
     {include-group = "lint"},
 ]
@@ -37,7 +38,6 @@ lint = [
     "ruff",
     "mypy",
     "bandit",
-    "vulture",
     "lxml-stubs",
 ]
 packaging = [
@@ -70,11 +70,17 @@ extend-select = [
     "T",
     "COM",
     "RUF",
+    "C4",
+    "SIM",
+    "TC",
+    "RET",
 ]
 ignore = [
     "ANN002",
     "ANN003",
     "ANN401",
+    "SIM108", # Use ternary operator
+    # XXX Fix 
     "E501", # Line too long
 ]
 
@@ -143,3 +149,18 @@ ignore_missing_imports = true
 module = "xmldiff.*"
 ignore_missing_imports = true
 
+#
+# Coverage
+#
+
+[tool.coverage.run]
+source = ["lizmap_server"]
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = [
+ "if TYPE_CHECKING",
+ '\(Protocol\):$',
+]

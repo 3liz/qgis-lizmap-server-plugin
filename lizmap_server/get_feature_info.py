@@ -1,7 +1,6 @@
 
 
 import json
-import os
 import xml.etree.ElementTree as ET
 
 from collections import namedtuple
@@ -23,7 +22,7 @@ from qgis.core import (
 from qgis.server import QgsServerFeatureId, QgsServerFilter, QgsServerProjectUtils
 
 from lizmap_server.core import find_vector_layer
-from lizmap_server.logger import Logger, exception_handler
+from lizmap_server import logger
 from lizmap_server.tools import to_bool
 from lizmap_server.tooltip import Tooltip
 
@@ -91,21 +90,21 @@ class GetFeatureInfoFilter(QgsServerFilter):
         for layer_name, feature_id in GetFeatureInfoFilter.parse_xml(xml):
             layer = find_vector_layer(layer_name, project)
             if not layer:
-                Logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
+                logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
                 continue
 
             if layer_name != layer.name():
-                Logger.info("Request on layer shortname '{}' and layer name '{}'".format(
+                logger.info("Request on layer shortname '{}' and layer name '{}'".format(
                     layer_name, layer.name()))
 
             layers = cfg.get('layers')
             if not layers:
-                Logger.critical(f"No 'layers' section in the CFG file {project.fileName()}.cfg")
+                logger.critical(f"No 'layers' section in the CFG file {project.fileName()}.cfg")
                 continue
 
             layer_config = layers.get(layer.name())
             if not layer_config:
-                Logger.critical(
+                logger.critical(
                     "No layer configuration for layer {} in the CFG file {}.cfg".format(
                         layer.name(), project.fileName()))
                 continue
@@ -118,7 +117,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
             config = layer.editFormConfig()
             if config.layout() != QgsEditFormConfig.EditorLayout.TabLayout:
-                Logger.warning(
+                logger.warning(
                     'The CFG is requesting a form popup, but the layer is not a form drag&drop layout')
                 continue
 
@@ -138,18 +137,16 @@ class GetFeatureInfoFilter(QgsServerFilter):
             # LWC core, so no call to Tooltip::css_3_8_6() on the server side, only in desktop.
             if css_framework == '':
                 # Maybe we can avoid the CSS on all features ?
-                html_content += Tooltip.css()
+                html_content += Tooltip.css
 
             features.append(Result(layer, feature_id, html_content))
-            Logger.info(
+            logger.info(
                 "The popup has been replaced for feature ID '{}' in layer '{}'".format(
                     feature_id, layer_name))
         return features
 
-    @exception_handler
     def responseComplete(self):
         """ Intercept the GetFeatureInfo and add the form maptip if needed. """
-        logger = Logger()
         request = self.serverInterface().requestHandler()
         # request: QgsRequestHandler
         params = request.parameterMap()
@@ -195,10 +192,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
         try:
             features = self.feature_list_to_replace(cfg, project, relation_manager, xml, css_framework)
         except Exception as e:
-            if to_bool(os.getenv("CI")):
-                logger.log_exception(e)
-                raise
-
+            # TODO handle proper exception
             logger.critical(
                 "Error while reading the XML response GetFeatureInfo for project {}, returning default "
                 "response".format(project_path))
@@ -291,10 +285,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             logger.info(f"GetFeatureInfo replaced for project {project_path}")
 
         except Exception as e:
-            if to_bool(os.getenv("CI")):
-                logger.log_exception(e)
-                raise
-
+            # TODO handle proper exception
             logger.critical(
                 "Error while rewriting the XML response GetFeatureInfo, returning default response")
             logger.log_exception(e)

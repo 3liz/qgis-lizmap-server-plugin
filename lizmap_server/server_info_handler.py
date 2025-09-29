@@ -16,21 +16,21 @@ from qgis.server import (
     QgsServerOgcApiHandler,
 )
 
-from lizmap_server.exception import ServiceError
-from lizmap_server.tools import check_environment_variable, to_bool
-from lizmap_server.tos_definitions import (
+from .exception import ServiceError
+from .tools import check_environment_variable, to_bool
+from .tos_definitions import (
     BING_KEY,
     GOOGLE_KEY,
     strict_tos_check,
 )
 
 from .context import create_server_context
+from . import logger
+
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     from osgeo import gdal
-
-from .logger import Logger
 
 
 PLUGIN_METADATA_KEYS = (
@@ -64,7 +64,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
     def __init__(self):
         super().__init__()
         self._context = create_server_context()
-        Logger.info(f"Server information handler using context '{self._context.name}'")
+        logger.info(f"Server information handler using context '{self._context.name}'")
 
     def path(self):
         return QRegularExpression("server.json")
@@ -93,7 +93,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         try:
             self._handleRequest(context)
         except Exception:
-            Logger.critical(traceback.format_exc())
+            logger.critical(traceback.format_exc())
             raise
 
     def _handleRequest(self, context):
@@ -113,7 +113,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 
         # Lizmap Cloud allocated ressources
         allocated_ressources = os.getenv("LZM_ALLOCATION_MODE", "")
-        if allocated_ressources != "" and DATA_PLOTLY not in plugins.keys():
+        if allocated_ressources != "" and DATA_PLOTLY not in plugins:
             if allocated_ressources == "shared":
                 version = 'Not available on the "Basic" Lizmap Cloud plan'
             else:
@@ -148,18 +148,18 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
             tag = ""
 
         if server_metadata:
-            qgis_server_meta = dict(
-                found=True,
-                name=server_metadata.name,
-                version=server_metadata.version,
-                build_id=server_metadata.build_id,
-                commit_id=server_metadata.commit_id,
-                stable=server_metadata.is_stable,
-                git_repository_url=self._context.git_repository_url,
-                documentation_url=self._context.documentation_url,
-            )
+            qgis_server_meta = {
+                "found": True,
+                "name": server_metadata.name,
+                "version": server_metadata.version,
+                "build_id": server_metadata.build_id,
+                "commit_id": server_metadata.commit_id,
+                "stable": server_metadata.is_stable,
+                "git_repository_url": self._context.git_repository_url,
+                "documentation_url": self._context.documentation_url,
+            }
         else:
-            qgis_server_meta = dict(found=False, version="not used")
+            qgis_server_meta = {"found": False, "version": "not used"}
 
         data = {
             # Only the "qgis_server" section is forwarded in LWC source code

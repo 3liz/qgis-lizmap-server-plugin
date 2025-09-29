@@ -11,7 +11,7 @@ from qgis.server import (
     QgsService,
 )
 
-from lizmap_server.core import (
+from .core import (
     find_vector_layer_from_params,
     get_lizmap_config,
     get_lizmap_groups,
@@ -21,15 +21,15 @@ from lizmap_server.core import (
     is_editing_context,
     write_json_response,
 )
-from lizmap_server.exception import ServiceError
-from lizmap_server.filter_by_polygon import (
+from .exception import ServiceError
+from .filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
     FilterType,
 )
-from lizmap_server.logger import Logger, profiling
-from lizmap_server.tools import version
+from .tools import version
+from . import logger
 
 
 class LizmapServiceError(ServiceError):
@@ -43,7 +43,6 @@ class LizmapService(QgsService):
     def __init__(self, server_iface: QgsServerInterface) -> None:
         super().__init__()
         self.server_iface = server_iface
-        self.logger = Logger()
 
     # QgsService inherited
 
@@ -70,7 +69,6 @@ class LizmapService(QgsService):
 
         params = request.parameters()
 
-        # noinspection PyBroadException
         try:
             req_param = params.get('REQUEST', '').upper()
 
@@ -96,15 +94,15 @@ class LizmapService(QgsService):
         except LizmapServiceError as e:
             e.formatResponse(response)
         except Exception as e:
-            self.logger.critical(f"Unhandled exception:\n{traceback.format_exc()}")
-            self.logger.critical(str(e))
+            logger.critical(f"Unhandled exception:\n{traceback.format_exc()}")
+            logger.critical(str(e))
             err = LizmapServiceError(
                 "Internal server error",
                 "Internal 'lizmap' service error",
             )
             err.formatResponse(response)
 
-    @profiling
+    @logger.profiling
     def polygon_filter(
         self,
         params: Dict[str, str],
@@ -112,8 +110,8 @@ class LizmapService(QgsService):
         project: QgsProject,
     ) -> None:
         """ The subset string to use a on a layer."""
-        flag, layer = find_vector_layer_from_params(params, project)
-        if not flag:
+        layer = find_vector_layer_from_params(params, project)
+        if not layer:
             raise ServiceError("Bad request error", "Invalid LAYER parameter", 400)
 
         body = {
@@ -168,7 +166,7 @@ class LizmapService(QgsService):
             )
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
-                    Logger.critical(
+                    logger.critical(
                         "The filter by polygon configuration is not valid.\n All features are hidden.")
                     body = {
                         'status': 'success',
@@ -177,31 +175,30 @@ class LizmapService(QgsService):
                     }
                     write_json_response(body, response)
                     return
-                else:
-                    # Get Lizmap user groups provided by the request
-                    groups = get_lizmap_groups(self.server_iface.requestHandler())
 
-                    # polygon_filter is set, we have a value to filter
-                    # pass the tuple of groups or the tuple of the user
-                    # depending on the filter_by_user boolean variable
-                    groups_or_user = groups
-                    if filter_polygon_config.is_filtered_by_user():
-                        user_login = get_lizmap_user_login(self.server_iface.requestHandler())
-                        groups_or_user = (user_login,)
+                # Get Lizmap user groups provided by the request
+                groups = get_lizmap_groups(self.server_iface.requestHandler())
 
-                    # Get the subset SQL
-                    sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
-                    body = {
-                        'status': 'success',
-                        'filter': sql,
-                        'polygons': polygons,
-                    }
-                    write_json_response(body, response)
-                    return
+                # polygon_filter is set, we have a value to filter
+                # pass the tuple of groups or the tuple of the user
+                # depending on the filter_by_user boolean variable
+                groups_or_user = groups
+                if filter_polygon_config.is_filtered_by_user():
+                    user_login = get_lizmap_user_login(self.server_iface.requestHandler())
+                    groups_or_user = (user_login,)
+
+                # Get the subset SQL
+                sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
+                body = {
+                    'status': 'success',
+                    'filter': sql,
+                    'polygons': polygons,
+                }
+                write_json_response(body, response)
 
         except Exception as e:
-            Logger.log_exception(e)
-            Logger.critical(
+            logger.log_exception(e)
+            logger.critical(
                 "An error occurred when trying to read the filtering by polygon.\nAll features are hidden.")
             body = {
                 'status': 'success',

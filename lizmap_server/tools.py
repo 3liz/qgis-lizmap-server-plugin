@@ -4,7 +4,8 @@ import os
 from pathlib import Path
 from typing import Union
 
-from qgis.core import Qgis, QgsMessageLog
+
+from . import logger
 
 """
 Tools for Lizmap.
@@ -19,6 +20,7 @@ def to_bool(val: Union[str, int, float, bool, None]) -> bool:
 
 def version() -> str:
     """ Returns the Lizmap current version. """
+    # TODO Use the canonical way to read package resources
     file_path = Path(__file__).parent.joinpath('metadata.txt')
     config = configparser.ConfigParser()
     try:
@@ -28,10 +30,10 @@ def version() -> str:
         # Maybe a locale issue ?
         # Do not use logger here, circular import
         # noinspection PyTypeChecker
-        QgsMessageLog.logMessage(
+        logger.critical(
             "Error, an UnicodeDecodeError occurred while reading the metadata.txt. Is the locale "
             "correctly set on the server ?",
-            "Lizmap", Qgis.MessageLevel.Critical)
+        )
         return 'NULL'
     else:
         return config["general"]["version"]
@@ -39,15 +41,15 @@ def version() -> str:
 
 def check_environment_variable() -> bool:
     """ Check the server configuration. """
-    if not to_bool(os.environ.get('QGIS_SERVER_LIZMAP_REVEAL_SETTINGS', '')):
-        QgsMessageLog.logMessage(
-            'The Lizmap API is currently not enabled. Please read the documentation how to enable the Lizmap API '
-            'on QGIS server side '
-            'https://docs.lizmap.com/current/en/install/pre_requirements.html#lizmap-server-plugin '
-            'An environment variable must be enabled to have Lizmap Web Client ≥ 3.5 working.',
-            "Lizmap",
-            Qgis.MessageLevel.Critical,
+    lizmap_enabled = to_bool(os.environ.get('QGIS_SERVER_LIZMAP_REVEAL_SETTINGS', ''))
+    if not lizmap_enabled:
+        logger.critical(
+            "The Lizmap API is currently not enabled. Please read the documentation "
+            "how to enable the Lizmap API on QGIS server side "
+            "'https://docs.lizmap.com/current/en/install/pre_requirements.html"
+            "#lizmap-server-plugin' "
+            "An environment variable must be enabled to have Lizmap Web "
+            "Client ≥ 3.5 working.",
         )
-        return False
 
-    return True
+    return lizmap_enabled

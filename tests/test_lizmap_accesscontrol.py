@@ -605,7 +605,7 @@ def test_filter_by_login_simple_values():
         "allow_multiple_acl_values": False,
     }
     output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "grp_2"), "a", "other_provider")
-    assert ("\"f\" = 'a' OR \"f\" = 'all'") == output, output
+    assert output == ("\"f\" = 'a' OR \"f\" = 'all'")
 
 
 def test_filter_by_login_postgres_multiple_values():
@@ -616,10 +616,10 @@ def test_filter_by_login_postgres_multiple_values():
         "allow_multiple_acl_values": True,
     }
     output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "grp_2"), "a", "postgres")
-    assert (
+    assert output == (
         "\"f\" = 'a' OR \"f\" LIKE 'a,%' OR \"f\" LIKE '%,a' OR \"f\" LIKE '%,a,%' OR \"f\" = 'all' "
         "OR \"f\" LIKE 'all,%' OR \"f\" LIKE '%,all' OR \"f\" LIKE '%,all,%'"
-    ) == output, output
+    )
 
 
 def test_filter_by_login_postgres_multiple_values_deactivated():
@@ -633,4 +633,4 @@ def test_filter_by_login_postgres_multiple_values_deactivated():
         "allow_multiple_acl_values": False,
     }
     output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "grp_2"), "a", "postgres")
-    assert ("\"f\" = 'a' OR \"f\" = 'all'") == output, output
+    assert output == ("\"f\" = 'a' OR \"f\" = 'all'")

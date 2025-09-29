@@ -20,50 +20,45 @@ from qgis.core import (
 )
 from qgis.server import QgsRequestHandler, QgsServerResponse
 
-from lizmap_server.logger import Logger
+from lizmap_server import logger
 from lizmap_server.tools import to_bool
 
 
-def write_json_response(data: Mapping[str, object], response: QgsServerResponse, code: int = 200) -> None:
+def write_json_response(
+    data: Mapping[str, object],
+    response: QgsServerResponse,
+    code: int = 200,
+):
     """ Write data as JSON response. """
     response.setStatusCode(code)
     response.setHeader("Content-Type", "application/json")
-    Logger.info(f"Sending JSON response : {data}")
+    logger.info(f"Sending JSON response : {data}")
     response.write(json.dumps(data))
 
 
-def find_vector_layer_from_params(params, project):
+def find_vector_layer_from_params(params: dict, project: QgsProject) -> Optional[QgsMapLayer]:
     """ Trying to find the layer in the URL in the given project. """
-#         params: Dict[str, str], project: QgsProject) -> tuple[bool, Union[QgsMapLayer, None]]:
     layer_name = params.get('LAYER', params.get('layer', ''))
-
-    if not layer_name:
-        return False, None
-
-    layer = find_vector_layer(layer_name, project)
-
-    if not layer:
-        return False, None
-
-    return True, layer
+    return find_vector_layer(layer_name, project) if layer_name else None
 
 
 def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
     """ Find layer with name, short name or layer ID. """
     found: Optional[QgsMapLayer] = None
     for layer in project.mapLayers().values():
-
         # check name
         if layer.name() == layer_name:
             found = layer
             break
 
         # check short name
-        if Qgis.versionInt() < 33800 and layer.shortName() == layer_name:
+        if Qgis.versionInt() < 33800:
+            if layer.shortName() == layer_name:
+                found = layer
+        elif layer.serverProperties().shortName() == layer_name:
             found = layer
-            break
-        elif Qgis.versionInt() >= 33800 and layer.serverProperties().shortName() == layer_name:
-            found = layer
+
+        if found:
             break
 
         # check layer id
@@ -72,11 +67,11 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
             break
 
     if not found:
-        Logger.warning(
+        logger.warning(
             f"The layer '{layer_name}' has not been found in the project '{project.fileName()}'")
 
     elif not found.isValid():
-        Logger.warning(
+        logger.warning(
             f"The layer '{layer_name}' has been found but it is not valid in the project "
             f"'{project.fileName()}'",
         )
@@ -86,13 +81,7 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
 def find_vector_layer(layer_name: str, project: QgsProject) -> Optional[QgsVectorLayer]:
     """ Find vector layer with name, short name or layer ID. """
     layer = find_layer(layer_name, project)
-    if not layer:
-        return None
-
-    if not layer.type() == QgsMapLayer.LayerType.VectorLayer:
-        return None
-
-    return layer
+    return layer if layer and layer.type() == QgsMapLayer.LayerType.VectorLayer else None
 
 
 def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
@@ -105,8 +94,6 @@ def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
 
 def get_lizmap_config(qgis_project_path: str) -> Optional[dict]:
     """ Get the lizmap config based on QGIS project path """
-
-    logger = Logger()
 
     # Check QGIS project path
     if not os.path.exists(qgis_project_path):
@@ -132,7 +119,6 @@ def _get_lizmap_config(config_path: str, last_modified: float) -> Optional[dict]
     """ Get the lizmap config based on QGIS project path with cache. """
     # Last modified is only for LRU cache
     _ = last_modified
-    logger = Logger()
 
     # Get Lizmap config
     with open(config_path) as cfg_file:
@@ -156,8 +142,6 @@ def get_lizmap_layers_config(config: Dict) -> Union[Dict, None]:
 
     if not config:
         return None
-
-    logger = Logger()
 
     # Check Lizmap config layers
     if 'layers' not in config or not config['layers']:
@@ -184,8 +168,6 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
         return None
     if not layer_name or not isinstance(layer_name, str):
         return None
-
-    logger = Logger()
 
     # Check Lizmap config loginFilteredLayers
     if 'loginFilteredLayers' not in config or not config['loginFilteredLayers']:
@@ -224,7 +206,6 @@ def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
 
     # Defined groups
     groups = []
-    logger = Logger()
 
     # Get Lizmap User Groups in request headers
     headers = handler.requestHeaders()
@@ -262,8 +243,6 @@ def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
     # Defined login
     login = ''
 
-    logger = Logger()
-
     # Get Lizmap User Login in request headers
     headers = handler.requestHeaders()
     if headers:
@@ -298,8 +277,6 @@ def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
     # Defined override
     override = False
 
-    logger = Logger()
-
     # Get Lizmap User Login in request headers
     headers = handler.requestHeaders()
     if headers:
@@ -332,8 +309,6 @@ def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
 
 def is_editing_context(handler: QgsRequestHandler) -> bool:
     """ Check if headers are defining an editing context. """
-    logger = Logger()
-
     headers = handler.requestHeaders()
     if headers:
         editing_context = headers.get('X-Lizmap-Edition-Context')

@@ -43,8 +43,6 @@ update-requirements: check-uv-install
 	done
 
 
-.PHONY: uv-required upda
-
 #
 # Static analysis
 #
@@ -73,7 +71,7 @@ scan:
 #
 
 test:
-	cd tests && $(UV_RUN) pytest -v
+	$(UV_RUN) pytest -v $(TESTS)/
 
 
 check-uv-install:
@@ -98,12 +96,25 @@ docker-test:
 		$(QGIS_IMAGE_TAG) .docker/run-tests.sh
 
 #
+# Coverage
+#
+
+# Run tests coverage
+covtest:
+	$(UV_RUN) coverage run -m pytest $(TESTS)/
+
+coverage: covtest
+	@echo "Building coverage html"
+	@ $(UV_RUN) coverage html
+
+
+#
 # Code managment
 #
 
 # Display a summary of codes annotations
 show-annotation-%:
-	@grep -nR --color=auto --include=*.py '# $*' lizmap/ || true
+	@grep -nR --color=auto --include=*.py '# $*' lizmap_server/ || true
 
 # Output variable
 echo-variable-%:

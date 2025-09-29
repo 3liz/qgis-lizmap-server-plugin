@@ -3,7 +3,7 @@ import sys
 from .common import ContextABC as ServerContext
 from .common import ProjectCacheError as ProjectCacheError, model_dump_json as model_dump_json, to_iso8601 as to_iso8601
 
-from ..logger import Logger
+from .. import logger
 
 
 def create_server_context() -> ServerContext:
@@ -20,5 +20,5 @@ def create_server_context() -> ServerContext:
         from .native import Context  # type: ignore [assignment]
 
     context: ServerContext = Context()
-    Logger.info(f"Using {context.name} context")
+    logger.info(f"Using {context.name} context")
     return context

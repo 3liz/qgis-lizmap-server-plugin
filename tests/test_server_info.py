@@ -82,7 +82,7 @@ def test_lizmap_server_info_env_check(client):
         assert rv.headers.get("Content-Type", "").find("application/json") == 0
 
         json_content = json.loads(rv.content.decode("utf-8"))
-        assert [{"code": "Bad request error", "description": "Invalid request"}] == json_content
+        assert json_content == [{"code": "Bad request error", "description": "Invalid request"}]
     finally:
         # Reset the environment variable just in case
         os.environ[KEY] = "TRUE"

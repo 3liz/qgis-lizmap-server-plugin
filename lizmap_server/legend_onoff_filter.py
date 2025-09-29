@@ -1,8 +1,11 @@
-__author__ = 'elpaso@itopen.it'
-__date__ = '2022-10-27'
-
+"""
+@author: elpaso@itopen.it
+@date: 2022-10-27
+"""
 
 # File adapted by @rldhont, 3Liz
+
+import traceback
 
 from qgis.core import (
     Qgis,
@@ -16,7 +19,7 @@ from qgis.server import (
 )
 
 from lizmap_server.core import find_vector_layer
-from lizmap_server.logger import Logger, exception_handler
+from lizmap_server import logger
 
 
 class LegendOnOffAccessControl(QgsAccessControlFilter):
@@ -95,13 +98,14 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
         if 'LEGEND_ON' not in params \
             and 'LEGEND_OFF' not in params \
-            and layer.type() == QgsMapLayer.LayerType.VectorLayer:
-            if layer.renderer() \
-                and layer.renderer().type() in (
-                    "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
-                ):
-                for item in layer.renderer().legendSymbolItems():
-                    layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
+            and layer.type() == QgsMapLayer.LayerType.VectorLayer \
+            and layer.renderer() \
+            and layer.renderer().type() in (
+                "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
+            ):
+
+            for item in layer.renderer().legendSymbolItems():
+                layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
 
         return rights
 
@@ -122,8 +126,6 @@ class LegendOnOffFilter(QgsServerFilter):
         if not qs or ':' not in qs:
             return
 
-        logger = Logger()
-
         for legend_layer in qs.split(';'):
             layer_name, key_list = legend_layer.split(':')
             if layer_name == '' or key_list == '':
@@ -143,24 +145,25 @@ class LegendOnOffFilter(QgsServerFilter):
             for key in keys:
                 layer.renderer().checkLegendSymbolItem(key, True)
 
-    @exception_handler
     def responseComplete(self) -> None:
         """Restore legend customized renderers"""
+        try:
+            handler = self.serverInterface().requestHandler()
+            if not handler:
+                logger.critical('LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.')
+                return
 
-        handler = self.serverInterface().requestHandler()
-        logger = Logger()
-        if not handler:
-            logger.critical('LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.')
-            return
+            params = handler.parameterMap()
 
-        params = handler.parameterMap()
+            if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
+                return
 
-        if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
-            return
+            project: QgsProject = QgsProject.instance()
 
-        project: QgsProject = QgsProject.instance()
-
-        if 'LEGEND_ON' in params:
-            self._reset_legend(params['LEGEND_ON'], project)
-        if 'LEGEND_OFF' in params:
-            self._reset_legend(params['LEGEND_OFF'], project)
+            if 'LEGEND_ON' in params:
+                self._reset_legend(params['LEGEND_ON'], project)
+            if 'LEGEND_OFF' in params:
+                self._reset_legend(params['LEGEND_OFF'], project)
+        except Exception:
+            # TODO handle proper exception
+            logger.critical(traceback.format_exc())

@@ -7,7 +7,7 @@ from qgis.PyQt.QtXml import QDomDocument
 from qgis.server import QgsServerException, QgsServerResponse
 
 from lizmap_server.core import write_json_response
-from lizmap_server.logger import Logger
+from lizmap_server import logger
 
 
 class ServiceError(Exception):
@@ -18,7 +18,7 @@ class ServiceError(Exception):
         self.msg = msg
         self.code = code
         self.response_code = response_code
-        Logger.critical(f"{self.service} request error {code}: {msg}")
+        logger.critical(f"{self.service} request error {code}: {msg}")
 
     def formatResponse(self, response: QgsServerResponse) -> None:
         """ Format error response
