@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.13.6 - 2025-09-29
+
 * Fix: Use access control to filter Expression ReplaceExpressionText
 * Fix: Use access control to filter Expression VirtualFields
 
