@@ -1,7 +1,7 @@
 [general]
-name=Lizmap server
+name=Lizmap serve
 qgisMinimumVersion=3.28
-qgisMaximumVersion=3.99
+qgisMaximumVersion=3.32
 author=3Liz
 email=info@3liz.com
 description=Designed only for QGIS server. For QGIS Desktop, install the other plugin called "Lizmap".
