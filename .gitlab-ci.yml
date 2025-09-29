@@ -38,9 +38,6 @@ qgis-server:
     matrix:
       - QGIS_FLAVOR: [
         "3.28",
-        "3.34",
-        "3.40",
-        "nightly-release",
       ]
 
 linter:
