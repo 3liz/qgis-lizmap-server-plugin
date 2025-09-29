@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Fix: Use access control to filter Expression ReplaceExpressionText
+* Fix: Use access control to filter Expression VirtualFields
+
 ## 2.13.5 - 2025-09-18
 
 * Improve support for QJazz
