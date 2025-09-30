@@ -67,20 +67,59 @@ jobs:
       - name: Running tests
         run: make docker-test QGIS_VERSION=${{ matrix.qgis_version }}
 
+  release-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: x64
+
+      - name: Set env
+        run: echo "RELEASE_VERSION=3.0.0" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v5.0.0
+
+      # XXX Atm git commands fails when run from a custom container
+      # so we have to install qgis-plugin-ci in the default container
+      - name: Install QGIS Plugin CI
+        run: .docker/install-qgis-plugin-ci.sh
+      
+      - name: Fetch current changelog
+        run: qgis-plugin-ci changelog ${{ env.RELEASE_VERSION }} >> release.md
+
+      - name: Package and deploy the zip
+        run: >-
+          qgis-plugin-ci -v
+          release ${{ env.RELEASE_VERSION }}
+          --dry-run
+          --no-diff-check
+
   release:
     needs: [tests, linter]
 
     runs-on: ubuntu-latest
     if: github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/')
-    container: 3liz/qgis-plugin-ci:endeavour
 
     steps:
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          architecture: x64
+
       - name: Set env
         run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v5.0.0
 
-      - name : Fetch current changelog
+        # XXX Atm git commands fails when run from a custom container
+        # so we have to install qgis-plugin-ci in the default container
+      - name: Install QGIS Plugin CI
+        run: .docker/install-qgis-plugin-ci.sh
+
+      - name: Fetch current changelog
         run: qgis-plugin-ci changelog ${{ env.RELEASE_VERSION }} >> release.md
 
       - name: Create release on GitHub
@@ -97,7 +136,8 @@ jobs:
           --osgeo-username ${{ secrets.OSGEO_USERNAME }}
           --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
           --create-plugin-repo
-
+          --no-diff-check
+      
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v3
         with:
