@@ -10,9 +10,9 @@ mypy==1.18.2
 mypy-extensions==1.1.0
 pathspec==0.12.1
 pygments==2.19.2
-pyyaml==6.0.2
+pyyaml==6.0.3
 rich==14.1.0
-ruff==0.13.1
+ruff==0.13.2
 stevedore==5.5.0
 tomli==2.2.1 ; python_full_version < '3.11'
 typing-extensions==4.15.0
