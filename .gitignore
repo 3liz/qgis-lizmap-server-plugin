@@ -31,3 +31,4 @@ test/data/*.asc.aux.xml
 .bash_aliases
 .localconfig.mk
 .coverage
+.bin
