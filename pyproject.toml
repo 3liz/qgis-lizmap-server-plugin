@@ -45,7 +45,7 @@ packaging = [
 ]
 
 [tool.uv.sources]
-qgis-plugin-package-ci = { git = "https://github.com/3liz/qgis-plugin-package-ci.git", branch = "testing" }
+qgis-plugin-package-ci = { git = "https://github.com/3liz/qgis-plugin-package-ci.git" }
 
 
 # Ruff configuration

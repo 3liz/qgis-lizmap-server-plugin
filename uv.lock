@@ -515,7 +515,7 @@ lint = [
     { name = "mypy" },
     { name = "ruff" },
 ]
-packaging = [{ name = "qgis-plugin-package-ci", marker = "python_full_version >= '3.12'", git = "https://github.com/3liz/qgis-plugin-package-ci.git?branch=testing" }]
+packaging = [{ name = "qgis-plugin-package-ci", marker = "python_full_version >= '3.12'", git = "https://github.com/3liz/qgis-plugin-package-ci.git" }]
 tests = [
     { name = "pillow" },
     { name = "pytest", specifier = ">=5.3" },
@@ -1233,7 +1233,7 @@ wheels = [
 [[package]]
 name = "qgis-plugin-package-ci"
 version = "0.1.0a1"
-source = { git = "https://github.com/3liz/qgis-plugin-package-ci.git?branch=testing#f5b41af79eaf9d8a923c39bdf32bfd10298fd7db" }
+source = { git = "https://github.com/3liz/qgis-plugin-package-ci.git#74aa10144127bd67fe29a5582155d9c83758a554" }
 dependencies = [
     { name = "click", marker = "python_full_version >= '3.12'" },
     { name = "gitpython", marker = "python_full_version >= '3.12'" },
