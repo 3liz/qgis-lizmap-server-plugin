@@ -165,5 +165,6 @@ class LegendOnOffFilter(QgsServerFilter):
             if 'LEGEND_OFF' in params:
                 self._reset_legend(params['LEGEND_OFF'], project)
         except Exception:
-            # TODO handle proper exception
             logger.critical(traceback.format_exc())
+            # Let server handle error 500
+            raise

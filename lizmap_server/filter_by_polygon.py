@@ -27,7 +27,6 @@ from qgis.PyQt.QtCore import QVariant
 from lizmap_server import logger
 from lizmap_server.tools import to_bool
 
-# TODO implement LRU cache with this variable
 CACHE_MAX_SIZE = 100
 
 # 1 = 0 results in a "false" in OGR/PostGIS

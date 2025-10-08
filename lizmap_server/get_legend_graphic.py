@@ -159,14 +159,6 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         symbol['ruleKey'] = category.ruleKey
                         symbol['checked'] = category.checked
                         symbol['parentRuleKey'] = category.parentRuleKey
-
-                        # TODO remove when QGIS 3.28 will be the minimum version
-                        # https://github.com/qgis/QGIS/pull/53738 3.34, 3.32.1, 3.28.10
-                        if 'scaleMaxDenom' not in symbol and category.scaleMaxDenom > 0:
-                            symbol['scaleMaxDenom'] = category.scaleMaxDenom
-                        if 'scaleMinDenom' not in symbol and category.scaleMinDenom > 0:
-                            symbol['scaleMinDenom'] = category.scaleMinDenom
-
                         symbol['expression'] = category.expression
                         if symbol['title'] != category.title:
                             symbol['title'] = category.title
@@ -182,13 +174,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
                 handler.clearBody()
                 handler.appendBody(json.dumps(json_data).encode('utf8'))
-        # TODO handle proper exception
         except Exception:
             logger.critical(
                 f"Error getting layer '{layer_name}' when setting up legend graphic for "
                 "json output when configuring "
                 "OWS call: {traceback.format_exc()}",
             )
+            # Let QGIS server handle error 500
+            raise
         finally:
             if layer and style and current_style and style != current_style:
                 layer.styleManager().setCurrentStyle(current_style)

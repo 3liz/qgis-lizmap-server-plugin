@@ -191,13 +191,12 @@ class GetFeatureInfoFilter(QgsServerFilter):
         # noinspection PyBroadException
         try:
             features = self.feature_list_to_replace(cfg, project, relation_manager, xml, css_framework)
-        except Exception as e:
-            # TODO handle proper exception
+        except Exception:
             logger.critical(
                 "Error while reading the XML response GetFeatureInfo for project {}, returning default "
                 "response".format(project_path))
-            logger.log_exception(e)
-            return
+            # Let QGIS server handler error 500
+            raise
 
         if not features:
             # The user has clicked in a random area on the map or no interesting LAYERS,
@@ -284,9 +283,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
             request.appendBody(bytes(xml, 'utf-8'))
             logger.info(f"GetFeatureInfo replaced for project {project_path}")
 
-        except Exception as e:
-            # TODO handle proper exception
+        except Exception:
             logger.critical(
                 "Error while rewriting the XML response GetFeatureInfo, returning default response")
-            logger.log_exception(e)
-            return
+            # Let QGIS server handle as error 500
+            raise

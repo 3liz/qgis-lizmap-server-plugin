@@ -10,6 +10,7 @@ import re
 
 
 from qgis.core import (
+    Qgis,
     QgsAttributeEditorContainer,
     QgsAttributeEditorElement,
     QgsAttributeEditorField,
@@ -60,8 +61,7 @@ class Tooltip:
         h = ''
 
         # for text widgets
-        # TODO QGIS_VERSION_INT 3.32 change to "Qgis.AttributeEditorType.TextElement"
-        if isinstance(node, QgsAttributeEditorElement) and node.type() == 6:
+        if isinstance(node, QgsAttributeEditorElement) and node.type() == Qgis.AttributeEditorType.TextElement:
             label = node.name()
             expression = node.toDomElement(QDomDocument()).text()
 
@@ -199,9 +199,7 @@ class Tooltip:
                 if lvl > 0:
                     a += h
                     continue
-                # TODO QGIS_VERSION_INT 3.30.0
-                # Change the integer with the QGIS enum `Qgis.AttributeEditorType.TextElement`
-                is_editor_element = isinstance(n, QgsAttributeEditorElement) and n.type() == 6
+                is_editor_element = isinstance(n, QgsAttributeEditorElement) and n.type() == Qgis.AttributeEditorType.TextElement
                 # If it is root children, store html in the right list
                 if isinstance(n, QgsAttributeEditorField) or is_editor_element:
                     if not headers:

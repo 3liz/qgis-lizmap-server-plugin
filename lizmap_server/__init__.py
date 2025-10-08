@@ -1,8 +1,4 @@
-
-
-# noinspection PyUnresolvedReferences
-from qgis.core import QgsExpression  # noqa: F401
-# noinspection PyUnresolvedReferences
+# Auto load expression functions
 from .qgis_expression import layer_renderer_used_attributes  # noqa: F401
 
 

@@ -44,7 +44,7 @@ class Context(ContextABC):
     def project(self, uri: str) -> QgsProject:
         """ Return the project specified by `uri`
         """
-        # TODO Fix me
+        # NOTE: Native do not handle uri mapping
         raise ProjectCacheError(403, f"Project not found in cache: {uri}")
 
     def installed_plugins(
