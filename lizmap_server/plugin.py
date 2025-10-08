@@ -20,20 +20,18 @@ from . import logger
 
 
 class LizmapServer:
-    """Plugin for QGIS server
-    this plugin loads Lizmap filter"""
+    """Plugin for QGIS server this plugin loads Lizmap filter"""
 
     def __init__(self, server_iface: QgsServerInterface):
         self.server_iface = server_iface
         self.version = version()
         logger.info(f'Init server version "{self.version}"')
-        # noinspection PyBroadException
         try:
-            self.plausible = Plausible()
-            self.plausible.request_stat_event()
+            self._plausible = Plausible()
+            self._plausible.request_stat_event()
         except Exception as e:
             logger.log_exception(e)
-            logger.critical('Error while calling the API stats')
+            logger.critical("Error initializing Plausible")
 
         service_registry = server_iface.serviceRegistry()
 
