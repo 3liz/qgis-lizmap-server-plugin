@@ -66,22 +66,14 @@ indent-style = "space"
 
 [tool.ruff.lint]
 extend-select = [
-    "E",
-    "F",
-    "ANN",
-    "W",
-    "T",
-    "COM",
-    "RUF",
-    "C4",
-    "SIM",
-    "TC",
-    "RET",
+    "E", "F", "ANN", "W", "T", "COM", "RUF",
+    "C4", "SIM", "TC", "RET",
 ]
 ignore = [
     "ANN002",
     "ANN003",
     "ANN401",
+    "COM812", # Conflict with format
     "SIM108", # Use ternary operator
     # XXX Fix 
     "E501", # Line too long
@@ -137,19 +129,12 @@ module = "lizmap_server.context.py_qgis_server"
 follow_imports = "skip"
 
 [[tool.mypy.overrides]]
-module = "py_qgis_server.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "qgis.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "osgeo.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "xmldiff.*"
+module = [
+    "py_qgis_server.*",
+    "qgis.*",
+    "osgeo.*",
+    "xmldiff.*",
+]
 ignore_missing_imports = true
 
 #
