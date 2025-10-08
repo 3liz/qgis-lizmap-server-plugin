@@ -35,6 +35,8 @@ REQUIREMENTS=$(patsubst %,requirements/%.txt, $(REQUIREMENT_GROUPS))
 update-packaging-dependencies::
 	uv sync -U --inexact --only-group packaging
 
+update-packaging-dependencies:: update-requirements
+
 update-requirements: $(REQUIREMENTS)
 
 # Require uv (https://docs.astral.sh/uv/) for extracting
