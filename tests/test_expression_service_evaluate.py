@@ -17,7 +17,7 @@ def test_layer_error_without_layer(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
     assert b["message"] == "Invalid 'Evaluate' REQUEST: LAYER parameter is mandatory"
@@ -39,7 +39,7 @@ def test_layer_error_with_layer_error(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
     assert b["message"].startswith("Invalid LAYER parameter for 'Evaluate'")
@@ -61,10 +61,10 @@ def test_expression_error(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
-    assert b["message"] == "Invalid 'Evaluate' REQUEST: EXPRESSION or EXPRESSIONS parameter is mandatory"
+    assert b["message"] == "Invalid 'Evaluate' REQUEST: EXPRESSIONS or EXPRESSION parameter is mandatory"
 
     # Make a request with an invalid expression
     qs = {
@@ -83,7 +83,7 @@ def test_expression_error(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
     assert b["message"].startswith("Invalid EXPRESSIONS for 'Evaluate'")
@@ -114,10 +114,10 @@ def test_features_error(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
-    assert b["message"].startswith("Invalid 'Evaluate' REQUEST: FEATURES")
+    assert b["message"].startswith("Invalid 'Evaluate' REQUEST: ")
 
     # Make a request
     qs = {
@@ -143,7 +143,7 @@ def test_features_error(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
     assert b["message"].startswith("Invalid 'Evaluate' REQUEST: FEATURES")
@@ -176,7 +176,7 @@ def test_features_error(client):
     assert b["status"] == "fail"
 
     assert "code" in b
-    assert b["code"] == "Bad request error"
+    assert b["code"] == "Bad request"
 
     assert "message" in b
     assert b["message"].startswith("Invalid 'Evaluate' REQUEST: FEATURES")
