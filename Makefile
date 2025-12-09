@@ -20,7 +20,7 @@ endif
 UV_RUN=uv run $(ACTIVE_VENV)
 endif
 
-REQUIREMENTS= \
+REQUIREMENT_GROUPS= \
 	dev \
 	tests \
 	lint \
@@ -29,18 +29,26 @@ REQUIREMENTS= \
 
 .PHONY: uv-required update-requirements
 
+REQUIREMENTS=$(patsubst %,requirements/%.txt, $(REQUIREMENT_GROUPS))
+
+# Update only packaging dependencies
+update-packaging-dependencies::
+	uv sync -U --inexact --only-group packaging
+
+update-packaging-dependencies:: update-requirements
+
+update-requirements: $(REQUIREMENTS)
+
 # Require uv (https://docs.astral.sh/uv/) for extracting
 # infos from project's dependency-groups
-update-requirements: check-uv-install
-	@for group in $(REQUIREMENTS); do \
-		echo "Updating requirements for '$$group'"; \
-		uv export --format requirements.txt \
-			--no-annotate \
-			--no-editable \
-			--no-hashes \
-			--only-group $$group \
-			-q -o requirements/$$group.txt; \
-	done
+requirements/%.txt: uv.lock
+	@echo "Updating requirements for '$*'"; \
+	uv export --format requirements.txt \
+		--no-annotate \
+		--no-editable \
+		--no-hashes \
+		--only-group $* \
+		-q -o requirements/$*.txt; \
 
 
 #
