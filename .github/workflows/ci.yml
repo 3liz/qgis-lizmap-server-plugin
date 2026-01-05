@@ -93,12 +93,12 @@ jobs:
           cat release.md
 
       - name: Package and deploy the zip
-        run: >-
+        run: >
           qgis-plugin-ci -vv
-          release ${{ env.RELEASE_VERSION }}
-          --github-token ${{ secrets.BOT_HUB_TOKEN }}
-          --osgeo-username ${{ secrets.OSGEO_USERNAME }}
-          --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
+          release "${{ env.RELEASE_VERSION }}"
+          --github-token "${{ secrets.BOT_HUB_TOKEN }}"
+          --osgeo-username "${{ secrets.OSGEO_USERNAME }}"
+          --osgeo-password "${{ secrets.OSGEO_PASSWORD }}"
           --dry-run
 
   release:
@@ -108,7 +108,7 @@ jobs:
     if: github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/')
 
     steps:
-      - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v6
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -134,12 +134,12 @@ jobs:
           token: ${{ secrets.BOT_HUB_TOKEN }}
 
       - name: Package and deploy the zip
-        run: >-
+        run: >
           qgis-plugin-ci
           release ${{ env.RELEASE_VERSION }}
-          --github-token ${{ secrets.BOT_HUB_TOKEN }}
-          --osgeo-username ${{ secrets.OSGEO_USERNAME }}
-          --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
+          --github-token "${{ secrets.BOT_HUB_TOKEN }}"
+          --osgeo-username "${{ secrets.OSGEO_USERNAME }}"
+          --osgeo-password "${{ secrets.OSGEO_PASSWORD }}"
           --create-plugin-repo
       
       - name: Repository Dispatch
