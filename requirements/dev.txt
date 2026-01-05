@@ -2,7 +2,7 @@
 #    uv export --format requirements.txt --no-annotate --no-editable --no-hashes --only-group dev -o requirements/dev.txt
 bandit==1.8.6
 colorama==0.4.6 ; sys_platform == 'win32'
-coverage==7.10.7
+coverage==7.13.1
 exceptiongroup==1.3.0 ; python_full_version < '3.11'
 iniconfig==2.1.0
 lxml==6.0.2
