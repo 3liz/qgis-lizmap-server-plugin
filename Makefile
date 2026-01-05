@@ -69,7 +69,8 @@ format:
 	@ $(UV_RUN) ruff format $(LINT_TARGETS) 
 
 typecheck:
-	@ $(UV_RUN) mypy $(LINT_TARGETS)
+	@ $(UV_RUN) mypy $(PYTHON_MODULE)
+	@ $(UV_RUN) mypy --python-version 3.10 tests
 
 scan:
 	@ $(UV_RUN) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)
