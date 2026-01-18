@@ -3,11 +3,17 @@ name = "Lizmap-server-plugin"
 authors = [
     { name = "3liz", email = "info@3liz.com" }
 ]
+version = "2.14.2"
 requires-python = ">=3.9"
 license = "GPL-2.0-only"
 license-files = ["LICENSE"]
 readme = "README.md"
+keywords = [
+    "online", "server", "web", "webgis", "webservice", "webmapping", "mobile",
+    "publication", "wms", "wfs" , "internet" , "cloud", 
+]
 classifiers = [
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.11",
@@ -16,12 +22,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: GIS",
 ]
-dynamic = ["version"]
 
 [project.urls]
 homepage = "https://docs.lizmap.com/current/fr/install/pre_requirements.html#lizmap-qgis-server-plugin"
+tracker = "https://github.com/3liz/qgis-lizmap-server-plugin/issues"
 repository = "https://github.com/3liz/qgis-lizmap-server-plugin"
-"Bug Reports" = "https://github.com/3liz/qgis-lizmap-server-plugin/issues"
+
 
 [dependency-groups]
 dev = [
