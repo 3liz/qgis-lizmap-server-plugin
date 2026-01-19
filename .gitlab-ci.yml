@@ -4,6 +4,7 @@ variables:
 stages:
 - lint
 - test
+- version
 - build
 - deploy
 - release
@@ -59,9 +60,10 @@ version:
     - factory-plain
   rules:
     - if: $RELEASE_BRANCH == "true"
-  stage: build
+  stage: version
   script:
     - version-helper > build.env
+    - cat build.env
   artifacts:
     reports:
       dotenv: build.env
@@ -98,7 +100,8 @@ deploy:
   script:
     - upload_plugins ${PRODUCT_NAME} ${PRODUCT_NAME}.${VERSION}.zip ${STATUS}
     - update-snap-qgis-plugins
-
+  variables:
+    PLUGIN_SERVER_URL: "https://qgis-plugins.3liz.org"
 
 #
 # Release
