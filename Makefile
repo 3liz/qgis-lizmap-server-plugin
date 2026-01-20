@@ -27,7 +27,7 @@ REQUIREMENT_GROUPS= \
 	packaging \
 	$(NULL)
 
-.PHONY: uv-required update-requirements
+.PHONY: update-requirements
 
 REQUIREMENTS=$(patsubst %,requirements/%.txt, $(REQUIREMENT_GROUPS))
 
