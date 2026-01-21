@@ -1650,7 +1650,7 @@ wheels = [
 [[package]]
 name = "qgis-plugin-package-ci"
 version = "0.1.0a1"
-source = { git = "https://github.com/3liz/qgis-plugin-package-ci.git#60aa303578de718bffa2077a47fbabf666c8879c" }
+source = { git = "https://github.com/3liz/qgis-plugin-package-ci.git#336756f27fdadd52553f79a125ac3df85450267a" }
 dependencies = [
     { name = "click", marker = "python_full_version >= '3.12'" },
     { name = "gitpython", marker = "python_full_version >= '3.12'" },

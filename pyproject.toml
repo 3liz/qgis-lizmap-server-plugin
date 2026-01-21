@@ -111,11 +111,6 @@ ignore-fully-untyped = true
 suppress-none-returning = true
 suppress-dummy-args = true
 
-[tool.qgis-plugin-ci]
-plugin_path = "lizmap_server"
-github_organization_slug = "3liz"
-project_slug = "qgis-lizmap-server-plugin"
-
 [tool.package-ci]
 plugin_source = "lizmap_server"
 github_organization_slug = "3liz"
