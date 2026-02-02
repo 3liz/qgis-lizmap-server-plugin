@@ -46,13 +46,9 @@ lint = [
     "bandit",
     "lxml-stubs",
 ]
-packaging = [
-    "qgis-plugin-package-ci; python_full_version >= '3.12'",
-]
 
-[tool.uv.sources]
-qgis-plugin-package-ci = { git = "https://github.com/3liz/qgis-plugin-package-ci.git" }
-
+[tool.yapt]
+plugin_source = "lizmap_server"
 
 # Ruff configuration
 # See https://doc.astral.sh/ruff/configuration
