@@ -3,7 +3,7 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      dry-run:
+      dry_run:
         description: Execute dry run
         required: true
         type: boolean
@@ -15,7 +15,7 @@ jobs:
 
   release-dry-run:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == '3liz' && inputs.tag && inputs.tag == 'dry-run' }}
+    if: ${{ github.repository_owner == '3liz' && inputs.dry_run == 'true'}}
     steps:
       - uses: actions/checkout@v6
 
@@ -51,7 +51,7 @@ jobs:
     needs: [tests]
 
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/') && inputs.tag && inputs.tag != 'dry-run' }}
+    if: ${{ github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/') && inputs.dry-run == 'false' }}
 
     steps:
       - uses: actions/checkout@v6
