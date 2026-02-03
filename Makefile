@@ -24,18 +24,11 @@ REQUIREMENT_GROUPS= \
 	dev \
 	tests \
 	lint \
-	packaging \
 	$(NULL)
 
 .PHONY: update-requirements
 
 REQUIREMENTS=$(patsubst %,requirements/%.txt, $(REQUIREMENT_GROUPS))
-
-# Update only packaging dependencies
-update-packaging-dependencies::
-	uv sync -U --inexact --only-group packaging
-
-update-packaging-dependencies:: update-requirements
 
 update-requirements: $(REQUIREMENTS)
 
