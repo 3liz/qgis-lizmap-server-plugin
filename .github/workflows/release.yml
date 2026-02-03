@@ -39,7 +39,7 @@ jobs:
       - uses: actions/checkout@v6
       
       - name: Fetch yapt
-        run: curl ${{ vars.YAPT_REPOSITORY_URL }} | tar -czf -
+        run: curl ${{ vars.YAPT_REPOSITORY_URL }} | tar -xzf -
       
       - name: Fetch current changelog
         run: |
@@ -53,7 +53,7 @@ jobs:
           --osgeo-password "${{ secrets.OSGEO_PASSWORD }}"
 
       - name: Create release on GitHub
-        uses: ncipollo/release-action@v1.20
+        uses: ncipollo/release-action@v1.20.0
         with:
           bodyFile: release.md
           artifacts: "*.zip"
