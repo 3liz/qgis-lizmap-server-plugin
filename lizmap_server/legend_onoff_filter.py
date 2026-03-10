@@ -23,7 +23,6 @@ from lizmap_server import logger
 
 
 class LegendOnOffAccessControl(QgsAccessControlFilter):
-
     def __init__(self, server_interface: QgsServerInterface):
         super().__init__(server_interface)
 
@@ -37,16 +36,16 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         else:
             layer_short_name = layer.serverProperties().shortName()
 
-        for legend_layer in qs.split(';'):
-            layer_name, key_list = legend_layer.split(':')
+        for legend_layer in qs.split(";"):
+            layer_name, key_list = legend_layer.split(":")
             # not empty
-            if layer_name == '' or key_list == '':
+            if layer_name == "" or key_list == "":
                 continue
             # for the layer
             if layer_name not in (layer_short_name, layer.name(), layer.id()):
                 continue
 
-            for key in key_list.split(','):
+            for key in key_list.split(","):
                 layer.renderer().checkLegendSymbolItem(key, onoff)
 
     def layerPermissions(self, layer: QgsMapLayer) -> QgsAccessControlFilter.LayerPermissions:
@@ -55,15 +54,15 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         handler = self.iface.requestHandler()
         params = handler.parameterMap()
 
-        styles = params.get('STYLES', '').split(',')
+        styles = params.get("STYLES", "").split(",")
 
         if len(styles) == 0:
-            styles = params.get('STYLE', [])
+            styles = params.get("STYLE", [])
 
-        layers = params.get('LAYERS', '').split(',')
+        layers = params.get("LAYERS", "").split(",")
 
         if len(layers) == 0:
-            layers = params.get('LAYER', [])
+            layers = params.get("LAYER", [])
 
         # noinspection PyBroadException
         try:
@@ -91,19 +90,23 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
         sm.setCurrentStyle(style)
 
-        if 'LEGEND_ON' in params:
-            self._setup_legend(layer, params['LEGEND_ON'], True)
-        if 'LEGEND_OFF' in params:
-            self._setup_legend(layer, params['LEGEND_OFF'], False)
+        if "LEGEND_ON" in params:
+            self._setup_legend(layer, params["LEGEND_ON"], True)
+        if "LEGEND_OFF" in params:
+            self._setup_legend(layer, params["LEGEND_OFF"], False)
 
-        if 'LEGEND_ON' not in params \
-            and 'LEGEND_OFF' not in params \
-            and layer.type() == QgsMapLayer.LayerType.VectorLayer \
-            and layer.renderer() \
-            and layer.renderer().type() in (
-                "categorizedSymbol", "RuleRenderer", "graduatedSymbol",
-            ):
-
+        if (
+            "LEGEND_ON" not in params
+            and "LEGEND_OFF" not in params
+            and layer.type() == QgsMapLayer.LayerType.VectorLayer
+            and layer.renderer()
+            and layer.renderer().type()
+            in (
+                "categorizedSymbol",
+                "RuleRenderer",
+                "graduatedSymbol",
+            )
+        ):
             for item in layer.renderer().legendSymbolItems():
                 layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
 
@@ -123,15 +126,15 @@ class LegendOnOffFilter(QgsServerFilter):
 
     @staticmethod
     def _reset_legend(qs: str, project: QgsProject):
-        if not qs or ':' not in qs:
+        if not qs or ":" not in qs:
             return
 
-        for legend_layer in qs.split(';'):
-            layer_name, key_list = legend_layer.split(':')
-            if layer_name == '' or key_list == '':
+        for legend_layer in qs.split(";"):
+            layer_name, key_list = legend_layer.split(":")
+            if layer_name == "" or key_list == "":
                 continue
 
-            keys = key_list.split(',')
+            keys = key_list.split(",")
             if len(keys) == 0:
                 continue
 
@@ -139,7 +142,9 @@ class LegendOnOffFilter(QgsServerFilter):
             if not layer:
                 logger.warning(
                     "LegendOnOFF::RequestReady : Skipping the layer '{}' because it's not a vector layer".format(
-                        layer_name))
+                        layer_name
+                    )
+                )
                 continue
 
             for key in keys:
@@ -150,20 +155,20 @@ class LegendOnOffFilter(QgsServerFilter):
         try:
             handler = self.serverInterface().requestHandler()
             if not handler:
-                logger.critical('LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.')
+                logger.critical("LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.")
                 return
 
             params = handler.parameterMap()
 
-            if 'LEGEND_ON' not in params and 'LEGEND_OFF' not in params:
+            if "LEGEND_ON" not in params and "LEGEND_OFF" not in params:
                 return
 
             project: QgsProject = QgsProject.instance()
 
-            if 'LEGEND_ON' in params:
-                self._reset_legend(params['LEGEND_ON'], project)
-            if 'LEGEND_OFF' in params:
-                self._reset_legend(params['LEGEND_OFF'], project)
+            if "LEGEND_ON" in params:
+                self._reset_legend(params["LEGEND_ON"], project)
+            if "LEGEND_OFF" in params:
+                self._reset_legend(params["LEGEND_OFF"], project)
         except Exception:
             logger.critical(traceback.format_exc())
             # Let server handle error 500

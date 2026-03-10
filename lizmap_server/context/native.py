@@ -1,5 +1,5 @@
-""" Native QGIS context
-"""
+"""Native QGIS context"""
+
 from typing import (
     Dict,
     Iterator,
@@ -18,11 +18,10 @@ from .common import (
     ServerMetadata,
 )
 
-SERVER_CONTEXT_NAME = 'FCGI'
+SERVER_CONTEXT_NAME = "FCGI"
 
 
 class Context(ContextABC):
-
     @property
     def name(self) -> str:
         return SERVER_CONTEXT_NAME
@@ -37,13 +36,11 @@ class Context(ContextABC):
 
     @property
     def search_paths(self) -> List[str]:
-        """ Return search paths for projects
-        """
+        """Return search paths for projects"""
         return []
 
     def project(self, uri: str) -> QgsProject:
-        """ Return the project specified by `uri`
-        """
+        """Return the project specified by `uri`"""
         # NOTE: Native do not handle uri mapping
         raise ProjectCacheError(403, f"Project not found in cache: {uri}")
 
@@ -52,8 +49,8 @@ class Context(ContextABC):
         keys: Sequence[str],
         unknown_default: Optional[str] = None,
     ) -> Iterator[Tuple[str, Dict]]:
-        """ return installed plugins metadata
-        """
+        """return installed plugins metadata"""
+
         def _get_key(name, key):
             value = pluginMetadata(name, key)
             if value not in ("__error__", ""):
@@ -68,6 +65,5 @@ class Context(ContextABC):
 
     @property
     def metadata(self) -> Optional[ServerMetadata]:
-        """ Return server metadata
-        """
+        """Return server metadata"""
         return None

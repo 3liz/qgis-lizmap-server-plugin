@@ -1,5 +1,3 @@
-
-
 import functools
 import time
 import traceback
@@ -8,7 +6,7 @@ import traceback
 from qgis.core import Qgis, QgsMessageLog
 
 
-PLUGIN = 'Lizmap'
+PLUGIN = "Lizmap"
 PROFILE = False
 
 
@@ -25,7 +23,7 @@ def critical(message: str):
 
 
 def log_exception(e: BaseException):
-    """ Log a Python exception. """
+    """Log a Python exception."""
     critical(
         "Critical exception:\n{e}\n{traceback}".format(
             e=e,
@@ -35,7 +33,7 @@ def log_exception(e: BaseException):
 
 
 def profiling(func):
-    """ Decorator to make some profiling. """
+    """Decorator to make some profiling."""
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

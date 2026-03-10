@@ -1,5 +1,3 @@
-
-
 from qgis.core import QgsProject
 from qgis.server import QgsServerFilter, QgsServerInterface
 
@@ -9,9 +7,8 @@ from . import logger
 
 
 class LizmapFilter(QgsServerFilter):
-
     def __init__(self, server_iface: QgsServerInterface) -> None:
-        logger.info('LizmapFilter.init')
+        logger.info("LizmapFilter.init")
         super().__init__(server_iface)
 
         self.iface = server_iface
@@ -36,7 +33,7 @@ class LizmapFilter(QgsServerFilter):
                 # The request can be evaluated by QGIS Server
                 return
 
-            cfg_options = cfg.get('options')
+            cfg_options = cfg.get("options")
             # Check Lizmap config options
             if not cfg_options:
                 # Lizmap config has no options
@@ -44,7 +41,7 @@ class LizmapFilter(QgsServerFilter):
                 # The request can be evaluated by QGIS Server
                 return
 
-            cfg_acl = cfg_options.get('acl')
+            cfg_acl = cfg_options.get("acl")
 
             # Check project acl option
             if not cfg_acl:
@@ -65,7 +62,7 @@ class LizmapFilter(QgsServerFilter):
 
             # The lizmap user groups provided in request header are not
             # authorized to get access to the QGIS Project
-            exc = LizmapFilterException('Forbidden', 'No ACL permissions', response_code=403)
+            exc = LizmapFilterException("Forbidden", "No ACL permissions", response_code=403)
 
             # Get request handler
             handler = self.iface.requestHandler()
@@ -79,6 +76,6 @@ class LizmapFilter(QgsServerFilter):
         # Remove lizmap variables for expression
         project = QgsProject.instance()
         custom_var = project.customVariables()
-        custom_var.pop('lizmap_user', None)
-        custom_var.pop('lizmap_user_groups', None)
+        custom_var.pop("lizmap_user", None)
+        custom_var.pop("lizmap_user_groups", None)
         project.setCustomVariables(custom_var)

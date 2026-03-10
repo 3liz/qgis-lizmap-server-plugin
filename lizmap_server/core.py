@@ -29,7 +29,7 @@ def write_json_response(
     response: QgsServerResponse,
     code: int = 200,
 ):
-    """ Write data as JSON response. """
+    """Write data as JSON response."""
     response.setStatusCode(code)
     response.setHeader("Content-Type", "application/json")
     logger.info(f"Sending JSON response : {data}")
@@ -37,13 +37,13 @@ def write_json_response(
 
 
 def find_vector_layer_from_params(params: dict, project: QgsProject) -> Optional[QgsMapLayer]:
-    """ Trying to find the layer in the URL in the given project. """
-    layer_name = params.get('LAYER', params.get('layer', ''))
+    """Trying to find the layer in the URL in the given project."""
+    layer_name = params.get("LAYER", params.get("layer", ""))
     return find_vector_layer(layer_name, project) if layer_name else None
 
 
 def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
-    """ Find layer with name, short name or layer ID. """
+    """Find layer with name, short name or layer ID."""
     found: Optional[QgsMapLayer] = None
     for layer in project.mapLayers().values():
         # check name
@@ -67,8 +67,7 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
             break
 
     if not found:
-        logger.warning(
-            f"The layer '{layer_name}' has not been found in the project '{project.fileName()}'")
+        logger.warning(f"The layer '{layer_name}' has not been found in the project '{project.fileName()}'")
 
     elif not found.isValid():
         logger.warning(
@@ -79,21 +78,21 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
 
 
 def find_vector_layer(layer_name: str, project: QgsProject) -> Optional[QgsVectorLayer]:
-    """ Find vector layer with name, short name or layer ID. """
+    """Find vector layer with name, short name or layer ID."""
     layer = find_layer(layer_name, project)
     return layer if layer and layer.type() == QgsMapLayer.LayerType.VectorLayer else None
 
 
 def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
-    """ Build server feature ID. """
+    """Build server feature ID."""
     if not pk_attributes:
         return str(feature.id())
 
-    return '@@'.join([str(feature.attribute(pk)) for pk in pk_attributes])
+    return "@@".join([str(feature.attribute(pk)) for pk in pk_attributes])
 
 
 def get_lizmap_config(qgis_project_path: str) -> Optional[dict]:
-    """ Get the lizmap config based on QGIS project path """
+    """Get the lizmap config based on QGIS project path"""
 
     # Check QGIS project path
     if not os.path.exists(qgis_project_path):
@@ -102,7 +101,7 @@ def get_lizmap_config(qgis_project_path: str) -> Optional[dict]:
         return None
 
     # Get Lizmap config path
-    config_path = qgis_project_path + '.cfg'
+    config_path = qgis_project_path + ".cfg"
     if not os.path.exists(config_path):
         # Lizmap config path does not exist
         logger.info("Lizmap config does not exist")
@@ -116,7 +115,7 @@ def get_lizmap_config(qgis_project_path: str) -> Optional[dict]:
 
 @lru_cache(maxsize=100)
 def _get_lizmap_config(config_path: str, last_modified: float) -> Optional[dict]:
-    """ Get the lizmap config based on QGIS project path with cache. """
+    """Get the lizmap config based on QGIS project path with cache."""
     # Last modified is only for LRU cache
     _ = last_modified
 
@@ -138,19 +137,19 @@ def _get_lizmap_config(config_path: str, last_modified: float) -> Optional[dict]
 
 
 def get_lizmap_layers_config(config: Dict) -> Union[Dict, None]:
-    """ Get layers Lizmap config """
+    """Get layers Lizmap config"""
 
     if not config:
         return None
 
     # Check Lizmap config layers
-    if 'layers' not in config or not config['layers']:
+    if "layers" not in config or not config["layers"]:
         # Lizmap config has no options
         logger.warning("Lizmap config has no layers")
         return None
 
     # Get Lizmap config layers to check it
-    cfg_layers = config['layers']
+    cfg_layers = config["layers"]
 
     # Check that layers lizmap config is dict
     if not isinstance(cfg_layers, dict):
@@ -162,7 +161,7 @@ def get_lizmap_layers_config(config: Dict) -> Union[Dict, None]:
 
 
 def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, None]:
-    """ Get loginFilteredLayers for layer """
+    """Get loginFilteredLayers for layer"""
 
     if not config or not isinstance(config, dict):
         return None
@@ -170,12 +169,12 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
         return None
 
     # Check Lizmap config loginFilteredLayers
-    if 'loginFilteredLayers' not in config or not config['loginFilteredLayers']:
+    if "loginFilteredLayers" not in config or not config["loginFilteredLayers"]:
         # Lizmap config has no options
         logger.info("Lizmap config has no loginFilteredLayers")
         return None
 
-    login_filtered_layers = config['loginFilteredLayers']
+    login_filtered_layers = config["loginFilteredLayers"]
 
     # Check loginFilteredLayers for layer
     if layer_name not in login_filtered_layers or not login_filtered_layers[layer_name]:
@@ -191,9 +190,11 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
         logger.warning(f"loginFilteredLayers for layer {layer_name} is not dict")
         return None
 
-    if 'layerId' not in cfg_layer_login_filter or \
-            'filterAttribute' not in cfg_layer_login_filter or \
-            'filterPrivate' not in cfg_layer_login_filter:
+    if (
+        "layerId" not in cfg_layer_login_filter
+        or "filterAttribute" not in cfg_layer_login_filter
+        or "filterPrivate" not in cfg_layer_login_filter
+    ):
         # loginFilteredLayers for layer not well formed
         logger.warning(f"loginFilteredLayers for layer {layer_name} not well formed")
         return None
@@ -202,7 +203,7 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
 
 
 def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
-    """ Get Lizmap user groups provided by the request """
+    """Get Lizmap user groups provided by the request"""
 
     # Defined groups
     groups = []
@@ -212,9 +213,9 @@ def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
     if headers:
         logger.info("Request headers provided")
         # Get Lizmap user groups defined in request headers
-        user_groups = headers.get('X-Lizmap-User-Groups')
+        user_groups = headers.get("X-Lizmap-User-Groups")
         if user_groups is not None:
-            groups = [g.strip() for g in user_groups.split(',')]
+            groups = [g.strip() for g in user_groups.split(",")]
             logger.info(f"Lizmap user groups in request headers : {','.join(groups)}")
     else:
         logger.info("No request headers provided")
@@ -229,9 +230,9 @@ def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
     params = handler.parameterMap()
     if params:
         # Get Lizmap user groups defined in parameters
-        user_groups = params.get('LIZMAP_USER_GROUPS')
+        user_groups = params.get("LIZMAP_USER_GROUPS")
         if user_groups is not None:
-            groups = [g.strip() for g in user_groups.split(',')]
+            groups = [g.strip() for g in user_groups.split(",")]
             logger.info(f"Lizmap user groups in parameters : {','.join(groups)}")
 
     # noinspection PyTypeChecker
@@ -239,16 +240,16 @@ def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
 
 
 def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
-    """ Get Lizmap user login provided by the request """
+    """Get Lizmap user login provided by the request"""
     # Defined login
-    login = ''
+    login = ""
 
     # Get Lizmap User Login in request headers
     headers = handler.requestHeaders()
     if headers:
         logger.info("Request headers provided")
         # Get Lizmap user login defined in request headers
-        user_login = headers.get('X-Lizmap-User')
+        user_login = headers.get("X-Lizmap-User")
         if user_login is not None:
             login = user_login
             logger.info(f"Lizmap user login in request headers : {login}")
@@ -264,7 +265,7 @@ def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
     params = handler.parameterMap()
     if params:
         # Get Lizmap user login defined in parameters
-        user_login = params.get('LIZMAP_USER')
+        user_login = params.get("LIZMAP_USER")
         if user_login is not None:
             login = user_login
             logger.info(f"Lizmap user login in parameters : {login}")
@@ -273,7 +274,7 @@ def get_lizmap_user_login(handler: QgsRequestHandler) -> str:
 
 
 def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
-    """ Get Lizmap user login provided by the request """
+    """Get Lizmap user login provided by the request"""
     # Defined override
     override = False
 
@@ -282,7 +283,7 @@ def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
     if headers:
         logger.info("Request headers provided")
         # Get Lizmap user login defined in request headers
-        override_filter = headers.get('X-Lizmap-Override-Filter')
+        override_filter = headers.get("X-Lizmap-Override-Filter")
         if override_filter is not None:
             override = to_bool(override_filter)
             logger.info("Lizmap override filter in request headers")
@@ -296,7 +297,7 @@ def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
     params = handler.parameterMap()
     if params:
         # Get Lizmap user login defined in parameters
-        override_filter = params.get('LIZMAP_OVERRIDE_FILTER')
+        override_filter = params.get("LIZMAP_OVERRIDE_FILTER")
         if override_filter is not None:
             override = to_bool(override_filter)
             logger.info("Lizmap override filter in parameters")
@@ -308,10 +309,10 @@ def get_lizmap_override_filter(handler: QgsRequestHandler) -> bool:
 
 
 def is_editing_context(handler: QgsRequestHandler) -> bool:
-    """ Check if headers are defining an editing context. """
+    """Check if headers are defining an editing context."""
     headers = handler.requestHeaders()
     if headers:
-        editing_context = headers.get('X-Lizmap-Edition-Context')
+        editing_context = headers.get("X-Lizmap-Edition-Context")
         if editing_context is not None:
             result = to_bool(editing_context)
             logger.info(f"Lizmap editing context is found in request headers : {result}")
@@ -321,7 +322,7 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
 
     params = handler.parameterMap()
     if params:
-        result = params.get('LIZMAP_EDITION_CONTEXT')
+        result = params.get("LIZMAP_EDITION_CONTEXT")
         if result is not None:
             result = to_bool(result)
             logger.info(f"Lizmap editing context is found in parameters : {result}")

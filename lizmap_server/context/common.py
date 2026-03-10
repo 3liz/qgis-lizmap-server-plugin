@@ -11,7 +11,7 @@ from qgis.core import QgsProject
 def to_iso8601(dt: Union[float, datetime]) -> str:
     if isinstance(dt, float):
         dt = datetime.fromtimestamp(dt)
-    return dt.astimezone(timezone.utc).isoformat(timespec='milliseconds')
+    return dt.astimezone(timezone.utc).isoformat(timespec="milliseconds")
 
 
 class DataclassEncoder(json.JSONEncoder):
@@ -42,39 +42,33 @@ class ProjectCacheError(Exception):
 
 
 class ContextABC(ABC):
-
     @property
     @abstractmethod
     def name(self) -> str:
-        """ Return context name
-        """
+        """Return context name"""
         ...
 
     @property
     @abstractmethod
     def git_repository_url(self) -> str:
-        """ Return Git repository URL
-        """
+        """Return Git repository URL"""
         ...
 
     @property
     @abstractmethod
     def documentation_url(self) -> str:
-        """ Return documentation URL
-        """
+        """Return documentation URL"""
         ...
 
     @property
     @abstractmethod
     def search_paths(self) -> List[str]:
-        """ Return search paths for projects
-        """
+        """Return search paths for projects"""
         ...
 
     @abstractmethod
     def project(self, uri: str) -> QgsProject:
-        """ Return the project specified by `uri`
-        """
+        """Return the project specified by `uri`"""
         ...
 
     @abstractmethod
@@ -83,14 +77,13 @@ class ContextABC(ABC):
         keys: Sequence[str],
         unknown_default: Optional[str] = None,
     ) -> Iterator[Tuple[str, Dict]]:
-        """ return installed plugin metadata
-        """
+        """return installed plugin metadata"""
         ...
 
     @property
     @abstractmethod
     def metadata(self) -> Optional[ServerMetadata]:
-        """ Return server metadata if the server
-            is not a native (FCGI) server
+        """Return server metadata if the server
+        is not a native (FCGI) server
         """
         ...

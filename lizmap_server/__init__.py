@@ -7,9 +7,8 @@ def classFactory(iface):
     from qgis.PyQt.QtWidgets import QMessageBox
 
     class Nothing:
-
         def __init__(self, iface):
-            """ In QGIS Desktop.
+            """In QGIS Desktop.
             :param iface: The QGIS Desktop interface
             """
             self.iface = iface
@@ -17,14 +16,14 @@ def classFactory(iface):
         def initGui(self):
             QMessageBox.warning(
                 self.iface.mainWindow(),
-                'Lizmap server plugin',
+                "Lizmap server plugin",
                 '"Lizmap server" is a plugin designed <b>only</b> for QGIS Server.'
-                '<br><br>'
-                'This plugin must be installed on QGIS Server following the documentation about '
+                "<br><br>"
+                "This plugin must be installed on QGIS Server following the documentation about "
                 '<a href="https://docs.qgis.org/latest/en/docs/server_manual/plugins.html">'
-                'QGIS server side plugins'
-                '</a>.'
-                '<br><br>'
+                "QGIS server side plugins"
+                "</a>."
+                "<br><br>"
                 'For QGIS Desktop, use the other plugin called "Lizmap".',
             )
 
@@ -42,4 +41,5 @@ def serverClassFactory(serverIface):
     :type serverIface: QgsServerInterface
     """
     from lizmap_server.plugin import LizmapServer
+
     return LizmapServer(serverIface)

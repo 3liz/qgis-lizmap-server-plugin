@@ -39,7 +39,6 @@ class LizmapServiceError(ServiceError):
 
 
 class LizmapService(QgsService):
-
     def __init__(self, server_iface: QgsServerInterface) -> None:
         super().__init__()
         self.server_iface = server_iface
@@ -48,14 +47,12 @@ class LizmapService(QgsService):
 
     # noinspection PyMethodMayBeStatic
     def name(self) -> str:
-        """ Service name
-        """
-        return 'LIZMAP'
+        """Service name"""
+        return "LIZMAP"
 
     # noinspection PyMethodMayBeStatic
     def version(self) -> str:
-        """ Service version
-        """
+        """Service version"""
         return "1.0.0"
 
     def executeRequest(
@@ -64,32 +61,30 @@ class LizmapService(QgsService):
         response: QgsServerResponse,
         project: QgsProject,
     ):
-        """ Execute a 'LIZMAP' request
-        """
+        """Execute a 'LIZMAP' request"""
 
         params = request.parameters()
 
         try:
-            req_param = params.get('REQUEST', '').upper()
+            req_param = params.get("REQUEST", "").upper()
 
             try:
                 bytes(request.data()).decode()
             except Exception:
-                raise LizmapServiceError(
-                    "Bad request error",
-                    f"Invalid POST DATA for '{req_param}'",
-                    400)
+                raise LizmapServiceError("Bad request error", f"Invalid POST DATA for '{req_param}'", 400)
 
-            if req_param == 'GETSERVERSETTINGS':
+            if req_param == "GETSERVERSETTINGS":
                 self.get_server_settings(params, response, project)
-            elif req_param == 'GETSUBSETSTRING':
+            elif req_param == "GETSUBSETSTRING":
                 self.polygon_filter(params, response, project)
             else:
                 raise LizmapServiceError(
                     "Bad request error",
                     "Invalid REQUEST parameter: must be one of GETSERVERSETTINGS, found '{}'".format(
-                        req_param),
-                    400)
+                        req_param
+                    ),
+                    400,
+                )
 
         except LizmapServiceError as e:
             e.formatResponse(response)
@@ -109,15 +104,15 @@ class LizmapService(QgsService):
         response: QgsServerResponse,
         project: QgsProject,
     ) -> None:
-        """ The subset string to use a on a layer."""
+        """The subset string to use a on a layer."""
         layer = find_vector_layer_from_params(params, project)
         if not layer:
             raise ServiceError("Bad request error", "Invalid LAYER parameter", 400)
 
         body = {
-            'status': 'success',
-            'filter': ALL_FEATURES,
-            'polygons': '',
+            "status": "success",
+            "filter": ALL_FEATURES,
+            "polygons": "",
         }
 
         # Check first the headers to avoid unnecessary config file reading
@@ -147,12 +142,12 @@ class LizmapService(QgsService):
             return
 
         try:
-            filter_type_param = params.get('FILTER_TYPE', '').upper()
-            if filter_type_param == 'SQL':
+            filter_type_param = params.get("FILTER_TYPE", "").upper()
+            if filter_type_param == "SQL":
                 filter_type = FilterType.PlainSqlQuery
-            elif filter_type_param == 'SAFESQL':
+            elif filter_type_param == "SAFESQL":
                 filter_type = FilterType.SafeSqlQuery
-            elif filter_type_param == 'EXPRESSION':
+            elif filter_type_param == "EXPRESSION":
                 filter_type = FilterType.QgisExpression
             else:
                 filter_type = FilterType.PlainSqlQuery
@@ -167,11 +162,12 @@ class LizmapService(QgsService):
             if filter_polygon_config.is_filtered():
                 if not filter_polygon_config.is_valid():
                     logger.critical(
-                        "The filter by polygon configuration is not valid.\n All features are hidden.")
+                        "The filter by polygon configuration is not valid.\n All features are hidden."
+                    )
                     body = {
-                        'status': 'success',
-                        'filter': NO_FEATURES,
-                        'polygons': '',
+                        "status": "success",
+                        "filter": NO_FEATURES,
+                        "polygons": "",
                     }
                     write_json_response(body, response)
                     return
@@ -190,56 +186,57 @@ class LizmapService(QgsService):
                 # Get the subset SQL
                 sql, polygons = filter_polygon_config.subset_sql(groups_or_user)
                 body = {
-                    'status': 'success',
-                    'filter': sql,
-                    'polygons': polygons,
+                    "status": "success",
+                    "filter": sql,
+                    "polygons": polygons,
                 }
                 write_json_response(body, response)
 
         except Exception as e:
             logger.log_exception(e)
             logger.critical(
-                "An error occurred when trying to read the filtering by polygon.\nAll features are hidden.")
+                "An error occurred when trying to read the filtering by polygon.\nAll features are hidden."
+            )
             body = {
-                'status': 'success',
-                'filter': NO_FEATURES,
-                'polygons': '',
+                "status": "success",
+                "filter": NO_FEATURES,
+                "polygons": "",
             }
             write_json_response(body, response)
 
     def get_server_settings(
-            self, params: Dict[str, str], response: QgsServerResponse, project: QgsProject) -> None:
-        """ Get Lizmap Server settings
-        """
+        self, params: Dict[str, str], response: QgsServerResponse, project: QgsProject
+    ) -> None:
+        """Get Lizmap Server settings"""
         _ = params
         _ = project
 
         # create the body
         body: dict = {
-            'qgis': {},
-            'gdalogr': {},
-            'services': [],
-            'lizmap': {},
+            "qgis": {},
+            "gdalogr": {},
+            "services": [],
+            "lizmap": {},
         }
 
         # QGIS info
-        qgis_version_split = Qgis.QGIS_VERSION.split('-')
-        body['qgis']['version'] = qgis_version_split[0]
-        body['qgis']['name'] = qgis_version_split[1]
-        body['qgis']['version_int'] = Qgis.QGIS_VERSION_INT
+        qgis_version_split = Qgis.QGIS_VERSION.split("-")
+        body["qgis"]["version"] = qgis_version_split[0]
+        body["qgis"]["name"] = qgis_version_split[1]
+        body["qgis"]["version_int"] = Qgis.QGIS_VERSION_INT
 
         # GDAL/OGR
-        body['gdalogr']['name'] = gdal.VersionInfo('NAME')
-        body['gdalogr']['version_int'] = gdal.VersionInfo('VERSION_NUM')
+        body["gdalogr"]["name"] = gdal.VersionInfo("NAME")
+        body["gdalogr"]["version_int"] = gdal.VersionInfo("VERSION_NUM")
 
         reg = self.server_iface.serviceRegistry()
-        services = ['WMS', 'WFS', 'WCS', 'WMTS', 'ATLAS', 'CADASTRE', 'EXPRESSION', 'LIZMAP']
+        services = ["WMS", "WFS", "WCS", "WMTS", "ATLAS", "CADASTRE", "EXPRESSION", "LIZMAP"]
         for s in services:
             if reg.getService(s):
-                body['services'].append(s)
+                body["services"].append(s)
 
-        body['lizmap']['name'] = 'Lizmap'
-        body['lizmap']['version'] = version()
+        body["lizmap"]["name"] = "Lizmap"
+        body["lizmap"]["version"] = version()
 
         write_json_response(body, response)
         return

@@ -47,7 +47,9 @@ class TestServerCore(unittest.TestCase):
             {"layers": {"lines-geojson": {"id": "lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3"}}},
         )
         self.assertIsNotNone(cfg_layers)
-        self.assertDictEqual(cfg_layers, {"lines-geojson": {"id": "lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3"}})
+        self.assertDictEqual(
+            cfg_layers, {"lines-geojson": {"id": "lines_7ddd81b1_8307_4aa2_8b7a_a0b7983f33e3"}}
+        )
 
     def test_get_lizmap_layer_login_filter(self):
         """Test get loginFilteredLayers for layer"""

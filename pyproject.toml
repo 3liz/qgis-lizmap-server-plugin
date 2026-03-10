@@ -22,12 +22,14 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: GIS",
 ]
+dependencies = [
+
+]
 
 [project.urls]
 homepage = "https://docs.lizmap.com/current/fr/install/pre_requirements.html#lizmap-qgis-server-plugin"
 tracker = "https://github.com/3liz/qgis-lizmap-server-plugin/issues"
 repository = "https://github.com/3liz/qgis-lizmap-server-plugin"
-
 
 [dependency-groups]
 dev = [

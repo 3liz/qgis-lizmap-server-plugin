@@ -220,7 +220,7 @@ def get_feature_with_form_scope(
         raise ExpressionServiceError(
             "Bad request",
             "Invalid FILTER for 'GetFeatureWithFormScope': "
-            f"Error \"{exp_filter}\": {exp_f.parserErrorString()}",
+            f'Error "{exp_filter}": {exp_f.parserErrorString()}',
             400,
         )
 

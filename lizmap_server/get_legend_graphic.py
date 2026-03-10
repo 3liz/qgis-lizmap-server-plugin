@@ -21,12 +21,13 @@ from lizmap_server.core import find_layer
 from lizmap_server.tools import to_bool
 
 Category = namedtuple(
-    'Category',
-    ['ruleKey', 'checked', 'parentRuleKey', 'scaleMaxDenom', 'scaleMinDenom', 'expression', 'title'])
+    "Category",
+    ["ruleKey", "checked", "parentRuleKey", "scaleMaxDenom", "scaleMinDenom", "expression", "title"],
+)
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
-    """ Add "ruleKey" to GetLegendGraphic for categorized and rule-based
+    """Add "ruleKey" to GetLegendGraphic for categorized and rule-based
     only works for single LAYER and STYLE(S) and JSON format.
     """
 
@@ -34,12 +35,12 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
     @classmethod
     def match_label_feature_count(cls, symbol_label: str) -> Optional[re.Match]:
-        """Regexp for extracting the feature count from the label. """
+        """Regexp for extracting the feature count from the label."""
         return re.match(cls.FEATURE_COUNT_REGEXP, symbol_label)
 
     @classmethod
     def warning_icon(cls) -> str:
-        """ Warning icon as base 64. """
+        """Warning icon as base 64."""
         buffer = QBuffer()
         buffer.open(QIODevice.OpenModeFlag.WriteOnly)
         qp = QImage(":/images/themes/default/mIconWarning.svg")
@@ -49,41 +50,40 @@ class GetLegendGraphicFilter(QgsServerFilter):
     def responseComplete(self) -> None:
         handler = self.serverInterface().requestHandler()
         if not handler:
-            logger.critical(
-                'GetLegendGraphicFilter plugin cannot be run in multithreading mode, skipping.')
+            logger.critical("GetLegendGraphicFilter plugin cannot be run in multithreading mode, skipping.")
             return
 
         params = handler.parameterMap()
 
-        if params.get('SERVICE', '').upper() != 'WMS':
+        if params.get("SERVICE", "").upper() != "WMS":
             return
 
-        if params.get('REQUEST', '').upper() not in ('GETLEGENDGRAPHIC', 'GETLEGENDGRAPHICS'):
+        if params.get("REQUEST", "").upper() not in ("GETLEGENDGRAPHIC", "GETLEGENDGRAPHICS"):
             return
 
-        if params.get('FORMAT', '').upper() != 'APPLICATION/JSON':
+        if params.get("FORMAT", "").upper() != "APPLICATION/JSON":
             return
 
         # Only support request for simple layer
-        layer_name = params.get('LAYER', '')
-        if layer_name == '':
+        layer_name = params.get("LAYER", "")
+        if layer_name == "":
             return
 
-        if ',' in layer_name:
+        if "," in layer_name:
             # The PHP must split the request per layer
             return
 
         # noinspection PyArgumentList
         project: QgsProject = QgsProject.instance()
 
-        style = params.get('STYLES', '')
+        style = params.get("STYLES", "")
 
         if not style:
-            style = params.get('STYLE', '')
+            style = params.get("STYLE", "")
 
-        show_feature_count = to_bool(params.get('SHOWFEATURECOUNT'))
+        show_feature_count = to_bool(params.get("SHOWFEATURECOUNT"))
 
-        current_style = ''
+        current_style = ""
         layer = find_layer(layer_name, project)
         if not layer:
             return
@@ -94,16 +94,18 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 f"'{project.homePath()}'",
             )
             json_data = {
-                'title': '',
-                'nodes': [{
-                    'type': 'layer',
-                    'title': layer_name,
-                    'icon': self.warning_icon(),
-                    'valid': False,
-                }],
+                "title": "",
+                "nodes": [
+                    {
+                        "type": "layer",
+                        "title": layer_name,
+                        "icon": self.warning_icon(),
+                        "valid": False,
+                    }
+                ],
             }
             handler.clearBody()
-            handler.appendBody(json.dumps(json_data).encode('utf8'))
+            handler.appendBody(json.dumps(json_data).encode("utf8"))
             return
 
         if layer.type() != QgsMapLayer.LayerType.VectorLayer:
@@ -125,15 +127,18 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
             # From QGIS source code :
             # https://github.com/qgis/QGIS/blob/71499aacf431d3ac244c9b75c3d345bdc53572fb/src/core/symbology/qgsrendererregistry.cpp#L33
-            if layer.renderer() \
-                and layer.renderer().type() in ("categorizedSymbol", "RuleRenderer", "graduatedSymbol"):
+            if layer.renderer() and layer.renderer().type() in (
+                "categorizedSymbol",
+                "RuleRenderer",
+                "graduatedSymbol",
+            ):
                 body = handler.body()
                 # noinspection PyTypeChecker
                 json_data = json.loads(bytes(body))
 
-                symbols = json_data['nodes'][0].get('symbols')
+                symbols = json_data["nodes"][0].get("symbols")
                 if not symbols:
-                    symbols = json_data['nodes']
+                    symbols = json_data["nodes"]
 
                 new_symbols = []
 
@@ -145,7 +150,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
                 for idx in range(len(symbols)):
                     symbol = symbols[idx]
-                    symbol_label = symbol['title']
+                    symbol_label = symbol["title"]
                     if show_feature_count:
                         match_label = self.match_label_feature_count(symbol_label)
                         if match_label:
@@ -153,27 +158,29 @@ class GetLegendGraphicFilter(QgsServerFilter):
                         else:
                             logger.info(
                                 "GetLegendGraphic JSON: symbol label does not match '{}' '{}'".format(
-                                    self.FEATURE_COUNT_REGEXP, symbol['title']))
+                                    self.FEATURE_COUNT_REGEXP, symbol["title"]
+                                )
+                            )
                     try:
                         category = categories[symbol_label]
-                        symbol['ruleKey'] = category.ruleKey
-                        symbol['checked'] = category.checked
-                        symbol['parentRuleKey'] = category.parentRuleKey
-                        symbol['expression'] = category.expression
-                        if symbol['title'] != category.title:
-                            symbol['title'] = category.title
+                        symbol["ruleKey"] = category.ruleKey
+                        symbol["checked"] = category.checked
+                        symbol["parentRuleKey"] = category.parentRuleKey
+                        symbol["expression"] = category.expression
+                        if symbol["title"] != category.title:
+                            symbol["title"] = category.title
                     except (IndexError, KeyError):
                         pass
 
                     new_symbols.append(symbol)
 
-                if 'symbols' in json_data['nodes'][0]:
-                    json_data['nodes'][0]['symbols'] = new_symbols
+                if "symbols" in json_data["nodes"][0]:
+                    json_data["nodes"][0]["symbols"] = new_symbols
                 else:
-                    json_data['nodes'] = new_symbols
+                    json_data["nodes"] = new_symbols
 
                 handler.clearBody()
-                handler.appendBody(json.dumps(json_data).encode('utf8'))
+                handler.appendBody(json.dumps(json_data).encode("utf8"))
         except Exception:
             logger.critical(
                 f"Error getting layer '{layer_name}' when setting up legend graphic for "
@@ -193,19 +200,18 @@ class GetLegendGraphicFilter(QgsServerFilter):
         show_feature_count: bool = False,
         project_path: str = "",
     ) -> dict:
-        """ Extract categories from the layer legend. """
+        """Extract categories from the layer legend."""
         # TODO Annotations QGIS 3.22 [str, Category]
         renderer = layer.renderer()
         categories: dict = {}
         for item in renderer.legendSymbolItems():
-
             # Calculate title if show_feature_count is activated
             # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
             title = item.label()
             if show_feature_count:
                 estimated_count = layer.dataProvider().uri().useEstimatedMetadata()
                 count = layer.featureCount(item.ruleKey())
-                title += ' [{}{}]'.format(
+                title += " [{}{}]".format(
                     "≈" if estimated_count else "",
                     count if count != -1 else "N/A",
                 )
@@ -216,7 +222,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     f"The expression in the project '{project_path}', layer '{layer.name()}' has not "
                     f"been generated correctly, setting the expression to an empty string",
                 )
-                expression = ''
+                expression = ""
 
             if item.label() in categories:
                 logger.warning(

@@ -1,4 +1,3 @@
-
 import logging
 import os
 
@@ -188,7 +187,9 @@ def test_group_visibility(client):
 def test_filter_by_polygon_wfs_getfeature(client):
     """Test the filter by polygon access right with WFS GetFeature."""
     # Check the layer itself about the number of features
-    file_path = Path(__file__).parent.joinpath("data", "test_filter_layer_data_by_polygon_for_groups", "bakeries.shp")
+    file_path = Path(__file__).parent.joinpath(
+        "data", "test_filter_layer_data_by_polygon_for_groups", "bakeries.shp"
+    )
     layer = QgsVectorLayer(str(file_path), "test", "ogr")
     expected_source = 178
     assert expected_source == layer.featureCount()

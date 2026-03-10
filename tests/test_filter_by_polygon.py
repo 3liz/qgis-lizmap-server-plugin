@@ -112,10 +112,14 @@ class TestFilterByPolygon(unittest.TestCase):
         # For admins, they see everything inside, not the one outside
         groups = ("admins",)
         geom = config._polygon_for_groups_with_qgis_api(groups)
-        self.assertEqual("MultiPolygon (((0 0, 0 5, 5 5, 5 0, 0 0)),((0 0, 0 -5, -5 -5, -5 0, 0 0)))", geom.asWkt(0))
+        self.assertEqual(
+            "MultiPolygon (((0 0, 0 5, 5 5, 5 0, 0 0)),((0 0, 0 -5, -5 -5, -5 0, 0 0)))", geom.asWkt(0)
+        )
         subset, ewkt = config.subset_sql(groups)
         self.assertEqual('"id" IN ( 1 , 3 )', subset)
-        self.assertEqual("SRID=4326;MultiPolygon (((0 0, 0 5, 5 5, 5 0, 0 0)),((0 0, 0 -5, -5 -5, -5 0, 0 0)))", ewkt)
+        self.assertEqual(
+            "SRID=4326;MultiPolygon (((0 0, 0 5, 5 5, 5 0, 0 0)),((0 0, 0 -5, -5 -5, -5 0, 0 0)))", ewkt
+        )
 
         # For east
         groups = ("east",)
@@ -164,7 +168,9 @@ class TestFilterByPolygon(unittest.TestCase):
 
         groups = ("admins",)
         geom = config._polygon_for_groups_with_qgis_api(groups)
-        self.assertEqual("MultiPolygon (((0 0, 0 5, 5 5, 5 0, 0 0)),((0 0, 0 -5, -5 -5, -5 0, 0 0)))", geom.asWkt(0))
+        self.assertEqual(
+            "MultiPolygon (((0 0, 0 5, 5 5, 5 0, 0 0)),((0 0, 0 -5, -5 -5, -5 0, 0 0)))", geom.asWkt(0)
+        )
         # self.assertEqual('"id" IN (1, 3)', config.subset_sql(groups))
         # self.assertEqual('', config.subset_sql(groups))
         project.clear()
@@ -278,6 +284,8 @@ ST_Contains(
 
         self.assertEqual('"roads"', FilterByPolygon._format_table_name(uri))
 
-        uri.setDataSource("", '(SELECT * FROM "public"."roads")', "the_geom", "cityid = 2643", "primary_key_field")
+        uri.setDataSource(
+            "", '(SELECT * FROM "public"."roads")', "the_geom", "cityid = 2643", "primary_key_field"
+        )
 
         self.assertEqual('(SELECT * FROM "public"."roads")', FilterByPolygon._format_table_name(uri))

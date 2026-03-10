@@ -1,5 +1,3 @@
-
-
 from qgis.server import QgsServerInterface, QgsServerOgcApi
 
 from .expression_service import ExpressionService
@@ -37,11 +35,8 @@ class LizmapServer:
 
         # Register API
         lizmap_api = QgsServerOgcApi(
-            self.server_iface,
-            '/lizmap',
-            'Lizmap',
-            'The Lizmap API endpoint',
-            self.version)
+            self.server_iface, "/lizmap", "Lizmap", "The Lizmap API endpoint", self.version
+        )
         service_registry.registerApi(lizmap_api)
         lizmap_api.registerHandler(ServerInfoHandler())
         logger.info('API "/lizmap" loaded with the server info handler')

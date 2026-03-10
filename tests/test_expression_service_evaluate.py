@@ -327,7 +327,9 @@ def test_layer_field_aggregates(client):
     assert len(data["results"]) == 1
 
     assert "distinct_values" in data["results"][0]
-    assert data["results"][0]["distinct_values"] == '["Basse-Normandie","Bretagne","Pays de la Loire","Centre"]'
+    assert (
+        data["results"][0]["distinct_values"] == '["Basse-Normandie","Bretagne","Pays de la Loire","Centre"]'
+    )
 
     assert "min_area" in data["results"][0]
     assert data["results"][0]["min_area"] == 17876.8

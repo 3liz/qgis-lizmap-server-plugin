@@ -23,22 +23,21 @@ from qgis.core import (
 from qgis.gui import QgsExternalResourceWidget
 from qgis.PyQt.QtXml import QDomDocument
 
-LOGGER = logging.getLogger('Lizmap')
-SPACES = '  '
+LOGGER = logging.getLogger("Lizmap")
+SPACES = "  "
 
 
 class Tooltip:
-
     @staticmethod
     def create_popup(html: str) -> str:
-        template = '''<div class="container popup_lizmap_dd form-horizontal" style="width:100%;">
+        template = """<div class="container popup_lizmap_dd form-horizontal" style="width:100%;">
     {}
-</div>\n'''
+</div>\n"""
         return template.format(html)
 
     @classmethod
     def remove_none(cls, data: dict) -> dict:
-        """ Remove None values in the dictionary. """
+        """Remove None values in the dictionary."""
         # Might be linked to QGIS 3.36 https://github.com/3liz/lizmap-web-client/issues/4307
         return {k: v for k, v in data.items() if v is not None}
 
@@ -57,22 +56,24 @@ class Tooltip:
         bootstrap_5: bool = False,
     ) -> str:
         regex = re.compile(r"[^a-zA-Z0-9_]", re.IGNORECASE)
-        a = ''
-        h = ''
+        a = ""
+        h = ""
 
         # for text widgets
-        if isinstance(node, QgsAttributeEditorElement) and node.type() == Qgis.AttributeEditorType.TextElement:
+        if (
+            isinstance(node, QgsAttributeEditorElement)
+            and node.type() == Qgis.AttributeEditorType.TextElement
+        ):
             label = node.name()
             expression = node.toDomElement(QDomDocument()).text()
 
-            a += '\n' + SPACES * level
+            a += "\n" + SPACES * level
             a += Tooltip._generate_text_label(label, expression)
 
         if isinstance(node, QgsAttributeEditorField):
             if node.idx() < 0:
                 # The form might have been imported from QML with some not existing fields
-                LOGGER.warning(
-                    f'Layer {layer.id()} does not have a valid editor field')
+                LOGGER.warning(f"Layer {layer.id()} does not have a valid editor field")
                 return html
 
             field = layer.fields()[node.idx()]
@@ -89,44 +90,48 @@ class Tooltip:
 
             field_view = Tooltip._generate_field_view(name)
 
-            if widget_type == 'Hidden':
+            if widget_type == "Hidden":
                 # If hidden field, do nothing
                 return html
 
-            if widget_type == 'ExternalResource':
+            if widget_type == "ExternalResource":
                 # External resource: file, url, photo, iframe
                 field_view = Tooltip._generate_external_resource(widget_config, name, fname)
 
-            if widget_type == 'ValueRelation':
-                if not QgsProject.instance().mapLayer(widget_config['Layer']):
+            if widget_type == "ValueRelation":
+                if not QgsProject.instance().mapLayer(widget_config["Layer"]):
                     # Issue #287
                     LOGGER.warning(
-                        'Layer {} does not have a valid value relation layer for field {}'.format(
-                            layer.id(), fname))
+                        "Layer {} does not have a valid value relation layer for field {}".format(
+                            layer.id(), fname
+                        )
+                    )
                     return html
 
                 field_view = Tooltip._generate_represent_value(name)
 
-            if widget_type == 'RelationReference':
-                relation = relation_manager.relation(widget_config['Relation'])
+            if widget_type == "RelationReference":
+                relation = relation_manager.relation(widget_config["Relation"])
                 referenced_layer = relation.referencedLayer()
 
                 if not referenced_layer:
                     # Issue #287
                     LOGGER.warning(
-                        'Layer {} does not have a valid relation reference layer for field {}'.format(
-                            layer.id(), fname))
+                        "Layer {} does not have a valid relation reference layer for field {}".format(
+                            layer.id(), fname
+                        )
+                    )
                     return html
 
                 field_view = Tooltip._generate_represent_value(name)
 
-            if widget_type == 'ValueMap':
+            if widget_type == "ValueMap":
                 field_view = Tooltip._generate_value_map(widget_config, name)
 
-            if widget_type == 'DateTime':
+            if widget_type == "DateTime":
                 field_view = Tooltip._generate_date(widget_config, name)
 
-            a += '\n' + SPACES * level
+            a += "\n" + SPACES * level
             a += Tooltip._generate_field_name(name, fname, field_view)
 
         if isinstance(node, QgsAttributeEditorRelation):
@@ -135,56 +140,64 @@ class Tooltip:
             relation = node.relation()
             if relation:
                 a += Tooltip._generate_attribute_editor_relation(
-                    node.label(), relation.id(), relation.referencingLayerId())
+                    node.label(), relation.id(), relation.referencingLayerId()
+                )
             else:
                 # Ticket https://github.com/3liz/qgis-lizmap-server-plugin/issues/82
                 LOGGER.warning(
                     f"The node '{node.name()}::{node.label()}' cannot be processed for the tooltip "
-                    f"because the relation has not been found.")
+                    f"because the relation has not been found."
+                )
 
         if isinstance(node, QgsAttributeEditorContainer):
-
-            visibility = ''
+            visibility = ""
             if node.visibilityExpression().enabled():
-                visibility = Tooltip._generate_eval_visibility(node.visibilityExpression().data().expression())
+                visibility = Tooltip._generate_eval_visibility(
+                    node.visibilityExpression().data().expression()
+                )
 
             lvl = level
             # create div container
             if lvl == 1:
-                active = ''
+                active = ""
                 if not headers:
-                    active = 'active'
+                    active = "active"
 
-                a += '\n' + SPACES + '<div id="popup_dd_[% $id %]_{}" class="tab-pane {}">'.format(
-                    regex.sub('_', node.name()), active)
+                a += (
+                    "\n"
+                    + SPACES
+                    + '<div id="popup_dd_[% $id %]_{}" class="tab-pane {}">'.format(
+                        regex.sub("_", node.name()), active
+                    )
+                )
 
                 if visibility and active:
-                    active = f'{active} {visibility}'
+                    active = f"{active} {visibility}"
                 if visibility and not active:
                     active = visibility
-                h += '\n' + SPACES
-                id_tab = regex.sub('_', node.name())
+                h += "\n" + SPACES
+                id_tab = regex.sub("_", node.name())
                 if bootstrap_5:
                     h += (
                         f'<li class="nav-item">'
                         f'<button class="nav-link {active}" data-bs-toggle="tab" '
                         f'data-bs-target="#popup_dd_[% $id %]_{id_tab}">'
-                        f'{node.name()}'
-                        f'</button>'
-                        f'</li>'
+                        f"{node.name()}"
+                        f"</button>"
+                        f"</li>"
                     )
                 else:
                     h += (
                         f'<li class="{active}">'
                         f'<a href="#popup_dd_[% $id %]_{id_tab}" data-toggle="tab">{node.name()}</a>'
-                        f'</li>'
+                        f"</li>"
                     )
                 headers.append(h)
 
             if lvl > 1:
-                a += '\n' + SPACES * lvl + f'<fieldset class="{visibility}">'
-                a += '\n' + SPACES * lvl + f'<legend>{node.name()}</legend>'
-                a += '\n' + SPACES * lvl + '<div>'
+                a += "\n" + SPACES * lvl + f'<fieldset class="{visibility}">'
+                a += "\n" + SPACES * lvl + f"<legend>{node.name()}</legend>"
+                a += "\n" + SPACES * lvl + "<div>"
 
             # In case of root children
             before_tabs = []
@@ -194,12 +207,16 @@ class Tooltip:
             level += 1
             for n in node.children():
                 h = Tooltip.create_popup_node_item_from_form(
-                    layer, n, level, headers, html, relation_manager, bootstrap_5)
+                    layer, n, level, headers, html, relation_manager, bootstrap_5
+                )
                 # If it is not root children, add html
                 if lvl > 0:
                     a += h
                     continue
-                is_editor_element = isinstance(n, QgsAttributeEditorElement) and n.type() == Qgis.AttributeEditorType.TextElement
+                is_editor_element = (
+                    isinstance(n, QgsAttributeEditorElement)
+                    and n.type() == Qgis.AttributeEditorType.TextElement
+                )
                 # If it is root children, store html in the right list
                 if isinstance(n, QgsAttributeEditorField) or is_editor_element:
                     if not headers:
@@ -212,24 +229,24 @@ class Tooltip:
             if lvl == 0:
                 if before_tabs:
                     a += '\n<div class="before-tabs">'
-                    a += '\n'.join(before_tabs)
-                    a += '\n</div>'
+                    a += "\n".join(before_tabs)
+                    a += "\n</div>"
                 if headers:
                     a += '<ul class="nav nav-tabs">\n'
-                    a += '\n'.join(headers)
-                    a += '\n</ul>'
+                    a += "\n".join(headers)
+                    a += "\n</ul>"
                     a += '\n<div class="tab-content">'
-                    a += '\n'.join(content_tabs)
-                    a += '\n</div>'
+                    a += "\n".join(content_tabs)
+                    a += "\n</div>"
                 if after_tabs:
                     a += '\n<div class="after-tabs">'
-                    a += '\n'.join(after_tabs)
-                    a += '\n</div>'
+                    a += "\n".join(after_tabs)
+                    a += "\n</div>"
             elif lvl == 1:
-                a += '\n' + SPACES * lvl + '</div>'
+                a += "\n" + SPACES * lvl + "</div>"
             elif lvl > 1:
-                a += '\n' + SPACES * lvl + '</div>'
-                a += '\n' + SPACES * lvl + '</fieldset>'
+                a += "\n" + SPACES * lvl + "</div>"
+                a += "\n" + SPACES * lvl + "</fieldset>"
 
         html += a
         return html
@@ -244,25 +261,25 @@ class Tooltip:
 
     @staticmethod
     def _generate_attribute_editor_relation(label: str, relation_id: str, referencing_layer_id: str) -> str:
-        """ Generate the div. LWC will manage to include children in the given div."""
-        result = '\n' + SPACES + f'<p><b>{label}</b></p>'
-        result += '\n' + SPACES
+        """Generate the div. LWC will manage to include children in the given div."""
+        result = "\n" + SPACES + f"<p><b>{label}</b></p>"
+        result += "\n" + SPACES
         result += (
             '<div id="popup_relation_{0}" data-relation-id="{0}" data-referencing-layer-id="{1}" '
             'class="popup_lizmap_dd_relation">'.format(relation_id, referencing_layer_id)
         )
-        result += '\n' + SPACES + '</div>'
+        result += "\n" + SPACES + "</div>"
         return result
 
     @staticmethod
     def _generate_represent_value(name: str) -> str:
-        """ Use represent_value which should cover many use cases about returning a human display string. """
+        """Use represent_value which should cover many use cases about returning a human display string."""
         # https://github.com/3liz/lizmap-plugin/issues/241
         return f'represent_value("{name}")'
 
     @staticmethod
     def _generate_field_name(name: str, fname: str, expression: str) -> str:
-        return '''
+        return """
                     [%
                     concat(
                         '<div class="control-group ',
@@ -288,7 +305,7 @@ class Tooltip:
                         '    </div>',
                         '</div>'
                     )
-                    %]'''.format(
+                    %]""".format(
             name,
             fname,
             expression,
@@ -297,25 +314,25 @@ class Tooltip:
     @staticmethod
     def _generate_value_map(widget_config: dict, name: str) -> str:
         def escape_value(value: str) -> str:
-            """Change ' to ’ for the HStore function. """
+            """Change ' to ’ for the HStore function."""
             return value.replace("'", "’")
 
-        if isinstance(widget_config['map'], list):
+        if isinstance(widget_config["map"], list):
             values = {}
-            for row in widget_config['map']:
-                if '<NULL>' not in list(row.keys()):
+            for row in widget_config["map"]:
+                if "<NULL>" not in list(row.keys()):
                     reverted = {escape_value(y): escape_value(x) for x, y in row.items()}
                     values.update(reverted)
         else:
             # It's not a list, it's a dict.
-            values = widget_config['map']
+            values = widget_config["map"]
 
             if values is None:
                 # The list is empty, the widget is not fully configured
                 return "''"
 
-            if values.get('<NULL>'):
-                del values['<NULL>']
+            if values.get("<NULL>"):
+                del values["<NULL>"]
             values = {escape_value(y): escape_value(x) for x, y in values.items()}
 
         # noinspection PyCallByClass,PyArgumentList
@@ -329,10 +346,10 @@ class Tooltip:
 
     @staticmethod
     def _generate_external_resource(widget_config: dict, name: str, fname: str) -> str:
-        dview = widget_config['DocumentViewer']
+        dview = widget_config["DocumentViewer"]
 
         if dview == QgsExternalResourceWidget.DocumentViewerContent.Image:
-            field_view = '''
+            field_view = """
                     concat(
                        '<a href="',
                        "{0}",
@@ -343,11 +360,11 @@ class Tooltip:
                        '" width="100%" title="{1}">',
                        '
                        </a>'
-                    )'''.format(name, fname)
+                    )""".format(name, fname)
 
         elif dview == QgsExternalResourceWidget.DocumentViewerContent.Web:
             # web view
-            field_view = '''
+            field_view = """
                     concat(
                        '<a href="',
                        "{0}",
@@ -359,26 +376,26 @@ class Tooltip:
                        '" width="100%" height="300" title="{1}"/>',
                        '
                        </a>'
-                    )'''.format(name, fname)
+                    )""".format(name, fname)
 
         elif dview == QgsExternalResourceWidget.DocumentViewerContent.NoContent:
-            field_view = '''
+            field_view = """
                     concat(
                         '<a href="',
                         "{0}",
                         '" target="_blank">',
                         base_file_name({0}),
                         '</a>'
-                    )'''.format(name)
+                    )""".format(name)
 
         else:
-            raise Exception('Unknown external resource widget')
+            raise Exception("Unknown external resource widget")
 
         return field_view
 
     @staticmethod
     def _generate_date(widget_config: dict, name: str) -> str:
-        date_format = widget_config.get('display_format')
+        date_format = widget_config.get("display_format")
 
         if not date_format:
             # Fallback to ISO 8601, when the widget has not been configured yet
@@ -393,14 +410,14 @@ class Tooltip:
 
     @staticmethod
     def _generate_text_label(label: str, expression: str) -> str:
-        return f'''
+        return f"""
             <p><strong>{label}</strong>
             <div class="field">{expression}</div>
             </p>
-            '''
+            """
 
     # CSS for LWC <= 3.7.
-    css = '''<style>
+    css = """<style>
     div.popup_lizmap_dd {
         margin: 2px;
     }
@@ -437,7 +454,7 @@ class Tooltip:
         margin-top: 15px !important;
     }
 
-</style>\n'''
+</style>\n"""
 
 
 # BE CAREFUL

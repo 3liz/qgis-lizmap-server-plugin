@@ -11,19 +11,20 @@ from qgis.core import (
 )
 from qgis.utils import qgsfunction
 
-LOGGER = logging.getLogger('Lizmap')
-SPACES = '  '
+LOGGER = logging.getLogger("Lizmap")
+SPACES = "  "
 
 
 @qgsfunction(
-    args='auto', group='Lizmap',
-    helpText='Get the list of fields needed to render the layer symbology',
+    args="auto",
+    group="Lizmap",
+    helpText="Get the list of fields needed to render the layer symbology",
 )
 def layer_renderer_used_attributes(
-        layer_identifier: str,
-        feature: QgsFeature,
-        parent: QgsExpression,
-        ) -> list:
+    layer_identifier: str,
+    feature: QgsFeature,
+    parent: QgsExpression,
+) -> list:
     """
     Return the list of fields (names)
     use to render a vector layer
@@ -37,14 +38,12 @@ def layer_renderer_used_attributes(
             layer = get_layers[0]
 
     if not layer:
-        LOGGER.debug(
-                f'Layer "{layer_identifier}" not found in the project')
+        LOGGER.debug(f'Layer "{layer_identifier}" not found in the project')
         return []
 
     # Layer must be a vector layer
     if layer.type() != QgsMapLayer.VectorLayer:
-        LOGGER.debug(
-                f'Layer "{layer_identifier}" is not a vector layer')
+        LOGGER.debug(f'Layer "{layer_identifier}" is not a vector layer')
         return []
 
     # Get layer renderer

@@ -18,9 +18,9 @@ PACKAGE_NAME = "lizmap_server"
 
 
 def to_bool(val: Union[str, int, float, bool, None]) -> bool:
-    """ Convert lizmap config value to boolean """
+    """Convert lizmap config value to boolean"""
     # For string, compare lower value to True string
-    return val.lower() in ('yes', 'true', 'y', 't', '1') if isinstance(val, str) else bool(val)
+    return val.lower() in ("yes", "true", "y", "t", "1") if isinstance(val, str) else bool(val)
 
 
 def plugin_path(*args: Union[str, Path]) -> Path:
@@ -38,13 +38,13 @@ def plugin_metadata() -> configparser.ConfigParser:
 
 
 def version() -> str:
-    """ Returns the Lizmap current version. """
+    """Returns the Lizmap current version."""
     return plugin_metadata()["general"]["version"]
 
 
 def check_environment_variable() -> bool:
-    """ Check the server configuration. """
-    lizmap_enabled = to_bool(os.environ.get('QGIS_SERVER_LIZMAP_REVEAL_SETTINGS', ''))
+    """Check the server configuration."""
+    lizmap_enabled = to_bool(os.environ.get("QGIS_SERVER_LIZMAP_REVEAL_SETTINGS", ""))
     if not lizmap_enabled:
         logger.critical(
             "The Lizmap API is currently not enabled. Please read the documentation "

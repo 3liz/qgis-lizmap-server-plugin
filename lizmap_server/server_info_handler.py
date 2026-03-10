@@ -1,5 +1,3 @@
-
-
 import os
 import sys
 import traceback
@@ -36,31 +34,30 @@ with warnings.catch_warnings():
 PLUGIN_METADATA_KEYS = (
     # 'name' is not the folder name in the 'expected_list' variable,
     # it can be different
-    'name',
-    'version',
-    'commitNumber',
-    'commitSha1',
-    'dateTime',
-    'repository',
-    'homepage',
+    "name",
+    "version",
+    "commitNumber",
+    "commitSha1",
+    "dateTime",
+    "repository",
+    "homepage",
 )
 
 DATA_PLOTLY = "DataPlotly"
 EXPECTED_PLUGINS = (
-    'wfsOutputExtension',
+    "wfsOutputExtension",
     # 'cadastre', very specific for the French use-case
-    'lizmap_server',
-    'atlasprint',
+    "lizmap_server",
+    "atlasprint",
     # waiting a little for these one
     # 'tilesForServer',
     # DATA_PLOTLY,  # Special case for this one, depending on the hosting infrastructure
 )
 
-EXPECTED_SERVICES = ('WMS', 'WFS', 'WCS', 'WMTS', 'EXPRESSION', 'LIZMAP')
+EXPECTED_SERVICES = ("WMS", "WFS", "WCS", "WMTS", "EXPRESSION", "LIZMAP")
 
 
 class ServerInfoHandler(QgsServerOgcApiHandler):
-
     def __init__(self):
         super().__init__()
         self._context = create_server_context()
@@ -107,8 +104,8 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         for expected in EXPECTED_PLUGINS:
             if expected not in plugins:
                 plugins[expected] = {
-                    'version': 'Not found',
-                    'name': expected,
+                    "version": "Not found",
+                    "name": expected,
                 }
 
         # Lizmap Cloud allocated ressources
@@ -118,27 +115,27 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
                 version = 'Not available on the "Basic" Lizmap Cloud plan'
             else:
                 # allocated_ressources == "dedicated"
-                version = 'Not installed'
+                version = "Not installed"
 
             plugins[DATA_PLOTLY] = {
-                'version': version,
-                'name': DATA_PLOTLY,
-                'homepage': 'https://github.com/ghtmtt/DataPlotly/blob/master/README.md',
+                "version": version,
+                "name": DATA_PLOTLY,
+                "homepage": "https://github.com/ghtmtt/DataPlotly/blob/master/README.md",
             }
 
         # 3.28 : Firenze
         # 3.30 : 's-Hertogenbosch
-        human_version, human_name = Qgis.QGIS_VERSION.split('-', 1)
+        human_version, human_name = Qgis.QGIS_VERSION.split("-", 1)
 
         services_available = []
         for service in EXPECTED_SERVICES:
             if context.serverInterface().serviceRegistry().getService(service):
                 services_available.append(service)
 
-        if Qgis.devVersion() != 'exported':
+        if Qgis.devVersion() != "exported":
             commit_id = Qgis.devVersion()
         else:
-            commit_id = ''
+            commit_id = ""
 
         # noinspection PyBroadException
         try:
@@ -163,50 +160,51 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 
         data = {
             # Only the "qgis_server" section is forwarded in LWC source code
-            'qgis_server': {
-                'metadata': {
-                    'version': human_version,  # 3.16.0
-                    'tag': tag,  # final-3_16_0
-                    'name': human_name,  # Hannover
-                    'commit_id': commit_id,  # 288d2cacb5 if it's a dev version
-                    'version_int': Qgis.QGIS_VERSION_INT,  # 31600
+            "qgis_server": {
+                "metadata": {
+                    "version": human_version,  # 3.16.0
+                    "tag": tag,  # final-3_16_0
+                    "name": human_name,  # Hannover
+                    "commit_id": commit_id,  # 288d2cacb5 if it's a dev version
+                    "version_int": Qgis.QGIS_VERSION_INT,  # 31600
                 },
-                'py_qgis_server': qgis_server_meta,
-                'external_providers_tos_checks': {
+                "py_qgis_server": qgis_server_meta,
+                "external_providers_tos_checks": {
                     GOOGLE_KEY.lower(): strict_tos_check(GOOGLE_KEY),
                     BING_KEY.lower(): strict_tos_check(BING_KEY),
                 },
                 # 'support_custom_headers': self.support_custom_headers(),
-                'services': services_available,
-                'plugins': plugins,
-                'fonts': QFontDatabase().families(),
+                "services": services_available,
+                "plugins": plugins,
+                "fonts": QFontDatabase().families(),
             },
-            'environment': {
-                'gdal': gdal.VersionInfo('VERSION_NUM'),
-                'python': sys.version,
-                'qt': Qt.QT_VERSION_STR,
+            "environment": {
+                "gdal": gdal.VersionInfo("VERSION_NUM"),
+                "python": sys.version,
+                "qt": Qt.QT_VERSION_STR,
             },
         }
         self.write(data, context)
 
     def support_custom_headers(self) -> Optional[bool]:
-        """ Check if this QGIS Server supports custom headers.
+        """Check if this QGIS Server supports custom headers.
 
-         Returns None if the check is not requested with the GET parameter CHECK_CUSTOM_HEADERS
+        Returns None if the check is not requested with the GET parameter CHECK_CUSTOM_HEADERS
 
-         If requested, returns boolean if X-Check-Custom-Headers is found in headers.
-         """
+        If requested, returns boolean if X-Check-Custom-Headers is found in headers.
+        """
         handler = self.serverIface().requestHandler()
 
         params = handler.parameterMap()
-        if not to_bool(params.get('CHECK_CUSTOM_HEADERS')):
+        if not to_bool(params.get("CHECK_CUSTOM_HEADERS")):
             return None
 
         headers = handler.requestHeaders()
-        return headers.get('X-Check-Custom-Headers') is not None
+        return headers.get("X-Check-Custom-Headers") is not None
 
     def parameters(self, context):
         from qgis.server import QgsServerQueryStringParameter
+
         return [
             QgsServerQueryStringParameter(
                 "CHECK_CUSTOM_HEADERS",

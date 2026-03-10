@@ -16,7 +16,6 @@ SERVER_CONTEXT_NAME = "Py-QGIS-Server"
 
 
 class Context(ContextABC):
-
     def __init__(self):
         self._cm = get_cacheservice()
 
@@ -34,13 +33,11 @@ class Context(ContextABC):
 
     @property
     def search_paths(self) -> List[str]:
-        """ Return search paths for projects
-        """
+        """Return search paths for projects"""
         return []
 
     def project(self, uri: str) -> QgsProject:
-        """ Return the project specified by `uri`
-        """
+        """Return the project specified by `uri`"""
         details = self._cm.peek(uri)
         if details:
             return details.project
@@ -58,10 +55,9 @@ class Context(ContextABC):
         keys: Sequence[str],
         unknown_default: Optional[str] = None,
     ) -> Iterator[Tuple[str, Dict]]:
-        """ return installed plugins metadata
-        """
+        """return installed plugins metadata"""
         for plugin in plugin_list():
-            md = plugin_metadata(plugin)['general']
+            md = plugin_metadata(plugin)["general"]
             yield (
                 plugin,
                 {k: (md.get(k) or md.get(k.lower(), unknown_default)) for k in keys},
@@ -69,13 +65,13 @@ class Context(ContextABC):
 
     @cached_property
     def metadata(self) -> ServerMetadata:
-        """ Return server metadata
-        """
+        """Return server metadata"""
         from pyqgisserver.version import __manifest__, __version__
+
         return ServerMetadata(
             name=SERVER_CONTEXT_NAME,
             version=__version__,
-            build_id=__manifest__.get('buildid'),
-            commit_id=__manifest__.get('commitid'),
+            build_id=__manifest__.get("buildid"),
+            commit_id=__manifest__.get("commitid"),
             is_stable=not any(x in __version__ for x in ("pre", "alpha", "beta", "rc")),
         )

@@ -15,11 +15,10 @@ from .common import (
 )
 
 
-SERVER_CONTEXT_NAME = 'QJazz'
+SERVER_CONTEXT_NAME = "QJazz"
 
 
 class Context(ContextABC):
-
     def __init__(self):
         self._cm = CacheManager.get_service()
 
@@ -42,13 +41,11 @@ class Context(ContextABC):
 
     @property
     def search_paths(self) -> List[str]:
-        """ Return search paths for projects
-        """
+        """Return search paths for projects"""
         return list(self._cm.conf.search_paths)
 
     def project(self, uri: str) -> Optional[QgsProject]:
-        """ Return the project in cache specified by `uri`
-        """
+        """Return the project in cache specified by `uri`"""
         md, co_status = self._checkout(uri)
 
         rv = None
@@ -74,12 +71,11 @@ class Context(ContextABC):
         keys: Sequence[str],
         unknown_default: Optional[str] = None,
     ) -> Iterator[Tuple[str, Dict]]:
-        """ return installed plugins metadata
-        """
+        """return installed plugins metadata"""
         service = QgisPluginService.get_service()
 
         for plugin in service.plugins:
-            md = plugin.metadata['general']
+            md = plugin.metadata["general"]
             logger.trace("== PLUGIN METADATA(%s): %s", plugin.name, md)
             yield (
                 plugin.path.name,
@@ -88,14 +84,13 @@ class Context(ContextABC):
 
     @cached_property
     def metadata(self) -> ServerMetadata:
-        """ Return server metadata
-        """
+        """Return server metadata"""
         from importlib import metadata
         from qjazz_core import manifest
 
         commit = manifest.get_manifest().commit_id
 
-        version = metadata.version('qjazz-contrib')
+        version = metadata.version("qjazz-contrib")
         return ServerMetadata(
             name=SERVER_CONTEXT_NAME,
             commit_id=commit,

@@ -1,5 +1,3 @@
-
-
 from qgis.core import QgsExpression, QgsMapLayer, QgsProject, QgsVectorLayer
 from qgis.server import QgsAccessControlFilter, QgsServerInterface
 
@@ -30,7 +28,6 @@ from lizmap_server.tos_definitions import (
 
 
 class LizmapAccessControlFilter(QgsAccessControlFilter):
-
     def __init__(self, server_iface: QgsServerInterface) -> None:
         super().__init__(server_iface)
 
@@ -59,7 +56,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
     #     return ALL_FEATURES
 
     def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
-        """ Return an additional subset string (typically SQL) filter """
+        """Return an additional subset string (typically SQL) filter"""
         logger.info("Lizmap layerFilterSubsetString")
         # We should have a safe SQL query.
         # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
@@ -70,7 +67,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         return super().layerFilterSubsetString(layer)
 
     def layerPermissions(self, layer: QgsMapLayer) -> QgsAccessControlFilter.LayerPermissions:
-        """ Return the layer rights """
+        """Return the layer rights"""
         # Get default layer rights
         rights = super().layerPermissions(layer)
 
@@ -84,7 +81,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         request_handler = self.iface.requestHandler()
 
         # Discard invalid layers for other services than WMS
-        if not layer.isValid() and request_handler.parameter('service').upper() != 'WMS':
+        if not layer.isValid() and request_handler.parameter("service").upper() != "WMS":
             logger.info(f"layerPermission: Layer {layer_name} is invalid in {project.fileName()}!")
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             return rights
@@ -95,29 +92,35 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Set lizmap variables
         user_login = get_lizmap_user_login(request_handler)
         custom_var = project.customVariables()
-        if custom_var.get('lizmap_user', None) != user_login:
-            custom_var['lizmap_user'] = user_login
-            custom_var['lizmap_user_groups'] = list(groups)  # QGIS can't store a tuple
+        if custom_var.get("lizmap_user", None) != user_login:
+            custom_var["lizmap_user"] = user_login
+            custom_var["lizmap_user_groups"] = list(groups)  # QGIS can't store a tuple
             project.setCustomVariables(custom_var)
 
         # Try to override filter expression cache
-        is_wfs = request_handler.parameter('service').upper() == 'WFS'
-        if is_wfs and request_handler.parameter('request').upper() == 'GETFEATURE':
+        is_wfs = request_handler.parameter("service").upper() == "WFS"
+        if is_wfs and request_handler.parameter("request").upper() == "GETFEATURE":
             self.iface.accessControls().resolveFilterFeatures([layer])
 
         datasource = layer.source().lower()
         is_google = GOOGLE_DOMAIN in datasource
         is_bing = BING_DOMAIN in datasource
         if is_google or is_bing:
-            logger.info(f"Layer '{layer_name}' has been detected as an external layer which might need a API key.")
+            logger.info(
+                f"Layer '{layer_name}' has been detected as an external layer which might need a API key."
+            )
 
         # Get Lizmap config
         cfg = get_lizmap_config(self.iface.configFilePath())
         if not cfg:
             if is_google:
-                rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = not self._strict_google
+                rights.canRead = rights.canInsert = rights.canUpdate = (
+                    rights.canDelete
+                ) = not self._strict_google
             elif is_bing:
-                rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = not self._strict_bing
+                rights.canRead = rights.canInsert = rights.canUpdate = (
+                    rights.canDelete
+                ) = not self._strict_bing
             # Default layer rights applied
             return rights
 
@@ -126,7 +129,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         if len(groups) == 0 and not (is_google or is_bing):
             return rights
 
-        api_key = cfg['options'].get('googleKey', '')
+        api_key = cfg["options"].get("googleKey", "")
         if is_google and not api_key and strict_tos_check(GOOGLE_KEY):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             logger.warning(
@@ -135,7 +138,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             )
             return rights
 
-        api_key = cfg['options'].get('bingKey', '')
+        api_key = cfg["options"].get("bingKey", "")
         if is_bing and not api_key and strict_tos_check(BING_KEY):
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             logger.warning(
@@ -152,17 +155,17 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Check lizmap edition config
         layer_id = layer.id()
-        if cfg.get('editionLayers'):
-            if layer_id in cfg['editionLayers'] and cfg['editionLayers'][layer_id]:
-                edit_layer = cfg['editionLayers'][layer_id]
+        if cfg.get("editionLayers"):
+            if layer_id in cfg["editionLayers"] and cfg["editionLayers"][layer_id]:
+                edit_layer = cfg["editionLayers"][layer_id]
 
                 # Check if edition is possible
                 # By default not
                 can_edit = False
-                if edit_layer.get('acl'):
+                if edit_layer.get("acl"):
                     # acl is defined and not an empty string
                     # authorization defined for edition
-                    group_edit = edit_layer['acl'].split(',')
+                    group_edit = edit_layer["acl"].split(",")
                     group_edit = [g.strip() for g in group_edit]
 
                     # check if a group is in authorization groups list
@@ -177,17 +180,19 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
                     # no authorization defined for edition
                     can_edit = True
 
-                if can_edit and 'capabilities' in edit_layer and edit_layer['capabilities']:
+                if can_edit and "capabilities" in edit_layer and edit_layer["capabilities"]:
                     # A user group can edit the layer and capabilities
                     # edition for the layer is defined in Lizmap edition config
-                    edit_layer_cap = cfg['editionLayers'][layer_id]['capabilities']
+                    edit_layer_cap = cfg["editionLayers"][layer_id]["capabilities"]
 
-                    rights.canInsert = to_bool(edit_layer_cap['createFeature'])
-                    rights.canDelete = to_bool(edit_layer_cap['deleteFeature'])
-                    rights.canUpdate = any([
-                        to_bool(edit_layer_cap['modifyAttribute']),
-                        to_bool(edit_layer_cap['modifyGeometry']),
-                    ])
+                    rights.canInsert = to_bool(edit_layer_cap["createFeature"])
+                    rights.canDelete = to_bool(edit_layer_cap["deleteFeature"])
+                    rights.canUpdate = any(
+                        [
+                            to_bool(edit_layer_cap["modifyAttribute"]),
+                            to_bool(edit_layer_cap["modifyGeometry"]),
+                        ]
+                    )
 
                 else:
                     # Any user groups can edit the layer or capabilities
@@ -198,8 +203,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             else:
                 # The layer has no editionLayers config defined
                 # Reset edition rights
-                logger.info(
-                    f"No edition config defined for layer: {layer_name} ({layer_id})")
+                logger.info(f"No edition config defined for layer: {layer_name} ({layer_id})")
                 rights.canInsert = rights.canUpdate = rights.canDelete = False
         else:
             # No editionLayers defined
@@ -216,34 +220,32 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         # Check Lizmap layer group visibility
         cfg_layer = cfg_layers[layer_name]
-        if 'group_visibility' not in cfg_layer or not cfg_layer['group_visibility']:
+        if "group_visibility" not in cfg_layer or not cfg_layer["group_visibility"]:
             # Lizmap config has no options
             logger.info(f"No Lizmap layer group visibility for: {layer_name}")
             # Default layer rights applied
             return rights
 
         # Get Lizmap layer group visibility
-        group_visibility = [g.strip() for g in cfg_layer['group_visibility']]
+        group_visibility = [g.strip() for g in cfg_layer["group_visibility"]]
 
         # If one Lizmap user group provided in request headers is
         # defined in Lizmap layer group visibility, the default layer
         # rights is applied
         for g in groups:
             if g in group_visibility:
-                logger.info(
-                    f"Group {g} is in Lizmap layer group visibility for: {layer_name}")
+                logger.info(f"Group {g} is in Lizmap layer group visibility for: {layer_name}")
                 return rights
 
         # The lizmap user groups provided gy the request are not
         # authorized to get access to the layer
-        logger.info(
-            f"Groups {', '.join(groups)} is in Lizmap layer group visibility for: {layer_name}")
+        logger.info(f"Groups {', '.join(groups)} is in Lizmap layer group visibility for: {layer_name}")
         rights.canRead = False
         rights.canInsert = rights.canUpdate = rights.canDelete = False
         return rights
 
     def cacheKey(self) -> str:
-        """ The key used to cache documents """
+        """The key used to cache documents"""
         default_cache_key = super().cacheKey()
 
         # Get Lizmap user groups provided by the request
@@ -270,14 +272,14 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         has_group_visibility = False
         for l_name, cfg_layer in cfg_layers.items():
             # check group_visibility in config
-            if 'group_visibility' not in cfg_layer or not cfg_layer['group_visibility']:
+            if "group_visibility" not in cfg_layer or not cfg_layer["group_visibility"]:
                 continue
 
             # clean group_visibility
-            group_visibility = [g.strip() for g in cfg_layer['group_visibility']]
+            group_visibility = [g.strip() for g in cfg_layer["group_visibility"]]
 
             # the group_visibility was just an empty string
-            if len(group_visibility) == 1 and groups[0] == '':
+            if len(group_visibility) == 1 and groups[0] == "":
                 continue
 
             has_group_visibility = True
@@ -286,16 +288,16 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # group_visibility option is defined in Lizmap config layers
         if has_group_visibility:
             # The group provided in request is anonymous
-            if len(groups) == 1 and groups[0] == '':
-                return '@@'
+            if len(groups) == 1 and groups[0] == "":
+                return "@@"
             # for other groups, removing duplicates and joining
-            return '@@'.join(list(set(groups)))
+            return "@@".join(list(set(groups)))
 
         return default_cache_key
 
     @logger.profiling
     def get_lizmap_layer_filter(self, layer: QgsVectorLayer, filter_type: FilterType) -> str:
-        """ Get lizmap layer filter based on login filter """
+        """Get lizmap layer filter based on login filter"""
 
         # Check first the headers to avoid unnecessary config file reading
         # Override filter
@@ -340,7 +342,8 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
                 if not filter_polygon_config.is_valid():
                     logger.critical(
                         "The filter by polygon configuration is not valid.\n All features are hidden : "
-                        "{}".format(NO_FEATURES))
+                        "{}".format(NO_FEATURES)
+                    )
                     return NO_FEATURES
 
                 # polygon_filter is set, we have a value to filter
@@ -355,7 +358,8 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             logger.log_exception(e)
             logger.critical(
                 "An error occurred when trying to read the filtering by polygon.\nAll features are hidden : "
-                "{}".format(NO_FEATURES))
+                "{}".format(NO_FEATURES)
+            )
             return NO_FEATURES
 
         if polygon_filter:
@@ -369,23 +373,22 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             return ALL_FEATURES
 
         # Layer login filter only for edition does not filter layer
-        is_edition_only = 'edition_only' in cfg_layer_login_filter
-        if is_edition_only and to_bool(cfg_layer_login_filter['edition_only']):
+        is_edition_only = "edition_only" in cfg_layer_login_filter
+        if is_edition_only and to_bool(cfg_layer_login_filter["edition_only"]):
             if polygon_filter:
                 return polygon_filter
             return ALL_FEATURES
 
-        attribute = cfg_layer_login_filter['filterAttribute']
+        attribute = cfg_layer_login_filter["filterAttribute"]
 
         # If groups is not empty but the only group like user login has no name
         # Return the filter for no user connected
-        if len(groups) == 1 and groups[0] == '' and user_login == '':
-
+        if len(groups) == 1 and groups[0] == "" and user_login == "":
             # Default filter for no user connected
             # we use expression tools also for subset string
-            login_filter = QgsExpression.createFieldEqualityExpression(attribute, 'all')
+            login_filter = QgsExpression.createFieldEqualityExpression(attribute, "all")
             if polygon_filter:
-                return f'{polygon_filter} AND {login_filter}'
+                return f"{polygon_filter} AND {login_filter}"
 
             return login_filter
 
@@ -396,13 +399,13 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             layer.dataProvider().name(),
         )
         if polygon_filter:
-            return f'{polygon_filter} AND {login_filter}'
+            return f"{polygon_filter} AND {login_filter}"
 
         return login_filter
 
     @staticmethod
     def _filter_by_login(cfg_layer_login_filter: dict, groups: tuple, login: str, provider: str) -> str:
-        """ Build the string according to the filter by login configuration.
+        """Build the string according to the filter by login configuration.
 
         :param cfg_layer_login_filter: The Lizmap Filter by login configuration.
         :param groups: List of groups for the current user
@@ -412,7 +415,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # List of values for expression
         values = []
 
-        if to_bool(cfg_layer_login_filter['filterPrivate']):
+        if to_bool(cfg_layer_login_filter["filterPrivate"]):
             # If filter is private use user_login
             values.append(login)
         else:
@@ -420,7 +423,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             values = list(groups)
 
         # Add all to values
-        values.append('all')
+        values.append("all")
 
         # Since LWC 3.8, we allow to have a list of groups (or logins)
         # separated by comma, with NO SPACES
@@ -436,7 +439,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         value_filters = []
 
         # Quoted attribute with double-quotes
-        quoted_field = QgsExpression.quotedColumnRef(cfg_layer_login_filter['filterAttribute'])
+        quoted_field = QgsExpression.quotedColumnRef(cfg_layer_login_filter["filterAttribute"])
 
         # For each value (group, all, login, etc.), create a filter
         # combining all the possibility: equality & LIKE
@@ -446,24 +449,24 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             quoted_value = QgsExpression.quotedString(value)
 
             # equality
-            filters.append(f'{quoted_field} = {quoted_value}')
+            filters.append(f"{quoted_field} = {quoted_value}")
 
             # Add LIKE statements to manage multiple values separated by comma
-            if provider == 'postgres' and cfg_layer_login_filter.get('allow_multiple_acl_values'):
+            if provider == "postgres" and cfg_layer_login_filter.get("allow_multiple_acl_values"):
                 # begins with value & comma
-                quoted_like_value = QgsExpression.quotedString(f'{value},%')
-                filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+                quoted_like_value = QgsExpression.quotedString(f"{value},%")
+                filters.append(f"{quoted_field} LIKE {quoted_like_value}")
 
                 # ends with comma & value
-                quoted_like_value = QgsExpression.quotedString(f'%,{value}')
-                filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+                quoted_like_value = QgsExpression.quotedString(f"%,{value}")
+                filters.append(f"{quoted_field} LIKE {quoted_like_value}")
 
                 # value between two commas
-                quoted_like_value = QgsExpression.quotedString(f'%,{value},%')
-                filters.append(f'{quoted_field} LIKE {quoted_like_value}')
+                quoted_like_value = QgsExpression.quotedString(f"%,{value},%")
+                filters.append(f"{quoted_field} LIKE {quoted_like_value}")
 
             # Build the filter for this value
-            value_filters.append(' OR '.join(filters))
+            value_filters.append(" OR ".join(filters))
 
         # Build filter for all values
-        return ' OR '.join(value_filters)
+        return " OR ".join(value_filters)

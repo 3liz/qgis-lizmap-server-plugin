@@ -111,13 +111,11 @@ class Client(Protocol):
         query: str,
         project: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
-    ) -> OWSResponse:
-        ...
+    ) -> OWSResponse: ...
 
     def get_with_project(
         self,
         query: str,
         project: QgsProject,
         headers: Optional[Dict[str, str]] = None,
-    ) -> OWSResponse:
-        ...
+    ) -> OWSResponse: ...

@@ -31,8 +31,8 @@ CACHE_MAX_SIZE = 100
 
 # 1 = 0 results in a "false" in OGR/PostGIS
 # ET : I didn't find a proper false value in OGR
-NO_FEATURES = '1 = 0'
-ALL_FEATURES = ''
+NO_FEATURES = "1 = 0"
+ALL_FEATURES = ""
 
 
 # noinspection PyArgumentList
@@ -43,10 +43,12 @@ class FilterType(Enum):
 
 
 class FilterByPolygon:
-
     def __init__(
-            self, config: Optional[dict], layer: QgsVectorLayer, editing: bool = False,
-            filter_type: FilterType = FilterType.PlainSqlQuery,
+        self,
+        config: Optional[dict],
+        layer: QgsVectorLayer,
+        editing: bool = False,
+        filter_type: FilterType = FilterType.PlainSqlQuery,
     ):
         """Constructor for the filter by polygon.
 
@@ -120,30 +122,30 @@ class FilterByPolygon:
         if self.config is None:
             return
 
-        layers = self.config.get('layers')
+        layers = self.config.get("layers")
         if not layers:
             return
 
         for layer in layers:
             if layer.get("layer") == self.layer.id():
-                self._primary_key = layer.get('primary_key')
-                self.filter_mode = layer.get('filter_mode')
-                self.spatial_relationship = layer.get('spatial_relationship')
-                self.use_centroid = layer.get('use_centroid', False)
+                self._primary_key = layer.get("primary_key")
+                self.filter_mode = layer.get("filter_mode")
+                self.spatial_relationship = layer.get("spatial_relationship")
+                self.use_centroid = layer.get("use_centroid", False)
                 break
 
         if self._primary_key is None:
             return
 
         config = self.config["config"]
-        self._polygon = self.project.mapLayer(config['polygon_layer_id'])
+        self._polygon = self.project.mapLayer(config["polygon_layer_id"])
         self.group_field = config.get("group_field")
 
         # Filter by groups or by user (check the "filter_by_user" flag)
-        self.filter_by_user = to_bool(config.get('filter_by_user'))
+        self.filter_by_user = to_bool(config.get("filter_by_user"))
 
     def is_valid(self) -> bool:
-        """ If the configuration is valid or not."""
+        """If the configuration is valid or not."""
         if not self._polygon or not self._polygon.isValid():
             logger.critical("The polygon layer for filtering is not valid.")
             return False
@@ -151,27 +153,33 @@ class FilterByPolygon:
         if self.polygon.fields().indexOf(self.group_field) < 0:
             logger.critical(
                 "The field {} used for filtering does not exist in {}".format(
-                    self.group_field, self.polygon.name()))
+                    self.group_field, self.polygon.name()
+                )
+            )
             return False
 
         if not self.layer.isValid():
             logger.critical(
                 "The field {} used for filtering does not exist in {}".format(
-                    self.primary_key, self.layer.name()))
+                    self.primary_key, self.layer.name()
+                )
+            )
             return False
 
         if self.layer.fields().indexOf(self.primary_key) < 0:
             logger.critical(
                 "The field {} used for filtering does not exist in {}".format(
-                    self.primary_key, self.layer.name()))
+                    self.primary_key, self.layer.name()
+                )
+            )
 
         return True
 
     def sql_query(self, uri: QgsDataSourceUri, sql: str) -> Tuple[Tuple]:
-        """ For a given URI, execute an SQL query and return the result. """
+        """For a given URI, execute an SQL query and return the result."""
         if self.connection is None:
             # noinspection PyArgumentList
-            metadata = QgsProviderRegistry.instance().providerMetadata('postgres')
+            metadata = QgsProviderRegistry.instance().providerMetadata("postgres")
             self.connection = metadata.createConnection(uri.uri(), {})
             try:
                 self.connection.executeSql("SET application_name='QGIS Lizmap Server : Filter By Polygon';")
@@ -182,7 +190,7 @@ class FilterByPolygon:
 
     @logger.profiling
     def subset_sql(self, groups_or_user: tuple) -> Tuple[str, str]:
-        """ Get the SQL subset string for the current groups of the user or the user.
+        """Get the SQL subset string for the current groups of the user or the user.
 
         :param groups_or_user: List of groups or users belongings to the user
                                or the user if we need to filter by user.
@@ -195,14 +203,16 @@ class FilterByPolygon:
         #         "Layer {} is empty, returning default NO_FEATURES {}".format(self.layer.name(), NO_FEATURES))
         #     return NO_FEATURES, ''
 
-        if self.filter_mode == 'editing':
+        if self.filter_mode == "editing":
             if not self.editing:
                 logger.info(
-                    "Layer is editing only BUT we are not in an editing session. Return all features.")
-                return ALL_FEATURES, ''
+                    "Layer is editing only BUT we are not in an editing session. Return all features."
+                )
+                return ALL_FEATURES, ""
 
             logger.info(
-                "Layer is editing only AND we are in an editing session. Continue to find the subset string")
+                "Layer is editing only AND we are in an editing session. Continue to find the subset string"
+            )
 
         # We need to have a cache for this, valid for the combo polygon layer id & user_groups
         # Check precondition
@@ -210,7 +220,7 @@ class FilterByPolygon:
             raise AssertionError("polygon not defined")
 
         # as it will be done for each WMS or WFS query
-        if self.polygon.providerType() == 'postgres':
+        if self.polygon.providerType() == "postgres":
             polygon = self._polygon_for_groups_with_sql_query(groups_or_user)
         else:
             polygon = self._polygon_for_groups_with_qgis_api(groups_or_user)
@@ -220,7 +230,7 @@ class FilterByPolygon:
             logger.info(f"The polygon is empty, returning default NO_FEATURES {NO_FEATURES}")
             # Let's try to free the connection
             self.connection = None
-            return NO_FEATURES, ''
+            return NO_FEATURES, ""
 
         ewkt = "SRID={crs};{wkt}".format(
             crs=self.polygon.crs().postgisSrid(),
@@ -239,7 +249,7 @@ class FilterByPolygon:
             )
             return qgis_expression, ewkt
 
-        if self.layer.providerType() == 'postgres':
+        if self.layer.providerType() == "postgres":
             uri = QgsDataSourceUri(self.layer.source())
             st_relation = self._format_sql_st_relationship(
                 self.layer.sourceCrs(),
@@ -272,7 +282,7 @@ class FilterByPolygon:
     @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_qgis_api(self, groups_or_user: tuple) -> QgsGeometry:
-        """ All features from the polygon layer corresponding to the user groups or the user """
+        """All features from the polygon layer corresponding to the user groups or the user"""
         expression = f"""
 array_intersect(
     array_foreach(
@@ -280,7 +290,7 @@ array_intersect(
         trim(@element)
     ),
     array_foreach(
-        string_to_array('{','.join(groups_or_user)}'),
+        string_to_array('{",".join(groups_or_user)}'),
         trim(@element)
     )
 )"""
@@ -299,7 +309,7 @@ array_intersect(
     @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_sql_query(self, groups_or_user: tuple) -> QgsGeometry:
-        """ All features from the polygon layer corresponding to the user groups
+        """All features from the polygon layer corresponding to the user groups
         or the user for a PostgreSQL layer.
 
         Only for QGIS >= 3.10
@@ -340,12 +350,13 @@ c.user_group && (
 
 """.format(
                 polygon_field=self.group_field,
-                groups_or_user=','.join(groups_or_user),
+                groups_or_user=",".join(groups_or_user),
                 geom=uri.geometryColumn(),
                 table_name=FilterByPolygon._format_table_name(uri),
             )
             logger.info(
-                f"Requesting the database about polygons for the current groups or user with : \n{sql}")
+                f"Requesting the database about polygons for the current groups or user with : \n{sql}"
+            )
 
             results = self.sql_query(uri, sql)
             wkb = results[0][1]
@@ -364,13 +375,14 @@ c.user_group && (
             logger.log_exception(e)
             logger.critical(
                 "The filter_by_polygon._polygon_for_groups_with_sql_query failed when requesting PostGIS.\n"
-                "Using the QGIS API")
+                "Using the QGIS API"
+            )
             return self._polygon_for_groups_with_qgis_api(groups_or_user)
 
     @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _features_ids_with_qgis_api(self, polygons: QgsGeometry) -> str:
-        """ List all features using the QGIS API.
+        """List all features using the QGIS API.
 
         :returns: The subset SQL string.
         """
@@ -384,7 +396,8 @@ c.user_group && (
                 self.layer.name(),
                 self.layer.crs().authid(),
                 self.polygon.crs().authid(),
-            ))
+            )
+        )
         index.addFeatures(self.layer.getFeatures())
 
         # Find candidates, if not already in cache
@@ -393,17 +406,18 @@ c.user_group && (
         candidates = index.intersects(polygons.boundingBox())
         if not candidates:
             logger.info(
-                f"Not features in the index matching the bounding box, return the default value {NO_FEATURES}")
+                f"Not features in the index matching the bounding box, return the default value {NO_FEATURES}"
+            )
             return NO_FEATURES
 
         # Check real intersection for the candidates
         unique_ids = []
         for candidate_id in candidates:
             feature = self.layer.getFeature(candidate_id)
-            if self.spatial_relationship == 'contains':
+            if self.spatial_relationship == "contains":
                 if feature.geometry().contains(polygons):
                     unique_ids.append(feature[self.primary_key])
-            elif self.spatial_relationship == 'intersects':
+            elif self.spatial_relationship == "intersects":
                 if feature.geometry().intersects(polygons):
                     unique_ids.append(feature[self.primary_key])
             else:
@@ -415,7 +429,7 @@ c.user_group && (
     @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _features_ids_with_sql_query(self, st_intersect: str) -> str:
-        """ List all features using a SQL query.
+        """List all features using a SQL query.
 
         Only for QGIS >= 3.10
 
@@ -428,8 +442,7 @@ c.user_group && (
             table_name=FilterByPolygon._format_table_name(uri),
             st_intersect=st_intersect,
         )
-        logger.info(
-            f"Requesting the database about IDs to filter with {sql[0:90]}...")
+        logger.info(f"Requesting the database about IDs to filter with {sql[0:90]}...")
 
         results = self.sql_query(uri, sql)
         unique_ids = [str(row[0]) for row in results]
@@ -440,7 +453,7 @@ c.user_group && (
     def _format_sql_in(cls, primary_key: str, values: Union[list, Tuple]) -> str:
         """Format the SQL IN statement."""
         if not values:
-            logger.info(f'No values, returning default NO VALUES {NO_FEATURES}')
+            logger.info(f"No values, returning default NO VALUES {NO_FEATURES}")
             return NO_FEATURES
 
         cleaned = []
@@ -450,17 +463,17 @@ c.user_group && (
             else:
                 cleaned.append(str(value))
 
-        return f"\"{primary_key}\" IN ( {' , '.join(cleaned)} )"
+        return f'"{primary_key}" IN ( {" , ".join(cleaned)} )'
 
     @classmethod
     def _format_sql_st_relationship(
-            cls,
-            filtered_crs: QgsCoordinateReferenceSystem,
-            filtering_crs: QgsCoordinateReferenceSystem,
-            geom_field: str,
-            polygons: QgsGeometry,
-            use_st_intersect: bool,
-            use_centroid: bool,
+        cls,
+        filtered_crs: QgsCoordinateReferenceSystem,
+        filtering_crs: QgsCoordinateReferenceSystem,
+        geom_field: str,
+        polygons: QgsGeometry,
+        use_st_intersect: bool,
+        use_centroid: bool,
     ) -> str:
         """If layer is of type PostgreSQL, use a simple ST_Intersects/ST_Contains.
 
@@ -472,24 +485,24 @@ c.user_group && (
             geom = f"ST_Transform({geom}, {filtered_crs.postgisSrid()})"
 
         if use_centroid:
-            geom_field = f"ST_Centroid(\"{geom_field}\")"
+            geom_field = f'ST_Centroid("{geom_field}")'
         else:
-            geom_field = f"\"{geom_field}\""
+            geom_field = f'"{geom_field}"'
 
         return f"""
-ST_{'Intersects' if use_st_intersect else 'Contains'}(
+ST_{"Intersects" if use_st_intersect else "Contains"}(
     {geom},
     {geom_field}
 )"""
 
     @classmethod
     def _format_qgis_expression_relationship(
-            cls,
-            filtered_crs: QgsCoordinateReferenceSystem,
-            filtering_crs: QgsCoordinateReferenceSystem,
-            polygons: QgsGeometry,
-            use_st_intersect: bool,
-            use_centroid: bool,
+        cls,
+        filtered_crs: QgsCoordinateReferenceSystem,
+        filtering_crs: QgsCoordinateReferenceSystem,
+        polygons: QgsGeometry,
+        use_st_intersect: bool,
+        use_centroid: bool,
     ) -> str:
         """Build the filter with a QGIS expression.
 
@@ -511,17 +524,17 @@ ST_{'Intersects' if use_st_intersect else 'Contains'}(
             current_geometry = "$geometry"
 
         return f"""
-{'intersects' if use_st_intersect else 'contains'}(
+{"intersects" if use_st_intersect else "contains"}(
     {geom},
     {current_geometry}
 )"""
 
     @classmethod
     def _format_table_name(cls, uri: QgsDataSourceUri) -> str:
-        """ Format the table name according to the URI. """
+        """Format the table name according to the URI."""
         table_name = uri.table()
         # is the datasource a query or a table ?
-        if not uri.schema() and table_name.startswith('(') and table_name.endswith(')'):
+        if not uri.schema() and table_name.startswith("(") and table_name.endswith(")"):
             # it is a query
             return table_name
         # it is a table

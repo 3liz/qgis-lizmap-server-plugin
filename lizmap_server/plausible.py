@@ -1,5 +1,3 @@
-
-
 import json
 import os
 import platform
@@ -29,14 +27,14 @@ PLAUSIBLE_URL_TEST = "https://plausible.snap.3liz.net/api/event"
 # Plausible is GDPR friendly https://plausible.io/data-policy
 # The User-Agent is set by QGIS Desktop itself
 
-class Plausible:
 
+class Plausible:
     def __init__(self):
-        """ Constructor. """
+        """Constructor."""
         self.previous_date = None
 
     def request_stat_event(self) -> bool:
-        """ Request to send an event to the API. """
+        """Request to send an event to the API."""
         if to_bool(os.getenv(ENV_SKIP_STATS)):
             # Disabled by environment variable
             return False
@@ -59,13 +57,13 @@ class Plausible:
 
     @staticmethod
     def _send_stat_event() -> bool:
-        """ Send stats event to the API. """
+        """Send stats event to the API."""
         # Only turn ON for debug purpose, temporary !
         debug = False
         extra_debug = False
 
         lizmap_plugin_version = version()
-        if lizmap_plugin_version in ('master', 'dev'):
+        if lizmap_plugin_version in ("master", "dev"):
             # Dev versions of the plugin, it's a kind of debug
             debug = True
 
@@ -87,14 +85,14 @@ class Plausible:
 
         # Qgis.QGIS_VERSION → 3.34.6-Prizren
         # noinspection PyUnresolvedReferences
-        qgis_version_full = Qgis.QGIS_VERSION.split('-')[0]
+        qgis_version_full = Qgis.QGIS_VERSION.split("-")[0]
         # qgis_version_full → 3.34.6
-        qgis_version_branch = '.'.join(qgis_version_full.split('.')[0:2])
+        qgis_version_branch = ".".join(qgis_version_full.split(".")[0:2])
         # qgis_version_branch → 3.34
 
         python_version_full = platform.python_version()
         # python_version_full → 3.10.12
-        python_version_branch = '.'.join(python_version_full.split('.')[0:2])
+        python_version_branch = ".".join(python_version_full.split(".")[0:2])
         # python_version_branch → 3.10
 
         data = {
@@ -116,12 +114,13 @@ class Plausible:
         }
 
         # noinspection PyArgumentList
-        r: QNetworkReply = QgsNetworkAccessManager.instance().post(request, QByteArray(str.encode(json.dumps(data))))
+        r: QNetworkReply = QgsNetworkAccessManager.instance().post(
+            request, QByteArray(str.encode(json.dumps(data)))
+        )
         if not is_lizcloud:
             return True
 
-        message = (
-            f"Request HTTP OS process '{os.getpid()}' sent to '{plausible_url}' with domain '{plausible_domain} : ")
+        message = f"Request HTTP OS process '{os.getpid()}' sent to '{plausible_url}' with domain '{plausible_domain} : "
         if r.error() == QNetworkReply.NetworkError.NoError:
             logger.info(message + "OK")
         else:
