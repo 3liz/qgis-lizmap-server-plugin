@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+    "hidden": {
+      "type": "boolean"
+    },
+    "name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "hidden",
+    "name"
+  ],
+  "type": "object"
+}

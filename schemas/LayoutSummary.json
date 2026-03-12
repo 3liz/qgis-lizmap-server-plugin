@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "atlasEnabled": {
+      "type": "boolean"
+    },
+    "atlasCoverageLayer": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "atlasEnabled"
+  ],
+  "title": "LayoutSummary",
+  "type": "object"
+}

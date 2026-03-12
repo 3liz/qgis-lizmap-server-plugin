@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "htmlState": {
+      "type": "boolean"
+    },
+    "text": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "htmlState",
+    "text"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,16 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "expression": {
+      "type": "string"
+    },
+    "applyOnUpdate": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "expression",
+    "applyOnUpdate"
+  ],
+  "type": "object"
+}

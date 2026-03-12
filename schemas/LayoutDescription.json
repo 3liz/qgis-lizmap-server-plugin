@@ -1,0 +1,41 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "atlasEnabled": {
+      "type": "boolean"
+    },
+    "atlasCoverageLayer": {
+      "type": "string"
+    },
+    "pages": {
+      "items": {
+        "$ref": "./LayoutPage.json"
+      },
+      "type": "array"
+    },
+    "maps": {
+      "items": {
+        "$ref": "./LayoutMap.json"
+      },
+      "type": "array"
+    },
+    "labels": {
+      "items": {
+        "$ref": "./LayoutLabel.json"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "atlasEnabled",
+    "pages",
+    "maps",
+    "labels"
+  ],
+  "title": "LayoutDescription",
+  "type": "object"
+}

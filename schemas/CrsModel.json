@@ -1,0 +1,28 @@
+{
+  "additionalProperties": false,
+  "description": "CRS",
+  "properties": {
+    "authId": {
+      "description": "The authority Id of the projection",
+      "type": "string"
+    },
+    "proj": {
+      "description": "The proj string for the crs",
+      "type": "string"
+    },
+    "srid": {
+      "description": "The Postgis SRID",
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "authId",
+    "proj",
+    "srid",
+    "description"
+  ],
+  "type": "object"
+}

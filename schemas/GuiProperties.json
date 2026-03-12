@@ -1,0 +1,15 @@
+{
+  "additionalProperties": false,
+  "description": "Gui properties",
+  "properties": {
+    "backgroundColor": {
+      "format": "color",
+      "type": "string"
+    },
+    "selectionColor": {
+      "format": "color",
+      "type": "string"
+    }
+  },
+  "type": "object"
+}

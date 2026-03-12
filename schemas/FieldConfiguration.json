@@ -1,0 +1,22 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "flags": {
+      "type": "string"
+    },
+    "hideFromWms": {
+      "type": "boolean"
+    },
+    "hideFromWfs": {
+      "type": "boolean"
+    },
+    "editWidget": {
+      "$ref": "./EditWidget.json"
+    }
+  },
+  "required": [
+    "hideFromWms",
+    "hideFromWfs"
+  ],
+  "type": "object"
+}

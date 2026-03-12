@@ -1,0 +1,13 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "columns": {
+      "default": [],
+      "items": {
+        "$ref": "./AttributeTableColumn.json"
+      },
+      "type": "array"
+    }
+  },
+  "type": "object"
+}

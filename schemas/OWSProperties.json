@@ -1,0 +1,105 @@
+{
+  "additionalProperties": false,
+  "description": "Ows properties",
+  "properties": {
+    "owsServiceTitle": {
+      "type": "string"
+    },
+    "owsServiceAbstract": {
+      "type": "string"
+    },
+    "owsServiceKeywords": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "owsOnlineResource": {
+      "type": "string"
+    },
+    "owsServiceContactMail": {
+      "type": "string"
+    },
+    "owsServiceContactOrganization": {
+      "type": "string"
+    },
+    "owsServiceContactPerson": {
+      "type": "string"
+    },
+    "owsServiceContactPhone": {
+      "type": "string"
+    },
+    "wwsMaxHeight": {
+      "type": "integer"
+    },
+    "wmsMaxWidth": {
+      "type": "integer"
+    },
+    "wmsExtent": {
+      "oneOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array"
+        }
+      ]
+    },
+    "wmsRestrictedLayers": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "wmsMaxAtlasFeatures": {
+      "type": "integer"
+    },
+    "wmsRestrictedComposers": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "wmsUseLayerIds": {
+      "type": "boolean"
+    },
+    "wmsFeatureInfoAddWktGeometry": {
+      "type": "boolean"
+    },
+    "wfsLayersIds": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "owsServiceTitle",
+    "owsServiceAbstract",
+    "owsServiceKeywords",
+    "owsOnlineResource",
+    "owsServiceContactMail",
+    "owsServiceContactOrganization",
+    "owsServiceContactPerson",
+    "owsServiceContactPhone",
+    "wwsMaxHeight",
+    "wmsMaxWidth",
+    "wmsRestrictedLayers",
+    "wmsMaxAtlasFeatures",
+    "wmsRestrictedComposers",
+    "wmsUseLayerIds",
+    "wmsFeatureInfoAddWktGeometry",
+    "wfsLayersIds"
+  ],
+  "type": "object"
+}

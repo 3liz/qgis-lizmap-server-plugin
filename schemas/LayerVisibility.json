@@ -1,0 +1,24 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "visible": {
+      "type": "boolean"
+    },
+    "style": {
+      "type": "string"
+    },
+    "expanded": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "visible",
+    "style",
+    "expanded"
+  ],
+  "type": "object"
+}

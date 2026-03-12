@@ -1,0 +1,19 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "current": {
+      "type": "string"
+    },
+    "styles": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "current",
+    "styles"
+  ],
+  "type": "object"
+}

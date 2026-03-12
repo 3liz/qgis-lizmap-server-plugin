@@ -1,0 +1,20 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "joinLayerId": {
+      "type": "string"
+    },
+    "joinFieldName": {
+      "type": "string"
+    },
+    "targetFieldName": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "joinLayerId",
+    "joinFieldName",
+    "targetFieldName"
+  ],
+  "type": "object"
+}

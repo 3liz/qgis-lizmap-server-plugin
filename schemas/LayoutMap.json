@@ -1,0 +1,35 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "width": {
+      "type": "number"
+    },
+    "heigth": {
+      "type": "number"
+    },
+    "uuid": {
+      "type": "string"
+    },
+    "page": {
+      "type": "integer"
+    },
+    "overviewMap": {
+      "type": "string"
+    },
+    "grid": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "width",
+    "heigth",
+    "uuid",
+    "page",
+    "grid"
+  ],
+  "type": "object"
+}
