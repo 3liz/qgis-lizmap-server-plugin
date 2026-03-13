@@ -1,18 +1,33 @@
 from functools import cached_property
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+)
+
+from urllib.parse import SplitResult as Url
+
+from qgis.core import QgsProject
 
 from qjazz_core.qgis import QgisPluginService
 from qjazz_core import logger
 from qjazz_cache.prelude import CacheEntry, CacheManager, ProjectMetadata
 from qjazz_cache.prelude import CheckoutStatus as Co
 
-from qgis.core import QgsProject
 
 from .common import (
     ContextABC,
-    ProjectCacheError,
     ServerMetadata,
 )
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    LayerDetails = TypeVar("LayerDetails")
 
 
 SERVER_CONTEXT_NAME = "QJazz"
@@ -24,7 +39,7 @@ class Context(ContextABC):
 
     def _checkout(self, uri: str) -> Tuple[ProjectMetadata | CacheEntry, Co]:
         return self._cm.checkout(
-            self._cm.resolve_path(uri, allow_direct=True),
+            self._cm.resolve_path(uri, allow_direct=False),
         )
 
     @property
@@ -39,32 +54,60 @@ class Context(ContextABC):
     def documentation_url(self) -> str:
         return ""
 
-    @property
-    def search_paths(self) -> List[str]:
-        """Return search paths for projects"""
-        return list(self._cm.conf.search_paths)
+    def load_project_def(
+        self,
+        md: Any,
+        *,
+        with_details: bool,
+        with_layouts: bool,
+    ) -> Tuple[Optional[QgsProject], Dict[str, "LayerDetails"]]:
 
-    def project(self, uri: str) -> Optional[QgsProject]:
-        """Return the project in cache specified by `uri`"""
-        md, co_status = self._checkout(uri)
+        from ..api import builder
 
-        rv = None
+        if isinstance(md, Url):
+            md = md.geturl()
 
-        match co_status:
-            case Co.UNCHANGED | Co.NEEDUPDATE:
-                rv = md.project
-            case Co.NEW:
-                raise ProjectCacheError(403, f"Requested project not in cache: {uri}")
-            case Co.NOTFOUND:
-                # Unexistent project
-                raise ProjectCacheError(404, f"Requested project not found: {uri}")
-            case Co.REMOVED:
-                # Do not return a removed project
-                # Since layer's data may not exist
-                # anymore
-                raise ProjectCacheError(410, f"Requested removed project: {uri}")
+        if isinstance(md, str):
+            match self._checkout(md):
+                case Co.REMOVED | Co.NOTFOUND:
+                    return None, {}
+                case _:
+                    pass
+        elif not isinstance(md, ProjectMetadata):
+            raise ValueError(f"QJazz: Invalid project locator: {md}")
 
-        return rv
+        details: dict[str, "LayerDetails"] = {}
+
+        def load(uri: str) -> QgsProject:
+            nonlocal details
+            project, details = builder.open_project_def(  # type: ignore [assignment]
+                uri,
+                with_details=with_details,
+                with_layouts=with_layouts,
+            )
+            if not project:
+                logger.error(f"Failed to load project {uri}")
+                raise FileNotFoundError(uri)
+            return project
+
+        handler = self._cm.get_protocol_handler(md.scheme)
+        try:
+            project = handler.load_project(md, load)
+        except FileNotFoundError:
+            return None, {}
+
+        return project, details
+
+    def collect_projects(self, location: str) -> Iterator[tuple[Any, str]]:
+        """Collect all projects from 'location'"""
+        return self._cm.collect_projects(location)
+
+    def resolve_path(self, location: str) -> Optional[Url]:
+        """Return the url corresponding to the public path"""
+        try:
+            return self._cm.resolve_path(location)
+        except CacheManager.ResourceNotAllowed:
+            return None
 
     def installed_plugins(
         self,

@@ -16,6 +16,12 @@ from .tools import check_environment_variable, version
 
 from . import logger
 
+try:
+    from .api.handler import LizmapApi
+    lizmap_api_enabled = True
+except ModuleNotFoundError as err:
+    logger.error(f"Cannot load REST api because of missing required modules: {err}")
+    lizmap_api_enabled = False
 
 class LizmapServer:
     """Plugin for QGIS server this plugin loads Lizmap filter"""
@@ -40,6 +46,9 @@ class LizmapServer:
         service_registry.registerApi(lizmap_api)
         lizmap_api.registerHandler(ServerInfoHandler())
         logger.info('API "/lizmap" loaded with the server info handler')
+
+        if lizmap_api_enabled:
+            service_registry.registerApi(LizmapApi(self.server_iface))
 
         check_environment_variable()
 

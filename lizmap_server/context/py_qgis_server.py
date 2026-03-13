@@ -1,16 +1,31 @@
 from functools import cached_property
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+)
+from urllib.parse import SplitResult as Url
 
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple
+from qgis.core import QgsProject
 
 from pyqgisserver.plugins import plugin_list, plugin_metadata
-from pyqgisserver.qgscache.cachemanager import CacheType, get_cacheservice
-from qgis.core import QgsProject
+from pyqgisserver.qgscache.cachemanager import get_cacheservice
 
 from .common import (
     ContextABC,
-    ProjectCacheError,
     ServerMetadata,
 )
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    LayerDetails = TypeVar("LayerDetails")
+
 
 SERVER_CONTEXT_NAME = "Py-QGIS-Server"
 
@@ -31,24 +46,40 @@ class Context(ContextABC):
     def documentation_url(self) -> str:
         return "https://docs.3liz.org/py-qgis-server/"
 
-    @property
-    def search_paths(self) -> List[str]:
-        """Return search paths for projects"""
-        return []
+    def load_project_def(
+        self,
+        md: Any,
+        *,
+        with_details: bool,
+        with_layouts: bool,
+    ) -> Tuple[Optional[QgsProject], Dict[str, "LayerDetails"]]:
+        from ..api import builder
 
-    def project(self, uri: str) -> QgsProject:
-        """Return the project specified by `uri`"""
-        details = self._cm.peek(uri)
-        if details:
-            return details.project
+        if isinstance(md, Url):
+            if md.scheme in ("file", ""):
+                md = md.path
+            else:
+                md = md.geturl()
+        elif not isinstance(md, str):
+            raise ValueError(f"Invalid uri: {md}")
 
-        # Find by filename
-        for cache_t in (CacheType.LRU, CacheType.STATIC):
-            for _, d in self._cm.items(cache_t):
-                if d.project.fileName() == uri:
-                    return d.project
+        return builder.open_project_def(
+            md,
+            with_details=with_details,
+            with_layouts=with_layouts,
+        )  # type: ignore [return-value]
 
-        raise ProjectCacheError(403, f"Project not found in cache: {uri}")
+    def collect_projects(self, location: str) -> Iterator[Tuple[Any, str]]:
+        """Collect all projects from 'location'"""
+        from ..api import defaults
+
+        return defaults.collect_projects(SERVER_CONTEXT_NAME, location)
+
+    def resolve_path(self, location: str) -> Optional[Url]:
+        """Return the url corresponding to the public path"""
+        from ..api import defaults
+
+        return defaults.resolve_project_uri(location)
 
     def installed_plugins(
         self,

@@ -1,11 +1,11 @@
 """Layer fields description"""
 
-from .models import Field, JsonModel, JsonObject, Option
+from .models import Field, JsonModel, JsonMap, Option
 
 
 class EditWidget(JsonModel):
     type_: str = Field(alias="type")
-    config: JsonObject
+    config: JsonMap
 
 
 class FieldDefault(JsonModel):

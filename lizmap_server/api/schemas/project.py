@@ -22,7 +22,7 @@ from .models import (
 Extent2D = Annotated[Sequence[float], Len(min_length=4, max_length=4)]
 Extent3D = Annotated[Sequence[float], Len(min_length=6, max_length=6)]
 
-Extent = OneOf[Extent2D|Extent3D]
+Extent = OneOf[Extent2D | Extent3D]
 
 ProjectCrs = CrsModel
 

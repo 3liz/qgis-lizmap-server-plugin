@@ -51,6 +51,9 @@ lint = [
     "bandit",
     "lxml-stubs",
 ]
+tools = [
+    "ipython",
+]
 
 [tool.yapt]
 plugin_source = "lizmap_server"

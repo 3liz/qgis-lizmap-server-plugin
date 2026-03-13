@@ -1,5 +1,5 @@
 {
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "joinLayerId": {
       "type": "string"

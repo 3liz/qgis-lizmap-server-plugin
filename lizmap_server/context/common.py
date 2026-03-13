@@ -3,7 +3,17 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, is_dataclass
 from datetime import datetime, timezone
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
+from urllib.parse import SplitResult as Url
 
 from qgis.core import QgsProject
 
@@ -19,6 +29,12 @@ class DataclassEncoder(json.JSONEncoder):
         if is_dataclass(o):
             return asdict(o)
         return super().default(o)
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    LayerDetails = TypeVar("LayerDetails")
 
 
 @dataclass(frozen=True)
@@ -60,15 +76,29 @@ class ContextABC(ABC):
         """Return documentation URL"""
         ...
 
-    @property
     @abstractmethod
-    def search_paths(self) -> List[str]:
-        """Return search paths for projects"""
+    def load_project_def(
+        self,
+        md: Any,
+        *,
+        with_details: bool,
+        with_layouts: bool,
+    ) -> Tuple[Optional[QgsProject], Dict[str, "LayerDetails"]]:
+        """Load a project definition
+
+        A project definition is project loaded without its layers. It is
+        used by the api to build metadata about the project.
+        """
         ...
 
     @abstractmethod
-    def project(self, uri: str) -> QgsProject:
-        """Return the project specified by `uri`"""
+    def collect_projects(self, location: str) -> Iterator[Tuple[Any, str]]:
+        """Collect all projects from 'location'"""
+        ...
+
+    @abstractmethod
+    def resolve_path(self, location: str) -> Optional[Url]:
+        """Return the url corresponding to the public path"""
         ...
 
     @abstractmethod

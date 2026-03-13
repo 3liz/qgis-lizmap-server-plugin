@@ -1,5 +1,5 @@
 {
-  "additionalProperties": false,
+  "additionalProperties": true,
   "description": "Project description",
   "properties": {
     "title": {

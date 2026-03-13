@@ -2,9 +2,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import (
+    Dict,
     Iterator,
     Optional,
     Sequence,
+    Tuple,
 )
 
 from pydantic_extra_types.color import Color
@@ -57,7 +59,7 @@ def project_last_save_datetime(project: QgsProject) -> Optional[datetime]:
 
 def project_description(
     project: QgsProject,
-    layers: Optional[dict[str, LayerDescription]] = None,
+    layers: Optional[Dict[str, LayerDescription]] = None,
 ) -> ProjectDescription:
     """Returns project description"""
     if layers is None:
@@ -262,9 +264,10 @@ def project_layout(project: QgsProject, name: str) -> Optional[LayoutDescription
 
 def open_project_def(
     uri: str,
+    *,
     with_details: bool = False,
-    with_layouts: bool = True,
-) -> tuple[Optional[QgsProject], dict[str, LayerDetails]]:
+    with_layouts: bool = False,
+) -> Tuple[Optional[QgsProject], Dict[str, LayerDetails]]:
     """Open a project definition without loading any layers"""
     from .builders.project import read_project
 

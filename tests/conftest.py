@@ -31,9 +31,24 @@ qgis_application = None
 
 
 @pytest.fixture(scope="session", autouse=True)
-def set_env():
+def set_env(request: pytest.FixtureRequest):
     os.environ["QGIS_SERVER_LIZMAP_REVEAL_SETTINGS"] = "TRUE"
     os.environ["CI"] = "True"
+
+    # Api context
+    rootpath = request.config.rootpath
+    os.environ["LIZMAP_PROJECTS_SEARCH_PATH"] = "/data"
+    os.environ["LIZMAP_PROJECTS_URI"] = f"{rootpath}/data"
+
+
+@pytest.fixture(scope="session")
+def rootdir(request: pytest.FixtureRequest) -> Path:
+    return request.config.rootpath
+
+
+@pytest.fixture(scope="session")
+def data(rootdir: Path) -> Path:
+    return rootdir.joinpath("data")
 
 
 def pytest_report_header(config):
@@ -82,7 +97,7 @@ def client(request: pytest.FixtureRequest) -> Client:
             # Activate debug headers
             os.environ["QGIS_WMTS_CACHE_DEBUG_HEADERS"] = "true"
 
-            rootdir = Path(request.config.rootdir.strpath)
+            rootdir = request.config.rootpath
 
             self.datapath = rootdir.joinpath("data")
             self.server = QgsServer()
