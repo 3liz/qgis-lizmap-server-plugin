@@ -86,8 +86,18 @@ def layer_description(
     layer_details: Optional[dict[str, LayerDetails]] = None,
 ) -> LayerDescription:
     """Build layer description"""
-    # Qgis 3.38+
-    properties = layer.serverProperties()
+
+    if Qgis.versionInt() < 33800:
+        abstract = layer.abstract()
+        datasource = layer.dataUrl()
+        keywords = layer.keywordList()
+    else:
+        # Qgis 3.38+
+        properties = layer.serverProperties()
+        abstract = properties.abstract()
+        datasource = properties.dataUrl()
+        keywords = properties.keywordList()
+
     project = project or layer.project()
 
     layer_type = layer.type()
@@ -137,14 +147,14 @@ def layer_description(
         id_=layer.id(),
         name=layer.name(),
         type_=layer.type().name.lower(),
-        abstract=properties.abstract(),
+        abstract=abstract,
         embedded=project.layerIsEmbedded(layer.id()) != "" if project else False,
         provider=provider_name,
-        datasource=properties.dataUrl(),
+        datasource=datasource,
         opacity=layer.opacity(),
         srs=to_crs(layer.crs()),
         style_manager=layer_style_manager(layer.styleManager()),
-        keywords=properties.keywordList(),
+        keywords=keywords,
         # Vector properties
         feature_renderer=feature_renderer,
         display_expression=display_expression,

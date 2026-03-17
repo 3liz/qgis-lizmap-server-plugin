@@ -18,6 +18,7 @@ from qgis.server import (
     QgsServerInterface,
 )
 
+from ..tools import plugin_path
 from ..server_info import server_info
 
 from . import builder
@@ -31,18 +32,19 @@ from .request import HTTPRequestDelegate
 from .schemas import (
     JsonModel,
     LayerDetails,
-    LayoutDescription,  # noqa F401
+    LayoutDescription,
     LayoutSummary,
-    ProjectDescription,  # noqa F401
+    ProjectDescription,
     ProjectSummary,
 )
+
+from .landingpage import v1
+
+from . import swagger
 
 #
 # Routes
 #
-
-def v1(path: str) -> str:
-    return f"/api/v1/{path}"
 
 
 class ProjectSummaryResponse(ProjectSummary):
@@ -62,6 +64,12 @@ def project_summary(project: QgsProject, links: Sequence[Link]) -> ProjectSummar
 class ProjectSummaries(JsonModel):
     projects: Sequence[ProjectSummaryResponse]
     links: Sequence[Link]
+
+
+swagger.model(ProjectSummary)
+swagger.model(ProjectDescription)
+swagger.model(LayerDetails)
+
 
 
 @routes.get(v1("projects/list/{PATH:.*}"))
@@ -98,7 +106,7 @@ def get_projects(request: HTTPRequestDelegate, **match_info):
                     Link.makelink(
                         request,
                         rel="related",
-                        path=f"projects/description?map={url}",
+                        path=v1(f"projects/description?p={url}"),
                     ),
                 ],
             )
@@ -106,7 +114,7 @@ def get_projects(request: HTTPRequestDelegate, **match_info):
     request.write_json(
         ProjectSummaries(
             projects=list(collect_projects()),
-            links=[Link.makelink(request, rel="self", path="projects/list/")],
+            links=[Link.makelink(request, rel="self", path=v1("projects/list/"))],
         )
     )
 
@@ -228,7 +236,7 @@ def get_project_layers(request: HTTPRequestDelegate, **match_info):
         raise HTTPError(404, reason="Layer not found")
 
     layer_details.links = [  # type: ignore [union-attr]
-        Link.makelink(request, rel="self", path=f"projects/layers/{layer_id}?p={loc}"),
+        Link.makelink(request, rel="self", path=v1(f"projects/layers/{layer_id}?p={loc}")),
     ]
     request.write_json(layer_details)
 
@@ -237,7 +245,10 @@ def get_project_layers(request: HTTPRequestDelegate, **match_info):
 #  Project's layout
 #
 
+swagger.model(LayoutDescription)
 
+
+@swagger.model
 class LayoutSummaries(JsonModel):
     layouts: Sequence[LayoutSummary]
 
@@ -281,14 +292,14 @@ def get_project_layouts(request: HTTPRequestDelegate, **match_info):
                 Link.makelink(
                     request,
                     rel="related",
-                    path=f"projects/layouts/{quote(layout.name)}?map={uri}",
+                    path=v1(f"projects/layouts/{quote(layout.name)}?p={uri}"),
                     title=layout.name,
                 ),
             ]
             yield layout
 
     summaries = LayoutSummaries(layouts=list(layouts()))
-    summaries.links = [Link.makelink(request, rel="self", path="projects/layouts/")]  # type: ignore [attr-defined]
+    summaries.links = [Link.makelink(request, rel="self", path=v1("projects/layouts/"))]  # type: ignore [attr-defined]
 
     request.write_json(summaries)
 
@@ -340,19 +351,31 @@ def get_layout(request: HTTPRequestDelegate, **match_info):
 
     request.write_json(layout)
 
+
 #
 # Lizmap server info
 #
-
-@routes.get("/server.json")
+@routes.get("/server.json", doc=False)
 def get_server_info(request: HTTPRequestDelegate, **match_info):
     request.write_json(server_info(request.server_context, request.serverInterface))
+
+
+#
+# Open api
+#
+@routes.get(v1(""), doc=False)
+def openapi(request: HTTPRequestDelegate, **match_info):
+    content = plugin_path("api").joinpath("openapi.json").read_bytes()
+    request.set_header("Content-Type", "application/json")
+    request.set_header("Content-Length", str(len(content)))
+    request.write(content)
 
 #
 # QgsApi
 #
 
-ROOTPATH="/lizmap"
+ROOTPATH = "/lizmap"
+
 
 class LizmapApi(QgsServerApi):
     __instances: list[QgsServerApi] = []  #  noqa RUF012
@@ -369,6 +392,7 @@ class LizmapApi(QgsServerApi):
 
     def version(self) -> str:
         from ..tools import version
+
         return version()
 
     def rootPath(self) -> str:

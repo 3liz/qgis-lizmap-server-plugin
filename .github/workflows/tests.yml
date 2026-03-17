@@ -21,8 +21,8 @@ jobs:
         run: pip install -r requirements/lint.txt
 
       - name: Run linter
-        run: |
-            ruff check --preview --output-format=concise lizmap_server
+        run: | 
+            ruff check --output-format=concise lizmap_server
             mypy lizmap_server
 
       - name: Run security check

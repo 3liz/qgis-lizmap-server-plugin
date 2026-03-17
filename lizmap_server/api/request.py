@@ -127,7 +127,7 @@ class HTTPRequestDelegate:
         host = self.host
         protocol = self.scheme
 
-        rootpath = self._context.matchedPath()
+        rootpath = self._context.matchedPath().removesuffix("/")
 
         # Check for X-Forwarded-Host header
         forwarded_host = self.header("X-Forwarded-Host")

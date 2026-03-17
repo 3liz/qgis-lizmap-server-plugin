@@ -173,6 +173,9 @@ class RouteDef:
     me: QgsServerRequest.Method
     route: Route
     fn: HandlerFn
+    method: str
+    path: str
+    doc: bool
 
 
 ROUTES: list[RouteDef] = []
@@ -199,22 +202,31 @@ def find_route(me: QgsServerRequest.Method, path: str) -> tuple[RouteDef, dict[s
     raise HTTPNotFound()
 
 
-def route(method: str, path: str) -> Callable[[HandlerFn], HandlerFn]:
+def route(method: str, path: str, *, doc: bool = True) -> Callable[[HandlerFn], HandlerFn]:
     me = METHODS[method]
     route = build_route(path)
 
     logger.debug(f"Adding route: {path} [{method}]")
 
     def inner(fn: HandlerFn) -> HandlerFn:
-        ROUTES.append(RouteDef(me, route, fn))
+        ROUTES.append(
+            RouteDef(
+                me=me,
+                route=route,
+                fn=fn,
+                method=method,
+                path=path,
+                doc=doc,
+            )
+        )
         return fn
 
     return inner
 
 
-def get(path: str) -> Callable[[HandlerFn], HandlerFn]:
-    return route("get", path)
+def get(path: str, **kwargs) -> Callable[[HandlerFn], HandlerFn]:
+    return route("get", path, **kwargs)
 
 
-def post(path: str) -> Callable[[HandlerFn], HandlerFn]:
-    return route("post", path)
+def post(path: str, **kwargs) -> Callable[[HandlerFn], HandlerFn]:
+    return route("post", path, **kwargs)

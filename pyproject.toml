@@ -39,20 +39,27 @@ dev = [
     "coverage[toml]",
     {include-group = "tests"},
     {include-group = "lint"},
+    "ruamel.yaml",
 ]
 tests = [
     "pytest >= 5.3",
     "xmldiff",
     "Pillow",
+    {include-group = "required"},
 ]
 lint = [
     "ruff",
     "mypy",
     "bandit",
     "lxml-stubs",
+    {include-group = "required"},
 ]
 tools = [
     "ipython",
+]
+required = [
+    "pydantic",
+    "pydantic-extra-types",
 ]
 
 [tool.yapt]
@@ -145,6 +152,7 @@ module = [
     "qjazz_core.*",
     "qjazz_cache.*",
     "pyqgisserver.*",
+    "ruamel.*",
 ]
 ignore_missing_imports = true
 

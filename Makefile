@@ -44,6 +44,9 @@ requirements/%.txt: uv.lock
 		-q -o requirements/$*.txt; \
 
 
+openapi:
+	@ uv run python -m $(PYTHON_MODULE).api.swagger > $(PYTHON_MODULE)/api/openapi.json
+
 sync:
 	@ uv sync --all-groups --all-extras
 

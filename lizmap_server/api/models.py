@@ -13,7 +13,7 @@ from .request import HTTPRequestDelegate
 
 
 def _href(request: HTTPRequestDelegate, path: str) -> str:
-    return request.public_url(f"/{path}")
+    return request.public_url(f"{path}")
 
 
 class Link(JsonModel):

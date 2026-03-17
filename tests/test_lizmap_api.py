@@ -121,3 +121,24 @@ def test_lizmap_api_projects_layouts(client):
     content = json.loads(rv.content.decode("utf-8"))
     print("\n::test_lizmap_server_api::layouts::1\n", content)
 
+
+def test_lizmap_api_openapi(client):
+    """Test lizmap openapi specifications"""
+    rv = client.get("/lizmap/api/v1/")
+    assert rv.status_code == 200
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    content = json.loads(rv.content.decode("utf-8"))
+    print("\n::test_lizmap_openapi::content\n", content)
+
+
+def test_lizmap_api_landinpage(client):
+    """Test lizmap landing page"""
+    rv = client.get("/lizmap/")
+    assert rv.status_code == 200
+    assert rv.headers.get("Content-Type", "").find("application/json") == 0
+
+    content = json.loads(rv.content.decode("utf-8"))
+    print("\n::test_landingpage::content\n", content)
+
+

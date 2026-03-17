@@ -1,0 +1,1230 @@
+{
+    "openapi": "3.0.0",
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Landing page",
+                "description": "Landing page for Lizmap api\n",
+                "tags": [
+                    "api"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the Landing page data as JSon\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#definitions/LandingPage"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/list/{PATH:.*}": {
+            "get": {
+                "summary": "List projects",
+                "description": "List available projects\n",
+                "tags": [
+                    "project"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The list of project summaries\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ProjectSummaries"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/description": {
+            "get": {
+                "summary": "Project description",
+                "description": "Return a project description\n",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "map",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "The project path"
+                    }
+                ],
+                "tags": [
+                    "project"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project's description\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/ProjectDescription"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exists\n",
+                        "content": {
+                            "application/json": {
+                                "schema": null
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/layers/{Id}": {
+            "get": {
+                "summary": "Project's layer details",
+                "description": "Return the project layers details for layer {Id}\n",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "Id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "Project's layer id"
+                    },
+                    {
+                        "in": "query",
+                        "name": "p",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "The project path"
+                    }
+                ],
+                "tags": [
+                    "project"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project's layer details\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/LayerDetails"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The layer does not exists\n",
+                        "content": {
+                            "application/json": {
+                                "schema": null
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/layouts/": {
+            "get": {
+                "summary": "Project's layout summary",
+                "description": "Return the project layout summaries\n",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "p",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "The project path"
+                    }
+                ],
+                "tags": [
+                    "layout"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The `roject's layout summaries\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/LayoutSummaries"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The project does not exists\n",
+                        "content": {
+                            "application/json": {
+                                "schema": null
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/projects/layouts/{Name}": {
+            "get": {
+                "summary": "Project's layout details",
+                "description": "Return the project's layout details for layout {Id}\n",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "Name",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "Project's layout name"
+                    },
+                    {
+                        "in": "query",
+                        "name": "p",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true,
+                        "description": "The project path"
+                    }
+                ],
+                "tags": [
+                    "layout"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The project's layer details\n",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/definitions/LayoutDescription"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The layout or the project does not exists\n",
+                        "content": {
+                            "application/json": {
+                                "schema": null
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Link": {
+            "additionalProperties": true,
+            "properties": {
+                "href": {
+                    "type": "string"
+                },
+                "rel": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "title": {
+                    "default": "",
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "length": {
+                    "type": "integer"
+                },
+                "templated": {
+                    "default": false,
+                    "type": "boolean"
+                },
+                "hreflang": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "href",
+                "rel",
+                "mimeType"
+            ],
+            "type": "object"
+        },
+        "LandingPage": {
+            "additionalProperties": true,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "links": {
+                    "items": {
+                        "$ref": "#/definitions/Link"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "description",
+                "links"
+            ],
+            "title": "LandingPage",
+            "type": "object"
+        },
+        "ProjectSummary": {
+            "additionalProperties": true,
+            "description": "Project summary",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "saveDateTime": {
+                    "format": "date-time",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "version"
+            ],
+            "title": "ProjectSummary",
+            "type": "object"
+        },
+        "CrsModel": {
+            "additionalProperties": true,
+            "description": "CRS",
+            "properties": {
+                "authId": {
+                    "description": "The authority Id of the projection",
+                    "type": "string"
+                },
+                "proj": {
+                    "description": "The proj string for the crs",
+                    "type": "string"
+                },
+                "srid": {
+                    "description": "The Postgis SRID",
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "authId",
+                "proj",
+                "srid",
+                "description"
+            ],
+            "type": "object"
+        },
+        "FeatureRenderer": {
+            "additionalProperties": true,
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "categories": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                }
+            },
+            "required": [
+                "type",
+                "categories"
+            ],
+            "type": "object"
+        },
+        "GuiProperties": {
+            "additionalProperties": true,
+            "description": "Gui properties",
+            "properties": {
+                "backgroundColor": {
+                    "format": "color",
+                    "type": "string"
+                },
+                "selectionColor": {
+                    "format": "color",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "LayerDescription": {
+            "additionalProperties": true,
+            "description": "Layer description",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "abstract": {
+                    "type": "string"
+                },
+                "embedded": {
+                    "type": "boolean"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "datasource": {
+                    "type": "string"
+                },
+                "opacity": {
+                    "type": "number"
+                },
+                "srs": {
+                    "$ref": "#/definitions/CrsModel"
+                },
+                "styleManager": {
+                    "$ref": "#/definitions/StyleManager"
+                },
+                "keywords": {
+                    "type": "string"
+                },
+                "attributeAliases": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "excludeAttributeWfs": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "excludeAttributeWms": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "displayExpression": {
+                    "type": "string"
+                },
+                "vectorJoins": {
+                    "items": {
+                        "$ref": "#/definitions/VectorLayerJoinInfo"
+                    },
+                    "type": "array"
+                },
+                "featureRenderer": {
+                    "$ref": "#/definitions/FeatureRenderer"
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "type",
+                "abstract",
+                "embedded",
+                "provider",
+                "datasource",
+                "opacity",
+                "styleManager",
+                "keywords",
+                "attributeAliases",
+                "excludeAttributeWfs",
+                "excludeAttributeWms",
+                "vectorJoins"
+            ],
+            "type": "object"
+        },
+        "LayerTreeGroup": {
+            "additionalProperties": true,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "customProperties": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "mutuallyExclusive": {
+                    "type": "boolean"
+                },
+                "items": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/LayerTreeLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/LayerTreeGroup"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "customProperties",
+                "mutuallyExclusive",
+                "items"
+            ],
+            "type": "object"
+        },
+        "LayerTreeLayer": {
+            "additionalProperties": true,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "customProperties": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "id",
+                "customProperties"
+            ],
+            "type": "object"
+        },
+        "LayerTreeRoot": {
+            "additionalProperties": true,
+            "properties": {
+                "customProperties": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "customOrderEnabled": {
+                    "type": "boolean"
+                },
+                "customOrderItems": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "items": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/definitions/LayerTreeLayer"
+                            },
+                            {
+                                "$ref": "#/definitions/LayerTreeGroup"
+                            }
+                        ]
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "customProperties",
+                "customOrderEnabled",
+                "customOrderItems",
+                "items"
+            ],
+            "type": "object"
+        },
+        "LayerVisibility": {
+            "additionalProperties": true,
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "visible": {
+                    "type": "boolean"
+                },
+                "style": {
+                    "type": "string"
+                },
+                "expanded": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "id",
+                "visible",
+                "style",
+                "expanded"
+            ],
+            "type": "object"
+        },
+        "LayerVisibilityPreset": {
+            "additionalProperties": true,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "layers": {
+                    "items": {
+                        "$ref": "#/definitions/LayerVisibility"
+                    },
+                    "type": "array"
+                },
+                "checkedGroupNodes": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                },
+                "expandedGroupNodes": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                }
+            },
+            "required": [
+                "name",
+                "layers",
+                "checkedGroupNodes",
+                "expandedGroupNodes"
+            ],
+            "type": "object"
+        },
+        "OWSProperties": {
+            "additionalProperties": true,
+            "description": "Ows properties",
+            "properties": {
+                "owsServiceTitle": {
+                    "type": "string"
+                },
+                "owsServiceAbstract": {
+                    "type": "string"
+                },
+                "owsServiceKeywords": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "owsOnlineResource": {
+                    "type": "string"
+                },
+                "owsServiceContactMail": {
+                    "type": "string"
+                },
+                "owsServiceContactOrganization": {
+                    "type": "string"
+                },
+                "owsServiceContactPerson": {
+                    "type": "string"
+                },
+                "owsServiceContactPhone": {
+                    "type": "string"
+                },
+                "wwsMaxHeight": {
+                    "type": "integer"
+                },
+                "wmsMaxWidth": {
+                    "type": "integer"
+                },
+                "wmsExtent": {
+                    "oneOf": [
+                        {
+                            "items": {
+                                "type": "number"
+                            },
+                            "maxItems": 4,
+                            "minItems": 4,
+                            "type": "array"
+                        },
+                        {
+                            "items": {
+                                "type": "number"
+                            },
+                            "maxItems": 6,
+                            "minItems": 6,
+                            "type": "array"
+                        }
+                    ]
+                },
+                "wmsRestrictedLayers": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "wmsMaxAtlasFeatures": {
+                    "type": "integer"
+                },
+                "wmsRestrictedComposers": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "wmsUseLayerIds": {
+                    "type": "boolean"
+                },
+                "wmsFeatureInfoAddWktGeometry": {
+                    "type": "boolean"
+                },
+                "wfsLayersIds": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "owsServiceTitle",
+                "owsServiceAbstract",
+                "owsServiceKeywords",
+                "owsOnlineResource",
+                "owsServiceContactMail",
+                "owsServiceContactOrganization",
+                "owsServiceContactPerson",
+                "owsServiceContactPhone",
+                "wwsMaxHeight",
+                "wmsMaxWidth",
+                "wmsRestrictedLayers",
+                "wmsMaxAtlasFeatures",
+                "wmsRestrictedComposers",
+                "wmsUseLayerIds",
+                "wmsFeatureInfoAddWktGeometry",
+                "wfsLayersIds"
+            ],
+            "type": "object"
+        },
+        "StyleManager": {
+            "additionalProperties": true,
+            "properties": {
+                "current": {
+                    "type": "string"
+                },
+                "styles": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "current",
+                "styles"
+            ],
+            "type": "object"
+        },
+        "VectorLayerJoinInfo": {
+            "additionalProperties": true,
+            "properties": {
+                "joinLayerId": {
+                    "type": "string"
+                },
+                "joinFieldName": {
+                    "type": "string"
+                },
+                "targetFieldName": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "joinLayerId",
+                "joinFieldName",
+                "targetFieldName"
+            ],
+            "type": "object"
+        },
+        "ProjectDescription": {
+            "additionalProperties": true,
+            "description": "Project description",
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "saveDateTime": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "projectCrs": {
+                    "$ref": "#/definitions/CrsModel"
+                },
+                "owsProperties": {
+                    "$ref": "#/definitions/OWSProperties"
+                },
+                "guiProperties": {
+                    "$ref": "#/definitions/GuiProperties"
+                },
+                "layerTreeRoot": {
+                    "$ref": "#/definitions/LayerTreeRoot"
+                },
+                "visibilityPresets": {
+                    "items": {
+                        "$ref": "#/definitions/LayerVisibilityPreset"
+                    },
+                    "type": "array"
+                },
+                "customVariables": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "layers": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/LayerDescription"
+                    },
+                    "type": "object"
+                }
+            },
+            "required": [
+                "title",
+                "version",
+                "layerTreeRoot",
+                "visibilityPresets",
+                "customVariables",
+                "layers"
+            ],
+            "title": "ProjectDescription",
+            "type": "object"
+        },
+        "AttributeTableColumn": {
+            "additionalProperties": true,
+            "properties": {
+                "type": {
+                    "title": "Type",
+                    "type": "string"
+                },
+                "hidden": {
+                    "title": "Hidden",
+                    "type": "boolean"
+                },
+                "name": {
+                    "title": "Name",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "type",
+                "hidden",
+                "name"
+            ],
+            "title": "AttributeTableColumn",
+            "type": "object"
+        },
+        "AttributeTableConfig": {
+            "additionalProperties": true,
+            "properties": {
+                "columns": {
+                    "default": [],
+                    "items": {
+                        "$ref": "#/definitions/AttributeTableColumn"
+                    },
+                    "title": "Columns",
+                    "type": "array"
+                }
+            },
+            "title": "AttributeTableConfig",
+            "type": "object"
+        },
+        "EditWidget": {
+            "additionalProperties": true,
+            "properties": {
+                "type": {
+                    "title": "Type",
+                    "type": "string"
+                },
+                "config": {
+                    "title": "Config",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "type",
+                "config"
+            ],
+            "title": "EditWidget",
+            "type": "object"
+        },
+        "FieldConfiguration": {
+            "additionalProperties": true,
+            "properties": {
+                "flags": {
+                    "title": "Flags",
+                    "type": "string"
+                },
+                "hideFromWms": {
+                    "title": "Hidefromwms",
+                    "type": "boolean"
+                },
+                "hideFromWfs": {
+                    "title": "Hidefromwfs",
+                    "type": "boolean"
+                },
+                "editWidget": {
+                    "$ref": "#/definitions/EditWidget"
+                }
+            },
+            "required": [
+                "hideFromWms",
+                "hideFromWfs"
+            ],
+            "title": "FieldConfiguration",
+            "type": "object"
+        },
+        "FieldConstraint": {
+            "additionalProperties": true,
+            "properties": {
+                "constraints": {
+                    "title": "Constraints",
+                    "type": "integer"
+                },
+                "notnullStrength": {
+                    "title": "Notnullstrength",
+                    "type": "integer"
+                },
+                "uniqueStrength": {
+                    "title": "Uniquestrength",
+                    "type": "integer"
+                },
+                "expressionStrength": {
+                    "title": "Expressionstrength",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "constraints",
+                "notnullStrength",
+                "uniqueStrength",
+                "expressionStrength"
+            ],
+            "title": "FieldConstraint",
+            "type": "object"
+        },
+        "FieldConstraintExpression": {
+            "additionalProperties": true,
+            "properties": {
+                "expression": {
+                    "title": "Expression",
+                    "type": "string"
+                },
+                "description": {
+                    "title": "Description",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "expression",
+                "description"
+            ],
+            "title": "FieldConstraintExpression",
+            "type": "object"
+        },
+        "FieldDefault": {
+            "additionalProperties": true,
+            "properties": {
+                "expression": {
+                    "title": "Expression",
+                    "type": "string"
+                },
+                "applyOnUpdate": {
+                    "title": "Applyonupdate",
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "expression",
+                "applyOnUpdate"
+            ],
+            "title": "FieldDefault",
+            "type": "object"
+        },
+        "RasterLayerDetails": {
+            "additionalProperties": true,
+            "properties": {
+                "provider": {
+                    "title": "Provider",
+                    "type": "string"
+                },
+                "type": {
+                    "const": "raster",
+                    "default": "raster",
+                    "title": "Type",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "provider"
+            ],
+            "title": "RasterLayerDetails",
+            "type": "object"
+        },
+        "VectorLayerDetails": {
+            "additionalProperties": true,
+            "properties": {
+                "provider": {
+                    "title": "Provider",
+                    "type": "string"
+                },
+                "type": {
+                    "const": "vector",
+                    "default": "vector",
+                    "title": "Type",
+                    "type": "string"
+                },
+                "attributeTableConfig": {
+                    "$ref": "#/definitions/AttributeTableConfig",
+                    "default": {
+                        "columns": []
+                    }
+                },
+                "editableFields": {
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "title": "Editablefields",
+                    "type": "object"
+                },
+                "fields": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/FieldConfiguration"
+                    },
+                    "title": "Fields",
+                    "type": "object"
+                },
+                "defaults": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/FieldDefault"
+                    },
+                    "title": "Defaults",
+                    "type": "object"
+                },
+                "constraints": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/FieldConstraint"
+                    },
+                    "title": "Constraints",
+                    "type": "object"
+                },
+                "constraintExpressions": {
+                    "additionalProperties": {
+                        "$ref": "#/definitions/FieldConstraintExpression"
+                    },
+                    "title": "Constraintexpressions",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "provider",
+                "editableFields",
+                "fields",
+                "defaults",
+                "constraints",
+                "constraintExpressions"
+            ],
+            "title": "VectorLayerDetails",
+            "type": "object"
+        },
+        "LayerDetails": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/VectorLayerDetails"
+                },
+                {
+                    "$ref": "#/definitions/RasterLayerDetails"
+                }
+            ]
+        },
+        "LayoutLabel": {
+            "additionalProperties": true,
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "htmlState": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "htmlState",
+                "text"
+            ],
+            "type": "object"
+        },
+        "LayoutMap": {
+            "additionalProperties": true,
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "width": {
+                    "type": "number"
+                },
+                "heigth": {
+                    "type": "number"
+                },
+                "uuid": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "overviewMap": {
+                    "type": "string"
+                },
+                "grid": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "id",
+                "width",
+                "heigth",
+                "uuid",
+                "page",
+                "grid"
+            ],
+            "type": "object"
+        },
+        "LayoutPage": {
+            "additionalProperties": true,
+            "properties": {
+                "width": {
+                    "type": "number"
+                },
+                "heigth": {
+                    "type": "number"
+                },
+                "units": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "width",
+                "heigth",
+                "units"
+            ],
+            "type": "object"
+        },
+        "LayoutDescription": {
+            "additionalProperties": true,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "atlasEnabled": {
+                    "type": "boolean"
+                },
+                "atlasCoverageLayer": {
+                    "type": "string"
+                },
+                "pages": {
+                    "items": {
+                        "$ref": "#/definitions/LayoutPage"
+                    },
+                    "type": "array"
+                },
+                "maps": {
+                    "items": {
+                        "$ref": "#/definitions/LayoutMap"
+                    },
+                    "type": "array"
+                },
+                "labels": {
+                    "items": {
+                        "$ref": "#/definitions/LayoutLabel"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "name",
+                "atlasEnabled",
+                "pages",
+                "maps",
+                "labels"
+            ],
+            "title": "LayoutDescription",
+            "type": "object"
+        },
+        "LayoutSummary": {
+            "additionalProperties": true,
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "atlasEnabled": {
+                    "type": "boolean"
+                },
+                "atlasCoverageLayer": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "atlasEnabled"
+            ],
+            "type": "object"
+        },
+        "LayoutSummaries": {
+            "additionalProperties": true,
+            "properties": {
+                "layouts": {
+                    "items": {
+                        "$ref": "#/definitions/LayoutSummary"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "layouts"
+            ],
+            "title": "LayoutSummaries",
+            "type": "object"
+        }
+    },
+    "tags": [
+        {
+            "description": "Project's informations",
+            "name": "project"
+        },
+        {
+            "description": "Project's layout",
+            "name": "layout"
+        }
+    ],
+    "info": {
+        "title": "Lizmap-server-api",
+        "description": "Lizmap server api for returning server and Qgis project's informations",
+        "version": "1"
+    }
+}

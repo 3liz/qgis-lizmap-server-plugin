@@ -26,7 +26,7 @@ def register_lizmap_api(server_iface: QgsServerInterface):
         return
 
     if pydantic_version and pydantic_extra_types_version:
-        from .api.handler import LizmapApi
+        from .api.handlers import LizmapApi
 
         logger.info("Lizmap api endpoint enabled")
         service_registry = server_iface.serviceRegistry()
