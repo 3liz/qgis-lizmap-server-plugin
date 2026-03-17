@@ -23,11 +23,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
-    
+     
 ]
 
 [project.optional-dependencies]
-api = ["pydantic", "pydantic_extra_types"]
+api = ["pydantic", "pydantic-extra-types"]
 
 [project.urls]
 homepage = "https://docs.lizmap.com/current/fr/install/pre_requirements.html#lizmap-qgis-server-plugin"

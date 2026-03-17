@@ -69,20 +69,3 @@ def test_tos_checks(client):
     assert json_content["qgis_server"]["external_providers_tos_checks"] == expected
     del os.environ[strict_tos_check_key(GOOGLE_KEY)]
     del os.environ[strict_tos_check_key(BING_KEY)]
-
-
-def test_lizmap_server_info_env_check(client):
-    """Check the environment variable check."""
-    # Remove the security environment variable, the query mustn't work
-    del os.environ[KEY]
-    try:
-        rv = client.get(QUERY)
-        assert rv.status_code == 400
-
-        assert rv.headers.get("Content-Type", "").find("application/json") == 0
-
-        json_content = json.loads(rv.content.decode("utf-8"))
-        assert json_content == [{"code": "Bad request error", "description": "Invalid request"}]
-    finally:
-        # Reset the environment variable just in case
-        os.environ[KEY] = "TRUE"

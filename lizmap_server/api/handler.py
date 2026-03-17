@@ -18,6 +18,8 @@ from qgis.server import (
     QgsServerInterface,
 )
 
+from ..server_info import server_info
+
 from . import builder
 from . import logger
 from . import routes
@@ -39,6 +41,9 @@ from .schemas import (
 # Routes
 #
 
+def v1(path: str) -> str:
+    return f"/api/v1/{path}"
+
 
 class ProjectSummaryResponse(ProjectSummary):
     links: Sequence[Link]
@@ -59,7 +64,7 @@ class ProjectSummaries(JsonModel):
     links: Sequence[Link]
 
 
-@routes.get("/projects/list/{PATH:.*}")
+@routes.get(v1("projects/list/{PATH:.*}"))
 def get_projects(request: HTTPRequestDelegate, **match_info):
     """
     summary: List projects
@@ -133,7 +138,7 @@ def load_project_def(
     return location, project, details
 
 
-@routes.get("/projects/description")
+@routes.get(v1("projects/description"))
 def get_project_description(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project description
@@ -178,7 +183,7 @@ def get_project_description(request: HTTPRequestDelegate, **match_info):
     request.write_json(builder.project_description(project, layers))
 
 
-@routes.get("/projects/layers/{Id}")
+@routes.get(v1("projects/layers/{Id}"))
 def get_project_layers(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project's layer details
@@ -237,7 +242,7 @@ class LayoutSummaries(JsonModel):
     layouts: Sequence[LayoutSummary]
 
 
-@routes.get("/projects/layouts/")
+@routes.get(v1("projects/layouts/"))
 def get_project_layouts(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project's layout summary
@@ -288,7 +293,7 @@ def get_project_layouts(request: HTTPRequestDelegate, **match_info):
     request.write_json(summaries)
 
 
-@routes.get("/projects/layouts/{Name}")
+@routes.get(v1("projects/layouts/{Name}"))
 def get_layout(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project's layout details
@@ -335,14 +340,19 @@ def get_layout(request: HTTPRequestDelegate, **match_info):
 
     request.write_json(layout)
 
+#
+# Lizmap server info
+#
+
+@routes.get("/server.json")
+def get_server_info(request: HTTPRequestDelegate, **match_info):
+    request.write_json(server_info(request.server_context, request.serverInterface))
 
 #
 # QgsApi
 #
 
-VERSION = "1"
-ROOTPATH = f"/api/v{VERSION}"
-
+ROOTPATH="/lizmap"
 
 class LizmapApi(QgsServerApi):
     __instances: list[QgsServerApi] = []  #  noqa RUF012
@@ -352,13 +362,14 @@ class LizmapApi(QgsServerApi):
         self.__instances.append(self)
 
     def name(self) -> str:
-        return "Lizmap API "
+        return "Lizmap"
 
     def description(self) -> str:
-        return "Lizmap REST api for retrieving projects informations"
+        return "Lizmap api endpoint"
 
     def version(self) -> str:
-        return f"{VERSION}"
+        from ..tools import version
+        return version()
 
     def rootPath(self) -> str:
         return ROOTPATH

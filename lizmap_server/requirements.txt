@@ -1,0 +1,3 @@
+# Requirements for using the api
+pydantic
+pydantic-extra-types
