@@ -1,0 +1,19 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "type": {
+      "type": "string"
+    },
+    "categories": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "type",
+    "categories"
+  ],
+  "type": "object"
+}

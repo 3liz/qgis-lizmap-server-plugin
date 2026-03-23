@@ -1,0 +1,40 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "customProperties": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "customOrderEnabled": {
+      "type": "boolean"
+    },
+    "customOrderItems": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "items": {
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "./LayerTreeLayer.json"
+          },
+          {
+            "$ref": "./LayerTreeGroup.json"
+          }
+        ]
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "customProperties",
+    "customOrderEnabled",
+    "customOrderItems",
+    "items"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,59 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "provider": {
+      "type": "string"
+    },
+    "type": {
+      "const": "vector",
+      "default": "vector",
+      "type": "string"
+    },
+    "attributeTableConfig": {
+      "$ref": "./AttributeTableConfig.json",
+      "default": {
+        "columns": []
+      }
+    },
+    "editableFields": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "type": "object"
+    },
+    "fields": {
+      "additionalProperties": {
+        "$ref": "./FieldConfiguration.json"
+      },
+      "type": "object"
+    },
+    "defaults": {
+      "additionalProperties": {
+        "$ref": "./FieldDefault.json"
+      },
+      "type": "object"
+    },
+    "constraints": {
+      "additionalProperties": {
+        "$ref": "./FieldConstraint.json"
+      },
+      "type": "object"
+    },
+    "constraintExpressions": {
+      "additionalProperties": {
+        "$ref": "./FieldConstraintExpression.json"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "provider",
+    "editableFields",
+    "fields",
+    "defaults",
+    "constraints",
+    "constraintExpressions"
+  ],
+  "title": "VectorLayerDetails",
+  "type": "object"
+}

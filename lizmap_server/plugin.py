@@ -1,4 +1,4 @@
-from qgis.server import QgsServerInterface, QgsServerOgcApi
+from qgis.server import QgsServerInterface
 
 from .expression_service import ExpressionService
 from .get_feature_info import GetFeatureInfoFilter
@@ -7,12 +7,12 @@ from .legend_onoff_filter import (
     LegendOnOffAccessControl,
     LegendOnOffFilter,
 )
+from .lizmap_api_handler import register_lizmap_api
 from .lizmap_accesscontrol import LizmapAccessControlFilter
 from .lizmap_filter import LizmapFilter
 from .lizmap_service import LizmapService
 from .plausible import Plausible
-from .server_info_handler import ServerInfoHandler
-from .tools import check_environment_variable, version
+from .tools import version
 
 from . import logger
 
@@ -31,19 +31,12 @@ class LizmapServer:
             logger.log_exception(e)
             logger.critical("Error initializing Plausible")
 
-        service_registry = server_iface.serviceRegistry()
-
         # Register API
-        lizmap_api = QgsServerOgcApi(
-            self.server_iface, "/lizmap", "Lizmap", "The Lizmap API endpoint", self.version
-        )
-        service_registry.registerApi(lizmap_api)
-        lizmap_api.registerHandler(ServerInfoHandler())
-        logger.info('API "/lizmap" loaded with the server info handler')
+        register_lizmap_api(server_iface)
 
-        check_environment_variable()
+        # Register services
+        service_registry = self.server_iface.serviceRegistry()
 
-        # Register service
         try:
             service_registry.registerService(ExpressionService(self.server_iface))
         except Exception as e:

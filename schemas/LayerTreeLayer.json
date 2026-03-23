@@ -1,0 +1,23 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "customProperties": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "id",
+    "customProperties"
+  ],
+  "type": "object"
+}

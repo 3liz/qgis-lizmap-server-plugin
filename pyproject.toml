@@ -23,8 +23,11 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
-
+     
 ]
+
+[project.optional-dependencies]
+api = ["pydantic", "pydantic-extra-types"]
 
 [project.urls]
 homepage = "https://docs.lizmap.com/current/fr/install/pre_requirements.html#lizmap-qgis-server-plugin"
@@ -36,17 +39,27 @@ dev = [
     "coverage[toml]",
     {include-group = "tests"},
     {include-group = "lint"},
+    "ruamel.yaml",
 ]
 tests = [
     "pytest >= 5.3",
     "xmldiff",
     "Pillow",
+    {include-group = "required"},
 ]
 lint = [
     "ruff",
     "mypy",
     "bandit",
     "lxml-stubs",
+    {include-group = "required"},
+]
+tools = [
+    "ipython",
+]
+required = [
+    "pydantic",
+    "pydantic-extra-types",
 ]
 
 [tool.yapt]
@@ -77,15 +90,17 @@ ignore = [
     "ANN002",
     "ANN003",
     "ANN401",
-    "COM812", # Conflict with format
-    "SIM108", # Use ternary operator
-    "RUF067", # module should only contain docstrings and re-exports
+    "COM812",  # Conflict with format
+    "SIM108",  # Use ternary operator
+    "RUF067",  # module should only contain docstrings and re-exports
+    "PLC0414", # useless-import-alias (conflict with re-export accepted syntax)
     # XXX Fix 
-    "E501", # Line too long
+    "E501",    # Line too long
 ]
 
 [tool.ruff.per-file-target-version]
 "lizmap_server/context/qjazz.py" = "py312"
+"lizmap_server/api/*" = "py310"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
@@ -118,12 +133,8 @@ project_slug = "qgis-lizmap-server-plugin"
 # Mypy
 #
 [tool.mypy]
-python_version = "3.9"
-
-exclude = [
-    "lizmap_server/context/py_qgis_server.py",
-    "lizmap_server/context/qjazz.py",
-]
+python_version = "3.10"
+plugins = [ "pydantic.mypy" ]
 
 [[tool.mypy.overrides]]
 module = "lizmap_server.context.qjazz"
@@ -135,10 +146,13 @@ follow_imports = "skip"
 
 [[tool.mypy.overrides]]
 module = [
-    "py_qgis_server.*",
     "qgis.*",
     "osgeo.*",
     "xmldiff.*",
+    "qjazz_core.*",
+    "qjazz_cache.*",
+    "pyqgisserver.*",
+    "ruamel.*",
 ]
 ignore_missing_imports = true
 

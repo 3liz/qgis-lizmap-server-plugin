@@ -1,5 +1,7 @@
 import sys
 
+import functools
+
 from .common import ContextABC as ServerContext
 from .common import (
     ProjectCacheError as ProjectCacheError,
@@ -10,6 +12,7 @@ from .common import (
 from .. import logger
 
 
+@functools.cache
 def create_server_context() -> ServerContext:
     """Create the appropriate server context"""
     m = sys.modules["lizmap_server"]

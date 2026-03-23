@@ -44,6 +44,12 @@ requirements/%.txt: uv.lock
 		-q -o requirements/$*.txt; \
 
 
+openapi:
+	@ uv run python -m $(PYTHON_MODULE).api.swagger > $(PYTHON_MODULE)/api/openapi.json
+
+sync:
+	@ uv sync --all-groups --all-extras
+
 #
 # Static analysis
 #
@@ -51,12 +57,15 @@ requirements/%.txt: uv.lock
 LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
 lint:: 
-	@ $(UV_RUN) ruff check --preview  --output-format=concise $(LINT_TARGETS)
+	@ $(UV_RUN) ruff check --output-format=concise $(LINT_TARGETS)
 
 lint:: typecheck
 
+lint-preview:
+	@ $(UV_RUN) ruff check --preview --output-format=concise $(LINT_TARGETS)
+
 lint-fix:
-	@ $(UV_RUN) ruff check --preview --fix $(LINT_TARGETS)
+	@ $(UV_RUN) ruff check  --fix $(LINT_TARGETS)
 
 format:
 	@ $(UV_RUN) ruff format $(LINT_TARGETS) 
@@ -74,13 +83,6 @@ scan:
 
 test:
 	$(UV_RUN) pytest -v $(TESTS)/
-
-
-check-uv-install:
-	@which uv > /dev/null || { \
-		echo "You must install uv (https://docs.astral.sh/uv/)"; \
-		exit 1; \
-	}
 
 #
 # Test using docker image

@@ -1,0 +1,56 @@
+{
+  "additionalProperties": true,
+  "description": "Project description",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "saveDateTime": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "projectCrs": {
+      "$ref": "./CrsModel.json"
+    },
+    "owsProperties": {
+      "$ref": "./OWSProperties.json"
+    },
+    "guiProperties": {
+      "$ref": "./GuiProperties.json"
+    },
+    "layerTreeRoot": {
+      "$ref": "./LayerTreeRoot.json"
+    },
+    "visibilityPresets": {
+      "items": {
+        "$ref": "./LayerVisibilityPreset.json"
+      },
+      "type": "array"
+    },
+    "customVariables": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "layers": {
+      "additionalProperties": {
+        "$ref": "./LayerDescription.json"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "title",
+    "version",
+    "layerTreeRoot",
+    "visibilityPresets",
+    "customVariables",
+    "layers"
+  ],
+  "title": "ProjectDescription",
+  "type": "object"
+}

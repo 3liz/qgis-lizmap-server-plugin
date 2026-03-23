@@ -1,0 +1,86 @@
+{
+  "additionalProperties": true,
+  "description": "Layer description",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "abstract": {
+      "type": "string"
+    },
+    "embedded": {
+      "type": "boolean"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "datasource": {
+      "type": "string"
+    },
+    "opacity": {
+      "type": "number"
+    },
+    "srs": {
+      "$ref": "./CrsModel.json"
+    },
+    "styleManager": {
+      "$ref": "./StyleManager.json"
+    },
+    "keywords": {
+      "type": "string"
+    },
+    "attributeAliases": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "excludeAttributeWfs": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "excludeAttributeWms": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "displayExpression": {
+      "type": "string"
+    },
+    "vectorJoins": {
+      "items": {
+        "$ref": "./VectorLayerJoinInfo.json"
+      },
+      "type": "array"
+    },
+    "featureRenderer": {
+      "$ref": "./FeatureRenderer.json"
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "type",
+    "abstract",
+    "embedded",
+    "provider",
+    "datasource",
+    "opacity",
+    "styleManager",
+    "keywords",
+    "attributeAliases",
+    "excludeAttributeWfs",
+    "excludeAttributeWms",
+    "vectorJoins"
+  ],
+  "type": "object"
+}

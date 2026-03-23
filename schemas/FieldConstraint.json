@@ -1,0 +1,24 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "constraints": {
+      "type": "integer"
+    },
+    "notnullStrength": {
+      "type": "integer"
+    },
+    "uniqueStrength": {
+      "type": "integer"
+    },
+    "expressionStrength": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "constraints",
+    "notnullStrength",
+    "uniqueStrength",
+    "expressionStrength"
+  ],
+  "type": "object"
+}

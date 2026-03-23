@@ -1,24 +1,30 @@
 """Native QGIS context"""
 
 from typing import (
+    TYPE_CHECKING,
+    Any,
     Dict,
     Iterator,
-    List,
     Optional,
     Sequence,
     Tuple,
 )
+from urllib.parse import SplitResult as Url
 
-from qgis.core import QgsProject
 from qgis.utils import pluginMetadata, server_active_plugins
+from qgis.core import QgsProject
 
 from .common import (
     ContextABC,
-    ProjectCacheError,
     ServerMetadata,
 )
 
 SERVER_CONTEXT_NAME = "FCGI"
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+
+    LayerDetails = TypeVar("LayerDetails")
 
 
 class Context(ContextABC):
@@ -34,15 +40,41 @@ class Context(ContextABC):
     def documentation_url(self) -> str:
         return "https://docs.qgis.org/latest/en/docs/server_manual/"
 
-    @property
-    def search_paths(self) -> List[str]:
-        """Return search paths for projects"""
-        return []
+    def load_project_def(
+        self,
+        md: Any,
+        *,
+        with_details: bool,
+        with_layouts: bool,
+    ) -> Tuple[Optional[QgsProject], Dict[str, "LayerDetails"]]:
+        from ..api import builder
 
-    def project(self, uri: str) -> QgsProject:
-        """Return the project specified by `uri`"""
-        # NOTE: Native do not handle uri mapping
-        raise ProjectCacheError(403, f"Project not found in cache: {uri}")
+        if isinstance(md, Url):
+            if md.scheme in ("file", ""):
+                md = md.path
+            else:
+                md = md.geturl()
+        elif not isinstance(md, str):
+            raise ValueError(f"Invalid uri: {md}")
+
+
+        return builder.open_project_def(
+            md,
+            with_details=with_details,
+            with_layouts=with_layouts,
+        )  # type: ignore [return-value]
+
+    def collect_projects(self, location: str) -> Iterator[Tuple[Any, str]]:
+        """Collect all projects from 'location'"""
+        from ..api import defaults
+
+        return defaults.collect_projects(SERVER_CONTEXT_NAME, location)
+
+    def resolve_path(self, location: str) -> Optional[Url]:
+        """Return the url corresponding to the public path"""
+        from ..api import defaults
+
+        return defaults.resolve_project_uri(location)
 
     def installed_plugins(
         self,

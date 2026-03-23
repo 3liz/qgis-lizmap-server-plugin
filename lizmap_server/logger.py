@@ -2,7 +2,6 @@ import functools
 import time
 import traceback
 
-
 from qgis.core import Qgis, QgsMessageLog
 
 
@@ -20,6 +19,10 @@ def warning(message: str):
 
 def critical(message: str):
     QgsMessageLog.logMessage(message, PLUGIN, Qgis.MessageLevel.Critical)
+
+
+debug = info
+error = critical
 
 
 def log_exception(e: BaseException):

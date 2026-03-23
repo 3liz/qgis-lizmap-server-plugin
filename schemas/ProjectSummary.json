@@ -1,0 +1,22 @@
+{
+  "additionalProperties": true,
+  "description": "Project summary",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "saveDateTime": {
+      "format": "date-time",
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "version"
+  ],
+  "title": "ProjectSummary",
+  "type": "object"
+}

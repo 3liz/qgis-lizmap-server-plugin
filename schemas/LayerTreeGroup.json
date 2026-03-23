@@ -1,0 +1,37 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "customProperties": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "mutuallyExclusive": {
+      "type": "boolean"
+    },
+    "items": {
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "./LayerTreeLayer.json"
+          },
+          {
+            "$ref": "./LayerTreeGroup.json"
+          }
+        ]
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "customProperties",
+    "mutuallyExclusive",
+    "items"
+  ],
+  "type": "object"
+}
