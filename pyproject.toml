@@ -51,6 +51,7 @@ lint = [
     "ruff",
     "mypy",
     "bandit",
+    "vulture",
     "lxml-stubs",
     {include-group = "required"},
 ]

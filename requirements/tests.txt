@@ -12,12 +12,12 @@ pillow==12.1.1 ; python_full_version >= '3.10'
 pluggy==1.6.0
 pydantic==2.12.5
 pydantic-core==2.41.5
-pydantic-extra-types==2.11.0
-pygments==2.19.2
+pydantic-extra-types==2.11.1
+pygments==2.20.0
 pytest==8.4.2 ; python_full_version < '3.10'
 pytest==9.0.2 ; python_full_version >= '3.10'
 setuptools==82.0.1
-tomli==2.4.0 ; python_full_version < '3.11'
+tomli==2.4.1 ; python_full_version < '3.11'
 typing-extensions==4.15.0
 typing-inspection==0.4.2
 xmldiff==2.7.0

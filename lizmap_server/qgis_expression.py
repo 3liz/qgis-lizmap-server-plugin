@@ -3,6 +3,7 @@
 import logging
 
 from qgis.core import (
+    Qgis,
     QgsExpression,
     QgsFeature,
     QgsMapLayer,
@@ -13,7 +14,6 @@ from qgis.utils import qgsfunction
 
 LOGGER = logging.getLogger("Lizmap")
 SPACES = "  "
-
 
 @qgsfunction(
     args="auto",
@@ -51,7 +51,11 @@ def layer_renderer_used_attributes(
 
     # Create render context
     renderContext = QgsRenderContext()
-    renderContext.setUseAdvancedEffects(True)
+    if Qgis.versionInt() < 34400:
+        renderContext.setUseAdvancedEffects(True)
+    else:
+        # Force Vector Rendering policy for extracting vectorized rendering infos.
+        renderContext.setRasterizedRenderingPolicy(Qgis.RasterizedRenderingPolicy.ForceVector)
 
     # Return the attributes used to render the layer
     return list(renderer.usedAttributes(renderContext))

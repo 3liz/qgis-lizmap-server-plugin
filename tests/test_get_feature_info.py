@@ -54,7 +54,7 @@ def test_no_get_feature_info_default_popup(client):
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("text/xml") == 0
-    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.versionInt() >= 33600 else ""
     expected = f'''
     <GetFeatureInfoResponse>
         <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}/>
@@ -70,7 +70,7 @@ def test_single_get_feature_info_default_popup(client):
     rv = client.get(qs, PROJECT)
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("text/xml") == 0
-    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.versionInt() >= 33600 else ""
     expected = f'''
     <GetFeatureInfoResponse>
         <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}>
@@ -98,7 +98,7 @@ def test_single_get_feature_info_default_popup_user(client):
     rv = client.get(qs, PROJECT, headers)
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("text/xml") == 0
-    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
+    title_attribute = f'title="{LAYER_DEFAULT_POPUP}"' if Qgis.versionInt() >= 33600 else ""
     expected = f'''
     <GetFeatureInfoResponse>
         <Layer name="{LAYER_DEFAULT_POPUP}" {title_attribute}>
@@ -126,7 +126,7 @@ def test_single_get_feature_info_qgis_popup(client):
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("text/xml") == 0
 
-    title_attribute = f'title="{LAYER_QGIS_POPUP}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
+    title_attribute = f'title="{LAYER_QGIS_POPUP}"' if Qgis.versionInt() >= 33600 else ""
 
     # Note the line <TH>maptip</TH>
     expected = f'''
@@ -167,7 +167,7 @@ def test_single_get_feature_info_form_popup(client):
     xml_lines = ET.tostring(root, encoding="utf8", method="xml").decode("utf-8").split("\n")
     xml_string = "\n".join(xml_lines[1:])
 
-    title_attribute = f'title="{LAYER_QGIS_FORM}"' if Qgis.QGIS_VERSION_INT >= 33600 else ""
+    title_attribute = f'title="{LAYER_QGIS_FORM}"' if Qgis.versionInt() >= 33600 else ""
 
     expected = f'''
     <GetFeatureInfoResponse>

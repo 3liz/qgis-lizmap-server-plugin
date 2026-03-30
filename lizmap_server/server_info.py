@@ -150,7 +150,7 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
                 "tag": tag,  # final-3_16_0
                 "name": human_name,  # Hannover
                 "commit_id": commit_id,  # 288d2cacb5 if it's a dev version
-                "version_int": Qgis.QGIS_VERSION_INT,  # 31600
+                "version_int": Qgis.versionInt(),
             },
             "py_qgis_server": qgis_server_meta,
             "external_providers_tos_checks": {

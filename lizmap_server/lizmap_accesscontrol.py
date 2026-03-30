@@ -37,24 +37,6 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         logger.info(f"LayerAccessControl : Google {self._strict_google}, Bing {self._strict_bing}")
 
-    # def layerFilterExpression(self, layer: QgsVectorLayer) -> str:
-    #     """ Return an additional expression filter """
-    #     # Disabling Lizmap layer filter expression for QGIS Server <= 3.16.1 and <= 3.10.12
-    #     # Fix in QGIS Server https://github.com/qgis/QGIS/pull/40556 3.18.0, 3.16.2, 3.10.13
-    #     if 31013 <= Qgis.QGIS_VERSION_INT < 31099 or 31602 <= Qgis.QGIS_VERSION_INT:
-    #         logger.info("Lizmap layerFilterExpression")
-    #         filter_exp = self.get_lizmap_layer_filter(layer, filter_type=FilterType.QgisExpression)
-    #         if filter_exp:
-    #             return filter_exp
-    #
-    #         return super().layerFilterExpression(layer)
-    #
-    #     message = (
-    #         "Lizmap layerFilterExpression disabled, you should consider upgrading QGIS Server to >= "
-    #         "3.10.13 or >= 3.16.2")
-    #     logger.critical(message)
-    #     return ALL_FEATURES
-
     def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
         """Return an additional subset string (typically SQL) filter"""
         logger.info("Lizmap layerFilterSubsetString")

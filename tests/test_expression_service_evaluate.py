@@ -536,6 +536,8 @@ def test_lizmap_python_expressions(client):
     qs_built = _build_query_string(qs)
     rv = client.get(qs_built, project_file)
     b = _check_request(rv)
+    print("\n::test_lizmap_python_expressions", b)
+
     assert "status" in b
     assert b["status"] == "success"
     assert "results" in b
@@ -557,6 +559,8 @@ def test_lizmap_python_expressions(client):
     qs_built = _build_query_string(qs)
     rv = client.get(qs_built, project_file)
     b = _check_request(rv)
+
+    print("\n::test_lizmap_python_expressions", b)
     assert "status" in b
     assert b["status"] == "success"
     assert "results" in b
