@@ -1,7 +1,6 @@
 import json
 import os
 
-from qgis.core import Qgis
 
 from lizmap_server.tos_definitions import (
     BING_KEY,
@@ -39,11 +38,6 @@ def test_lizmap_server_info(client):
         "bing": True,
     }
     assert json_content["qgis_server"]["external_providers_tos_checks"] == expected
-
-    if 33000 <= Qgis.QGIS_VERSION_INT < 33200:
-        assert json_content["qgis_server"]["metadata"]["name"] == "'s-Hertogenbosch"
-    elif 32800 <= Qgis.QGIS_VERSION_INT < 32900:
-        assert json_content["qgis_server"]["metadata"]["name"] == "Firenze"
 
     # Names and versions are used in Lizmap Web Client
     expected_plugins = ("atlasprint", "wfsOutputExtension", "lizmap_server")

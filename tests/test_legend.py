@@ -2,7 +2,6 @@ import logging
 
 from .utils import _build_query_string, _check_request
 
-from qgis.core import Qgis
 
 from lizmap_server.get_legend_graphic import GetLegendGraphicFilter
 
@@ -93,7 +92,7 @@ def test_simple_rule_based(client):
     ]
     assert "scaleMaxDenom" not in symbols[0], symbols[0]["scaleMaxDenom"]
     assert "scaleMinDenom" not in symbols[0], symbols[0]["scaleMinDenom"]
-    expected = "\"NAME_1\" = 'Basse-Normandie'" if Qgis.QGIS_VERSION_INT >= 32600 else ""
+    expected = "\"NAME_1\" = 'Basse-Normandie'"
     assert symbols[0]["expression"] == expected, symbols[0]["expression"]
     assert b["title"] == ""
     assert b["nodes"][0]["title"] == "rule_based", b["nodes"][0]["title"]
@@ -160,7 +159,7 @@ def test_simple_rule_based_feature_count(client):
     ]
     assert "scaleMaxDenom" not in symbols[0], symbols[0]["scaleMaxDenom"]
     assert "scaleMinDenom" not in symbols[0], symbols[0]["scaleMinDenom"]
-    expected = "\"NAME_1\" = 'Basse-Normandie'" if Qgis.QGIS_VERSION_INT >= 32600 else ""
+    expected = "\"NAME_1\" = 'Basse-Normandie'"
     assert symbols[0]["expression"] == expected, symbols[0]["expression"]
     assert b["title"] == ""
     assert b["nodes"][0]["title"] == "rule_based [4]", b["nodes"][0]["title"]
@@ -174,47 +173,27 @@ def test_valid_raster_layer(client):
     rv = client.get(_build_query_string(qs), PROJECT)
     b = _check_request(rv)
 
-    # Answer straight from QGIS Server
-    if Qgis.QGIS_VERSION_INT < 33400:
-        expected = {
-            "nodes": [
-                {
-                    "symbols": [
-                        {
-                            "title": "Band 1",
-                        },
-                        {
-                            "title": "",
-                        },
-                    ],
-                    "title": qs["LAYER"],
-                    "type": "layer",
-                },
-            ],
-            "title": "",
-        }
-    else:
-        expected = {
-            "nodes": [
-                {
-                    "symbols": [
-                        {
-                            "title": "Band 1",
-                        },
-                        {
-                            # 'icon': '',
-                            "max": 125,
-                            "min": 50,
-                            "title": "",
-                        },
-                    ],
-                    "title": qs["LAYER"],
-                    "type": "layer",
-                },
-            ],
-            "title": "",
-        }
-        del b["nodes"][0]["symbols"][1]["icon"]
+    expected = {
+        "nodes": [
+            {
+                "symbols": [
+                    {
+                        "title": "Band 1",
+                    },
+                    {
+                        # 'icon': '',
+                        "max": 125,
+                        "min": 50,
+                        "title": "",
+                    },
+                ],
+                "title": qs["LAYER"],
+                "type": "layer",
+            },
+        ],
+        "title": "",
+    }
+    del b["nodes"][0]["symbols"][1]["icon"]
 
     assert b == expected, b
 

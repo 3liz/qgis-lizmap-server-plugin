@@ -11,7 +11,7 @@ from typing import Any, Dict, Generator, Optional
 import pytest
 
 from qgis.core import Qgis, QgsApplication, QgsFontUtils, QgsProject
-from qgis.PyQt import Qt
+from qgis.PyQt.QtCore import qVersion
 from qgis.server import (
     QgsBufferServerRequest,
     QgsBufferServerResponse,
@@ -53,10 +53,10 @@ def data(rootdir: Path) -> Path:
 
 def pytest_report_header(config):
     return (
-        f"QGIS : {Qgis.QGIS_VERSION_INT}\n"
+        f"QGIS : {Qgis.versionInt()}\n"
         f"Python GDAL : {gdal.VersionInfo('VERSION_NUM')}\n"
         f"Python : {sys.version}\n"
-        f"QT : {Qt.QT_VERSION_STR}"
+        f"QT : {qVersion()}"
     )
 
 
@@ -75,14 +75,16 @@ def pytest_sessionstart(session: pytest.Session):
     install_logger_hook(verbose=True)
 
 
-# Note from Etienne 22/03/2022
-# Switching from 3.10 to 3.16 is crashing when a test is failing
-# def pytest_sessionfinish(session, exitstatus):
-#     """ End qgis session
-#     """
-#     global qgis_application
-#     qgis_application.exitQgis()
-#     del qgis_application
+@pytest.fixture(scope="session", autouse=True)
+def qgis_app(request: pytest.FixtureRequest) -> QgsApplication:
+
+    yield qgis_application
+
+    if qgis_application:
+        pass
+        # NOTE: This actually makes segmentation fault.
+        # logging.info("EXITING QGIS")
+        # qgis_application.exitQgis()
 
 
 @pytest.fixture(scope="session")
@@ -114,10 +116,7 @@ def client(request: pytest.FixtureRequest) -> Client:
 
         def get_project(self, name: str) -> QgsProject:
             projectpath = self.getprojectpath(name)
-            if Qgis.QGIS_VERSION_INT >= 32601:
-                qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
-            else:
-                qgsproject = QgsProject()
+            qgsproject = QgsProject(capabilities=Qgis.ProjectCapabilities())
             if not qgsproject.read(str(projectpath)):
                 raise ValueError(f"Error reading project '{projectpath}'")
             return qgsproject

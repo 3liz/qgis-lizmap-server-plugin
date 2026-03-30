@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix deprecated `setUseAdvancedEffects` for QGIS >= 3.44
+- Replace `QGIS_VERSION_INT` by `versionInt()` call
+- Clean up legacy code support for QGIS < 3.34
+
 ## 2.14.1 - 2025-09-29
 
 * Fix: Use access control to filter Expression ReplaceExpressionText

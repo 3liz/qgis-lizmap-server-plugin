@@ -251,7 +251,7 @@ def test_filter_by_polygon_wfs_getfeature(client):
     assert len(layers) == 1
 
 
-def test_filter_by_polygon_wms(client):
+def test_filter_by_polygon_wms_getmap(client):
     project = "test_filter_layer_data_by_polygon_for_groups.qgs"
 
     # Transparent GetMap
@@ -330,6 +330,10 @@ def test_filter_by_polygon_wms(client):
     assert colors[0][1][1] == 0
     assert colors[0][1][2] == 0
     assert colors[0][1][3] == 0
+
+
+def test_filter_by_polygon_wms_getfeatureinfo(client):
+    project = "test_filter_layer_data_by_polygon_for_groups.qgs"
 
     # Montferrier sur Lez
     qs = "?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo&LAYERS=shop_bakery&QUERY_LAYERS=shop_bakery&STYLES=d%C3%A9faut"

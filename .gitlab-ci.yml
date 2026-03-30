@@ -14,7 +14,7 @@ stages:
 # Lint
 # ------------
 lint:
-  image: ${REGISTRY_URL}/factory-ci-runner:qgis-release
+  image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
   tags:
     - factory-plain
   stage: lint
@@ -41,7 +41,6 @@ qgis-server:
         "3.34",
         "3.40",
         "3.44",
-        "nightly-release",
       ]
 
 

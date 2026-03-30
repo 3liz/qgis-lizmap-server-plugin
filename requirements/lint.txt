@@ -14,13 +14,14 @@ mypy-extensions==1.1.0
 pathspec==1.0.4
 pydantic==2.12.5
 pydantic-core==2.41.5
-pydantic-extra-types==2.11.0
-pygments==2.19.2
+pydantic-extra-types==2.11.1
+pygments==2.20.0
 pyyaml==6.0.3
 rich==14.3.3
-ruff==0.15.5
+ruff==0.15.8
 stevedore==5.5.0 ; python_full_version < '3.10'
 stevedore==5.7.0 ; python_full_version >= '3.10'
-tomli==2.4.0 ; python_full_version < '3.11'
+tomli==2.4.1 ; python_full_version < '3.11'
 typing-extensions==4.15.0
 typing-inspection==0.4.2
+vulture==2.16

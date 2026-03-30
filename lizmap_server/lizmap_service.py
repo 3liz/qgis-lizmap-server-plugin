@@ -223,7 +223,7 @@ class LizmapService(QgsService):
         qgis_version_split = Qgis.QGIS_VERSION.split("-")
         body["qgis"]["version"] = qgis_version_split[0]
         body["qgis"]["name"] = qgis_version_split[1]
-        body["qgis"]["version_int"] = Qgis.QGIS_VERSION_INT
+        body["qgis"]["version_int"] = Qgis.versionInt()
 
         # GDAL/OGR
         body["gdalogr"]["name"] = gdal.VersionInfo("NAME")
