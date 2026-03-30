@@ -24,6 +24,7 @@ REQUIREMENT_GROUPS= \
 	dev \
 	tests \
 	lint \
+	tools \
 	$(NULL)
 
 .PHONY: update-requirements

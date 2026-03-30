@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- QGIS4 support
 - Fix deprecated `setUseAdvancedEffects` for QGIS >= 3.44
 - Replace `QGIS_VERSION_INT` by `versionInt()` call
 - Clean up legacy code support for QGIS < 3.34
