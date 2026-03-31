@@ -231,7 +231,7 @@ def test_single_get_feature_info_ascii(client):
         "FI_POINT_TOLERANCE": "25",
         "FI_LINE_TOLERANCE": "10",
         "FI_POLYGON_TOLERANCE": "5",
-        "FILTER": "accents:\"NAME_1\" = 'Bret\\'agne'",
+        "FILTER": "accents:\"NAME_1\" = 'Bret\'\'agne'",
     }
 
     rv = client.get(_build_query_string(qs, use_urllib=True), PROJECT)

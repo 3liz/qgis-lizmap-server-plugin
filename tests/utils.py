@@ -85,6 +85,11 @@ def _check_request(
     http_code: int = 200,
 ) -> Optional[Union[dict, ET.Element, Image.Image]]:
     """Check the output and return the content."""
+
+    if result.status_code != http_code:
+        print("\n::status_code::", result.status_code)
+        print("\n::content::", result.content)
+
     assert result.status_code == http_code, f"HTTP code {result.status_code}, expected {http_code}"
     assert result.headers.get("Content-Type", "").lower().find(content_type) == 0, f"Headers {result.headers}"
 

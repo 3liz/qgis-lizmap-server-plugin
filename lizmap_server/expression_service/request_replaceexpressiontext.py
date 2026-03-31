@@ -25,7 +25,7 @@ from qgis.core import (
     QgsJsonUtils,
     QgsProject,
 )
-from qgis.PyQt.QtCore import QMetaType, QTextCodec, QVariant
+from qgis.PyQt.QtCore import QMetaType, QVariant
 from qgis.server import (
     QgsServerInterface,
     QgsServerResponse,
@@ -35,9 +35,16 @@ from lizmap_server.core import (
     find_vector_layer,
     write_json_response,
 )
-from lizmap_server.exception import ExpressionServiceError
-from lizmap_server.tools import to_bool
-from lizmap_server import logger
+from ..exception import ExpressionServiceError
+from ..qgis4_compat import (
+    QgsJsonUtils_stringToFields,
+    QgsJsonUtils_stringToFeatureList,
+)
+from ..tools import to_bool
+
+
+from .. import logger
+
 
 
 if TYPE_CHECKING:
@@ -203,14 +210,13 @@ def replace_expression_text(
 
         # try to load features
         # read fields
-        feature_fields = QgsJsonUtils.stringToFields(
-            '{ "type": "FeatureCollection","features":' + features + "}", QTextCodec.codecForName("UTF-8")
+        feature_fields = QgsJsonUtils_stringToFields(
+            '{ "type": "FeatureCollection","features":' + features + "}",
         )
         # read features
-        feature_list = QgsJsonUtils.stringToFeatureList(
+        feature_list = QgsJsonUtils_stringToFeatureList(
             '{ "type": "FeatureCollection","features":' + features + "}",
             feature_fields,
-            QTextCodec.codecForName("UTF-8"),
         )
 
     # features not well-formed

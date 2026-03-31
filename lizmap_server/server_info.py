@@ -5,7 +5,7 @@ import warnings
 from typing import Dict
 
 from qgis.core import Qgis
-from qgis.PyQt import Qt
+from qgis.PyQt.QtCore import QT_VERSION_STR
 from qgis.PyQt.QtGui import QFontDatabase
 from qgis.server import (
     QgsServerInterface,
@@ -142,6 +142,8 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
     else:
         qgis_server_meta = {"found": False, "version": "not used"}
 
+    qfontdb = QFontDatabase() if Qgis.versionInt() < 40000 else QFontDatabase
+
     return {
         # Only the "qgis_server" section is forwarded in LWC source code
         "qgis_server": {
@@ -159,12 +161,12 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
             },
             "services": services_available,
             "plugins": plugins,
-            "fonts": QFontDatabase().families(),
+            "fonts": qfontdb.families(),
         },
         "environment": {
             "gdal": gdal.VersionInfo("VERSION_NUM"),
             "python": sys.version,
-            "qt": Qt.QT_VERSION_STR,
+            "qt": QT_VERSION_STR,
         },
     }
 

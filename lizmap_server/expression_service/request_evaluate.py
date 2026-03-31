@@ -22,7 +22,6 @@ from qgis.core import (
     QgsJsonUtils,
     QgsProject,
 )
-from qgis.PyQt.QtCore import QTextCodec
 from qgis.server import (
     QgsServerResponse,
 )
@@ -31,10 +30,21 @@ from lizmap_server.core import (
     find_vector_layer,
     write_json_response,
 )
-from lizmap_server.exception import ExpressionServiceError
-from lizmap_server.tools import to_bool
-from lizmap_server import logger
+from ..exception import ExpressionServiceError
+from ..qgis4_compat import (
+    QgsJsonUtils_stringToFields,
+    QgsJsonUtils_stringToFeatureList,
+)
+from ..tools import to_bool
+from .. import logger
 
+
+try:
+    # QT_VERSION_CHECK only exists in Qt6
+    from qgis.PyQt.QtCore import QT_VERSION_CHECK  # noqa F401
+    QT_VERSION_5 = False
+except ImportError:
+    QT_VERSION_5 = True
 
 if TYPE_CHECKING:
     from .models import Body
@@ -204,14 +214,13 @@ def evaluate(params: Dict[str, str], response: QgsServerResponse, project: QgsPr
 
     # try to load features
     # read fields
-    feature_fields = QgsJsonUtils.stringToFields(
-        '{ "type": "FeatureCollection","features":' + features + "}", QTextCodec.codecForName("UTF-8")
+    feature_fields = QgsJsonUtils_stringToFields(
+        '{ "type": "FeatureCollection","features":' + features + "}",
     )
     # read features
-    feature_list = QgsJsonUtils.stringToFeatureList(
+    feature_list = QgsJsonUtils_stringToFeatureList(
         '{ "type": "FeatureCollection","features":' + features + "}",
         feature_fields,
-        QTextCodec.codecForName("UTF-8"),
     )
 
     # features not well formed

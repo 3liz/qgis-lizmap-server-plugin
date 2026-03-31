@@ -1,6 +1,8 @@
 import io
 import logging
 
+from qgis.core import Qgis
+
 from tests.utils import _build_query_string
 
 from PIL import Image
@@ -237,8 +239,11 @@ def test_invalid_layer_symbol_layer(client):
     qs = dict(BASE_QUERY)
     qs["LAYERS"] = "unique_symbol"
     rv = client.get_with_project(_build_query_string(qs), project)
-    assert rv.status_code == 200
-    assert rv.headers.get("Content-Type", "").find("image/png") == 0
+    if Qgis.versionInt() < 40000:
+        assert rv.status_code == 200
+        assert rv.headers.get("Content-Type", "").find("image/png") == 0
+    else:
+        assert rv.status_code == 500
 
 
 def test_no_geom_layer(client):

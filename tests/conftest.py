@@ -72,7 +72,7 @@ def pytest_sessionstart(session: pytest.Session):
     qgis_application.initQgis()
 
     # Install logger hook
-    install_logger_hook(verbose=True)
+    install_logger_hook()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -241,21 +241,24 @@ def load_plugins(serverIface: QgsServerInterface, pluginpath: Path) -> None:
 #
 
 
-def install_logger_hook(verbose: bool = False) -> None:
+def install_logger_hook() -> None:
     """Install message log hook"""
     from qgis.core import Qgis, QgsApplication
 
     # Add a hook to qgis  message log
-    def writelogmessage(message, tag, level):
+    def writelogmessage(message, tag, level, *args):
         arg = f"{tag}: {message}"
         if level == Qgis.MessageLevel.Warning:
             logging.warning(arg)
         elif level == Qgis.MessageLevel.Critical:
             logging.error(arg)
-        elif verbose:
+        else:
             # Qgis is somehow very noisy
             # log only if verbose is set
             logging.info(arg)
 
     messageLog = QgsApplication.messageLog()
-    messageLog.messageReceived.connect(writelogmessage)
+    if Qgis.versionInt() < 40000:
+        messageLog.messageReceived.connect(writelogmessage)
+    else:
+        messageLog.messageReceivedWithFormat.connect(writelogmessage)

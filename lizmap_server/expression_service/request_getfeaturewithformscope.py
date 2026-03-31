@@ -15,10 +15,8 @@ from qgis.core import (
     QgsExpressionContextUtils,
     QgsFeatureRequest,
     QgsJsonExporter,
-    QgsJsonUtils,
     QgsProject,
 )
-from qgis.PyQt.QtCore import QTextCodec
 from qgis.server import (
     QgsServerResponse,
 )
@@ -27,9 +25,13 @@ from lizmap_server.core import (
     find_vector_layer,
     get_server_fid,
 )
-from lizmap_server.exception import ExpressionServiceError
-from lizmap_server.tools import to_bool
-from lizmap_server import logger
+from ..exception import ExpressionServiceError
+from ..qgis4_compat import (
+    QgsJsonUtils_stringToFields,
+    QgsJsonUtils_stringToFeatureList,
+)
+from ..tools import to_bool
+from .. import logger
 
 
 def get_feature_with_form_scope(
@@ -110,11 +112,9 @@ def get_feature_with_form_scope(
 
     # try to load form feature
     # read fields
-    form_feature_fields = QgsJsonUtils.stringToFields(form_feature, QTextCodec.codecForName("UTF-8"))
+    form_feature_fields = QgsJsonUtils_stringToFields(form_feature)
     # read features
-    form_feature_list = QgsJsonUtils.stringToFeatureList(
-        form_feature, form_feature_fields, QTextCodec.codecForName("UTF-8")
-    )
+    form_feature_list = QgsJsonUtils_stringToFeatureList(form_feature, form_feature_fields)
 
     # features not well formed
     if not form_feature_list:
@@ -178,11 +178,9 @@ def get_feature_with_form_scope(
 
         # try to load parent feature
         # read fields
-        parent_feature_fields = QgsJsonUtils.stringToFields(parent_feature, QTextCodec.codecForName("UTF-8"))
+        parent_feature_fields = QgsJsonUtils_stringToFields(parent_feature)
         # read features
-        parent_feature_list = QgsJsonUtils.stringToFeatureList(
-            parent_feature, parent_feature_fields, QTextCodec.codecForName("UTF-8")
-        )
+        parent_feature_list = QgsJsonUtils_stringToFeatureList(parent_feature, parent_feature_fields)
 
         if not parent_feature_list or len(parent_feature_list) != 1:
             raise ExpressionServiceError(
