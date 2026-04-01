@@ -14,12 +14,15 @@ stages:
 # Lint
 # ------------
 lint:
-  image: ${REGISTRY_URL}/factory-ci-runner:qgis-ltr
+  image: ${REGISTRY_URL}/factory-ci-runner:qgis-${QGIS_FLAVOR}
   tags:
     - factory-plain
   stage: lint
   script:
     - make lint
+  parallel:
+    matrix:
+      - QGIS_FLAVOR: [ "ltr", "release" ]
 
 # ------------
 # Tests

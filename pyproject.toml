@@ -42,7 +42,7 @@ dev = [
     "ruamel.yaml",
 ]
 tests = [
-    "pytest >= 5.3",
+    "pytest",
     "xmldiff",
     "Pillow",
     {include-group = "required"},

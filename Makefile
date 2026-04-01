@@ -17,7 +17,7 @@ ifdef VIRTUAL_ENV
 # Always prefer active environment
 ACTIVE_VENV=--active
 endif
-UV_RUN=uv run $(ACTIVE_VENV)
+UV=uv run $(ACTIVE_VENV)
 endif
 
 REQUIREMENT_GROUPS= \
@@ -48,9 +48,6 @@ requirements/%.txt: uv.lock
 openapi:
 	@ uv run python -m $(PYTHON_MODULE).api.swagger > $(PYTHON_MODULE)/api/openapi.json
 
-sync:
-	@ uv sync --all-groups --all-extras
-
 #
 # Static analysis
 #
@@ -58,37 +55,37 @@ sync:
 LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
 lint:: 
-	@ $(UV_RUN) ruff check --output-format=concise $(LINT_TARGETS)
+	@ $(UV) ruff check --output-format=concise $(LINT_TARGETS)
 
 lint:: typecheck
 
 lint-preview:
-	@ $(UV_RUN) ruff check --preview --output-format=concise $(LINT_TARGETS)
+	@ $(UV) ruff check --preview --output-format=concise $(LINT_TARGETS)
 
 lint-fix:
-	@ $(UV_RUN) ruff check  --fix $(LINT_TARGETS)
+	@ $(UV) ruff check  --fix $(LINT_TARGETS)
 
 format:
-	@ $(UV_RUN) ruff format $(LINT_TARGETS) 
+	@ $(UV) ruff format $(LINT_TARGETS) 
 
 typecheck:
-	@ $(UV_RUN) mypy $(PYTHON_MODULE)
-	@ $(UV_RUN) mypy --python-version 3.10 tests
+	@ $(UV) mypy $(PYTHON_MODULE)
+	@ $(UV) mypy --python-version 3.10 tests
 
 scan:
-	@ $(UV_RUN) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)
+	@ $(UV) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)
 
 #
 # Tests
 #
 
 test:
-	$(UV_RUN) pytest -v $(TESTS)/
+	$(UV) pytest -v $(TESTS)/
 
 #
 # Test using docker image
 #
-QGIS_VERSION ?= 3.40
+QGIS_VERSION ?= 3.44
 QGIS_IMAGE_REPOSITORY ?= 3liz/qgis-platform
 QGIS_IMAGE_TAG ?= $(QGIS_IMAGE_REPOSITORY):$(QGIS_VERSION)
 docker-test:
@@ -106,11 +103,11 @@ docker-test:
 
 # Run tests coverage
 covtest:
-	$(UV_RUN) coverage run -m pytest $(TESTS)/
+	$(UV) coverage run -m pytest $(TESTS)/
 
 coverage: covtest
 	@echo "Building coverage html"
-	@ $(UV_RUN) coverage html
+	@ $(UV) coverage html
 
 
 #
