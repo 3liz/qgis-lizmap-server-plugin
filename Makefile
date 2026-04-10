@@ -46,7 +46,7 @@ requirements/%.txt: uv.lock
 
 
 openapi:
-	@ uv run python -m $(PYTHON_MODULE).api.swagger > $(PYTHON_MODULE)/api/openapi.json
+	@ $(UV) python -m $(PYTHON_MODULE).api.swagger > $(PYTHON_MODULE)/api/openapi.json
 
 #
 # Static analysis

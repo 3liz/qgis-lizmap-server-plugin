@@ -41,7 +41,7 @@ def landing_page(request: HTTPRequestDelegate, **match_info):
             content:
                 application/json:
                     schema:
-                        $ref: '#definitions/LandingPage'
+                        $ref: '#/definitions/LandingPage'
     """
     request.write_json(
         LandingPage(

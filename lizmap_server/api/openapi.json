@@ -14,7 +14,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#definitions/LandingPage"
+                                    "$ref": "#/definitions/LandingPage"
                                 }
                             }
                         }
@@ -282,6 +282,56 @@
                 "links"
             ],
             "title": "LandingPage",
+            "type": "object"
+        },
+        "ProjectSummaryResponse": {
+            "additionalProperties": true,
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "saveDateTime": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "links": {
+                    "items": {
+                        "$ref": "#/definitions/Link"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "title",
+                "version",
+                "links"
+            ],
+            "type": "object"
+        },
+        "ProjectSummaries": {
+            "additionalProperties": true,
+            "properties": {
+                "projects": {
+                    "items": {
+                        "$ref": "#/definitions/ProjectSummaryResponse"
+                    },
+                    "type": "array"
+                },
+                "links": {
+                    "items": {
+                        "$ref": "#/definitions/Link"
+                    },
+                    "type": "array"
+                }
+            },
+            "required": [
+                "projects",
+                "links"
+            ],
+            "title": "ProjectSummaries",
             "type": "object"
         },
         "ProjectSummary": {

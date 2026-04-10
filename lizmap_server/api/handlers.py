@@ -60,7 +60,7 @@ def project_summary(project: QgsProject, links: Sequence[Link]) -> ProjectSummar
         links=links,
     )
 
-
+@swagger.model
 class ProjectSummaries(JsonModel):
     projects: Sequence[ProjectSummaryResponse]
     links: Sequence[Link]
