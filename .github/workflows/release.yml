@@ -53,7 +53,7 @@ jobs:
           --osgeo-password "${{ secrets.OSGEO_PASSWORD }}"
 
       - name: Create release on GitHub
-        uses: ncipollo/release-action@v1.20.0
+        uses: ncipollo/release-action@v1.21.0
         with:
           bodyFile: release.md
           artifacts: "*.zip"
