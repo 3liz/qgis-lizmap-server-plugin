@@ -57,12 +57,8 @@ class Route(Protocol):
     def match(self, path: str) -> Optional[Dict[str, str]]:
         """Partial match
 
-        Check if location starts with the corresponding pattern
+        Check if location ends with the corresponding pattern
         """
-        ...
-
-    def full_match(self, path: str) -> Optional[Dict[str, str]]:
-        """Exact match"""
         ...
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]: ...
@@ -75,10 +71,7 @@ class StaticRoute(Route):
         self._location = location
 
     def match(self, path: str) -> Optional[Dict[str, str]]:
-        return {} if self._location.startswith(path) else None
-
-    def full_match(self, path: str) -> Optional[Dict[str, str]]:
-        return {} if self._location == path else None
+        return {} if self._location.endswith(path) else None
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]:
         if path.is_relative_to(self._location):
@@ -121,7 +114,8 @@ class DynamicRoute(Route):
             pattern += re.escape(part)
 
         try:
-            compiled = re.compile(pattern)
+            # Match **the end** of the path
+            compiled = re.compile(f"{pattern}$")
         except re.error as exc:
             raise ValueError(f"Bad pattern '{pattern}': {exc}") from None
 
@@ -131,12 +125,8 @@ class DynamicRoute(Route):
         self._formatter = formatter
 
     def match(self, location: str) -> Optional[Dict[str, str]]:
-        pmatch = self._pattern.match(location)
-        return pmatch.groupdict() if pmatch else None
-
-    def full_match(self, location: str) -> Optional[Dict[str, str]]:
-        """Full match"""
-        pmatch = self._pattern.fullmatch(location)
+        # Cf above: **the end** of the location must match the pattern
+        pmatch = self._pattern.search(location)
         return pmatch.groupdict() if pmatch else None
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]:
@@ -192,7 +182,7 @@ def find_route(me: QgsServerRequest.Method, path: str) -> tuple[RouteDef, dict[s
     for r in ROUTES:
         if r.me == me:
             candidate = r
-            values = r.route.full_match(path)
+            values = r.route.match(path)
             if values is not None:
                 return (r, values)
 
