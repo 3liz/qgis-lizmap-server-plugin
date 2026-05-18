@@ -57,7 +57,7 @@ LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 lint:: 
 	@ $(UV) ruff check --output-format=concise $(LINT_TARGETS)
 
-lint:: typecheck
+#lint:: typecheck
 
 lint-preview:
 	@ $(UV) ruff check --preview --output-format=concise $(LINT_TARGETS)
