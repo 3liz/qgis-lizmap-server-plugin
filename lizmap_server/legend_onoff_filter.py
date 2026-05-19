@@ -7,6 +7,10 @@
 
 import traceback
 
+from typing import (
+    Optional,
+)
+
 from qgis.core import (
     Qgis,
     QgsMapLayer,
@@ -18,8 +22,10 @@ from qgis.server import (
     QgsServerInterface,
 )
 
-from lizmap_server.core import find_vector_layer
-from lizmap_server import logger
+from .core import find_vector_layer
+from .tools import _N
+
+from . import logger
 
 
 class LegendOnOffAccessControl(QgsAccessControlFilter):
@@ -34,7 +40,7 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         if Qgis.versionInt() < 33800:
             layer_short_name = layer.shortName()
         else:
-            layer_short_name = layer.serverProperties().shortName()
+            layer_short_name = _N(layer.serverProperties()).shortName()
 
         for legend_layer in qs.split(";"):
             layer_name, key_list = legend_layer.split(":")
@@ -45,23 +51,29 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             if layer_name not in (layer_short_name, layer.name(), layer.id()):
                 continue
 
+            # TODO: check that layer is a vector layer
             for key in key_list.split(","):
-                layer.renderer().checkLegendSymbolItem(key, onoff)
+                layer.renderer().checkLegendSymbolItem(key, onoff)  # ty: ignore[unresolved-attribute]
 
-    def layerPermissions(self, layer: QgsMapLayer) -> QgsAccessControlFilter.LayerPermissions:
+    def layerPermissions(self, layer: Optional[QgsMapLayer]) -> QgsAccessControlFilter.LayerPermissions:
+
+        layer = _N(layer)
+
         rights = super().layerPermissions(layer)
 
-        handler = self.iface.requestHandler()
+        handler = _N(self.iface.requestHandler())
         params = handler.parameterMap()
 
         styles = params.get("STYLES", "").split(",")
 
         if len(styles) == 0:
+            # TODO: check return type
             styles = params.get("STYLE", [])
 
         layers = params.get("LAYERS", "").split(",")
 
         if len(layers) == 0:
+            # TODO: check return type
             layers = params.get("LAYER", [])
 
         # noinspection PyBroadException
@@ -70,14 +82,14 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         except Exception:
             style_map = {}
 
-        sm = layer.styleManager()
+        sm = _N(layer.styleManager())
         style = sm.currentStyle()
 
         # check short name
         if Qgis.versionInt() < 33800:
             layer_short_name = layer.shortName()
         else:
-            layer_short_name = layer.serverProperties().shortName()
+            layer_short_name = _N(layer.serverProperties()).shortName()
         if layer_short_name in style_map:
             style = style_map[layer_short_name]
 
@@ -98,17 +110,18 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         if (
             "LEGEND_ON" not in params
             and "LEGEND_OFF" not in params
-            and layer.type() == QgsMapLayer.LayerType.VectorLayer
-            and layer.renderer()
-            and layer.renderer().type()
+            and layer.type() == Qgis.LayerType.Vector
+            and layer.renderer()  # ty: ignore[unresolved-attribute]
+            and layer.renderer().type()  # ty: ignore[unresolved-attribute]
             in (
                 "categorizedSymbol",
                 "RuleRenderer",
                 "graduatedSymbol",
             )
         ):
-            for item in layer.renderer().legendSymbolItems():
-                layer.renderer().checkLegendSymbolItem(item.ruleKey(), True)
+            renderer = layer.renderer()  # ty: ignore[unresolved-attribute]
+            for item in renderer.legendSymbolItems():
+                renderer.checkLegendSymbolItem(item.ruleKey(), True)
 
         return rights
 
@@ -139,21 +152,20 @@ class LegendOnOffFilter(QgsServerFilter):
                 continue
 
             layer = find_vector_layer(layer_name, project)
-            if not layer:
+            if layer is None:
                 logger.warning(
-                    "LegendOnOFF::RequestReady : Skipping the layer '{}' because it's not a vector layer".format(
-                        layer_name
-                    )
+                    f"LegendOnOFF::RequestReady : Skipping the layer '{layer_name}'"
+                    " because it's not a vector layer"
                 )
                 continue
 
             for key in keys:
-                layer.renderer().checkLegendSymbolItem(key, True)
+                _N(layer.renderer()).checkLegendSymbolItem(key, True)
 
     def responseComplete(self) -> None:
         """Restore legend customized renderers"""
         try:
-            handler = self.serverInterface().requestHandler()
+            handler = _N(self.serverInterface()).requestHandler()
             if not handler:
                 logger.critical("LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.")
                 return
@@ -163,7 +175,7 @@ class LegendOnOffFilter(QgsServerFilter):
             if "LEGEND_ON" not in params and "LEGEND_OFF" not in params:
                 return
 
-            project: QgsProject = QgsProject.instance()
+            project: QgsProject = _N(QgsProject.instance())
 
             if "LEGEND_ON" in params:
                 self._reset_legend(params["LEGEND_ON"], project)

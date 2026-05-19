@@ -54,7 +54,7 @@ class Route(Protocol):
     @property
     def is_dynamic(self) -> bool: ...
 
-    def match(self, path: str) -> Optional[Dict[str, str]]:
+    def match(self, location: str) -> Optional[Dict[str, str]]:
         """Partial match
 
         Check if location ends with the corresponding pattern
@@ -70,8 +70,8 @@ class StaticRoute(Route):
     def __init__(self, location: str):
         self._location = location
 
-    def match(self, path: str) -> Optional[Dict[str, str]]:
-        return {} if self._location.endswith(path) else None
+    def match(self, location: str) -> Optional[Dict[str, str]]:
+        return {} if self._location.endswith(location) else None
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]:
         if path.is_relative_to(self._location):
@@ -145,12 +145,12 @@ class DynamicRoute(Route):
 #
 
 METHODS = {
-    "head": QgsServerRequest.HeadMethod,
-    "put": QgsServerRequest.PutMethod,
-    "get": QgsServerRequest.GetMethod,
-    "post": QgsServerRequest.PostMethod,
-    "patch": QgsServerRequest.PatchMethod,
-    "delete": QgsServerRequest.DeleteMethod,
+    "head": QgsServerRequest.Method.HeadMethod,
+    "put": QgsServerRequest.Method.PutMethod,
+    "get": QgsServerRequest.Method.GetMethod,
+    "post": QgsServerRequest.Method.PostMethod,
+    "patch": QgsServerRequest.Method.PatchMethod,
+    "delete": QgsServerRequest.Method.DeleteMethod,
 }
 
 

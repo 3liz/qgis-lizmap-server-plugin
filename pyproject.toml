@@ -4,7 +4,7 @@ authors = [
     { name = "3liz", email = "info@3liz.com" }
 ]
 version = "2.14.2"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "GPL-2.0-only"
 license-files = ["LICENSE"]
 readme = "README.md"
@@ -18,7 +18,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: GIS",
 ]
@@ -49,7 +48,7 @@ tests = [
 ]
 lint = [
     "ruff",
-    "mypy",
+    "ty",
     "bandit",
     "vulture",
     "lxml-stubs",
@@ -156,6 +155,24 @@ module = [
     "ruamel.*",
 ]
 ignore_missing_imports = true
+
+#
+# Ty
+#
+[tool.ty.src]
+include = [ "lizmap_server" ]
+exclude = [ "lizmap_server/qgis4_compat.py"]
+
+
+[tool.ty.rules]
+unused-ignore-comment = "ignore"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+    "qjazz_core.**",
+    "qjazz_cache.**",
+    "pyqgisserver.**",
+]
 
 #
 # Coverage

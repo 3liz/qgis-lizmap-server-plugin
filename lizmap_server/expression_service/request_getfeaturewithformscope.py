@@ -57,7 +57,7 @@ def get_feature_with_form_scope(
     # get layer
     layer = find_vector_layer(layer_name, project)
     # layer not found
-    if not layer:
+    if layer is None:
         raise ExpressionServiceError(
             "Bad request", f"Invalid LAYER parameter for 'VirtualField': {layer_name} provided", 400
         )
@@ -236,7 +236,10 @@ def get_feature_with_form_scope(
     # With geometry
     with_geom = to_bool(params.get("WITH_GEOMETRY"))
     if not with_geom:
-        req.setFlags(QgsFeatureRequest.Flag.NoGeometry)
+        # TODO: change when deprecating QGIS 3.34
+        # Only with QGIS >= 3.36
+        # req.setFlags(Qgis.FeatureRequestFlag.NoGeometry)
+        req.setFlags(QgsFeatureRequest.Flag.NoGeometry)  # ty: ignore [unresolved-attribute]
 
     # Fields
     pk_attributes = layer.primaryKeyAttributes()
@@ -257,7 +260,7 @@ def get_feature_with_form_scope(
         json_exporter.setAttributes(attribute_list)
 
     separator = ""
-    for feat in layer.getFeatures(req):
+    for feat in layer.getFeatures(req):  # ty: ignore[not-iterable]
         fid = layer_name + "." + get_server_fid(feat, pk_attributes)
         response.write(separator + json_exporter.exportFeature(feat, {}, fid))
         response.flush()

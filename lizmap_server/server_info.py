@@ -12,6 +12,8 @@ from qgis.server import (
 )
 
 
+from .tools import _N
+
 from .tos_definitions import (
     BING_KEY,
     GOOGLE_KEY,
@@ -77,8 +79,9 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         return QgsServerOgcApi.data
 """
 
+
 def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dict:
-    #if not check_environment_variable():
+    # if not check_environment_variable():
     #    raise ServiceError("Bad request error", "Invalid request", 404)
 
     server_metadata = context.metadata
@@ -109,11 +112,11 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
 
     # 3.28 : Firenze
     # 3.30 : 's-Hertogenbosch
-    human_version, human_name = Qgis.QGIS_VERSION.split("-", 1)
+    human_version, human_name = Qgis.version().split("-", 1)
 
     services_available = []
     for service in EXPECTED_SERVICES:
-        if server_iface.serviceRegistry().getService(service):
+        if _N(server_iface.serviceRegistry()).getService(service):
             services_available.append(service)
 
     if Qgis.devVersion() != "exported":
@@ -142,7 +145,7 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
     else:
         qgis_server_meta = {"found": False, "version": "not used"}
 
-    qfontdb = QFontDatabase() if Qgis.versionInt() < 40000 else QFontDatabase
+    qfontdb = QFontDatabase() if Qgis.versionInt() < 40000 else QFontDatabase # ty: ignore
 
     return {
         # Only the "qgis_server" section is forwarded in LWC source code
@@ -161,7 +164,7 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
             },
             "services": services_available,
             "plugins": plugins,
-            "fonts": qfontdb.families(),
+            "fonts": qfontdb.families(),  # ty: ignore[missing-argument]
         },
         "environment": {
             "gdal": gdal.VersionInfo("VERSION_NUM"),
@@ -169,4 +172,3 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
             "qt": QT_VERSION_STR,
         },
     }
-

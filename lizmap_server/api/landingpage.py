@@ -1,4 +1,3 @@
-
 from . import routes
 
 from .models import Link
@@ -18,6 +17,7 @@ def v1(path: str) -> str:
 #
 # Landing page
 #
+
 
 @swagger.model
 class LandingPage(JsonModel):
@@ -47,7 +47,7 @@ def landing_page(request: HTTPRequestDelegate, **match_info):
         LandingPage(
             name="Lizmap API",
             description="Provide informations about projects",
-            links = [
+            links=[
                 Link.makelink(
                     request,
                     rel="service-desc",
@@ -90,7 +90,6 @@ def landing_page(request: HTTPRequestDelegate, **match_info):
                     title="Landing page",
                     path="/",
                 ),
-            ]
+            ],
         )
     )
-

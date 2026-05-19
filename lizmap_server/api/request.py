@@ -15,6 +15,7 @@ from qgis.server import (
 from pydantic import TypeAdapter, JsonValue
 
 from ..context import create_server_context
+from ..tools import _N
 
 from .errors import HTTPError
 from .schemas.models import JsonModel
@@ -26,8 +27,8 @@ class HTTPRequestDelegate:
 
     def __init__(self, context: QgsServerApiContext):
         self._context = context
-        self._response = context.response()
-        self._request = context.request()
+        self._response = _N(context.response())
+        self._request = _N(context.request())
         self._finished = False
 
     @cached_property
@@ -64,7 +65,7 @@ class HTTPRequestDelegate:
 
     @property
     def serverInterface(self) -> QgsServerInterface:
-        return self._context.serverInterface()
+        return _N(self._context.serverInterface())
 
     def parameter(self, key: str, default: Optional[str] = "") -> str:
         return self._request.parameter(key, default)
@@ -84,7 +85,7 @@ class HTTPRequestDelegate:
         if isinstance(data, JsonModel):
             self._response.write(data.model_dump_json())
         else:
-            self._response.write(TypeAdapter(JsonValue).dump_json(data))  # type: ignore [arg-type]
+            self._response.write(TypeAdapter(JsonValue).dump_json(data))
 
     def write(self, chunk: str | bytes) -> None:
         """ """

@@ -18,6 +18,7 @@ from lizmap_server.api.defaults import (
     verify_config,
 )
 
+
 def test_lizmap_api_default_path_resolution(rootdir: Path):
 
     assert os.getenv(SEARCH_PATH_ENV) == "/data"
@@ -32,17 +33,17 @@ def test_lizmap_api_default_path_resolution(rootdir: Path):
 
     resolved = resolve_project_uri("/data/legend")
     assert resolved is not None
-    assert resolved.path ==  f"{rootdir}/data/legend"
+    assert resolved.path == f"{rootdir}/data/legend"
 
 
 def test_lizmap_api_routes(client):
     from lizmap_server.api import errors, routes
 
-    route, match_infos  = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list/")
+    route, match_infos = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list/")
     assert route is not None
     assert match_infos.get("PATH") == ""
 
-    route, match_infos  = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list/foo/bar")
+    route, match_infos = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list/foo/bar")
     assert route is not None
     assert match_infos.get("PATH") == "foo/bar"
 
@@ -103,7 +104,6 @@ def test_lizmap_api_projects_layers(client):
     print("\n::test_lizmap_server_api::description::\n", content)
 
 
-
 def test_lizmap_api_projects_layouts(client):
     """Test the Lizmap API for server settings"""
 
@@ -140,5 +140,3 @@ def test_lizmap_api_landinpage(client):
 
     content = json.loads(rv.content.decode("utf-8"))
     print("\n::test_landingpage::content\n", content)
-
-

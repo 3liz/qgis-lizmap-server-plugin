@@ -6,14 +6,16 @@ from qgis.core import (
     Qgis,
     QgsExpression,
     QgsFeature,
-    QgsMapLayer,
     QgsProject,
     QgsRenderContext,
 )
 from qgis.utils import qgsfunction
 
+from .tools import _N
+
 LOGGER = logging.getLogger("Lizmap")
 SPACES = "  "
+
 
 @qgsfunction(
     args="auto",
@@ -30,10 +32,10 @@ def layer_renderer_used_attributes(
     use to render a vector layer
     """
     # Get layer by ID
-    layer = QgsProject.instance().mapLayer(layer_identifier)
+    layer = _N(QgsProject.instance()).mapLayer(layer_identifier)
     if not layer:
         # Get layer by name if no layer found
-        get_layers = QgsProject.instance().mapLayersByName(layer_identifier)
+        get_layers = _N(QgsProject.instance()).mapLayersByName(layer_identifier)
         if len(get_layers) > 0:
             layer = get_layers[0]
 
@@ -42,12 +44,12 @@ def layer_renderer_used_attributes(
         return []
 
     # Layer must be a vector layer
-    if layer.type() != QgsMapLayer.VectorLayer:
+    if layer.type() != Qgis.LayerType.Vector:
         LOGGER.debug(f'Layer "{layer_identifier}" is not a vector layer')
         return []
 
     # Get layer renderer
-    renderer = layer.renderer()
+    renderer = layer.renderer()  # ty: ignore[unresolved-attribute]
 
     # Create render context
     renderContext = QgsRenderContext()

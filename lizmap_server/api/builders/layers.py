@@ -1,4 +1,5 @@
 from typing import (
+    TYPE_CHECKING,
     Iterator,
     Optional,
     Sequence,
@@ -16,6 +17,8 @@ from qgis.core import (
     QgsVectorLayerJoinInfo,
 )
 
+from ...tools import _N
+
 from ..schemas.layers import (
     AttributeTableColumn,
     AttributeTableConfig,
@@ -27,6 +30,9 @@ from ..schemas.layers import (
     VectorLayerJoinInfo,
 )
 from .crs import to_crs
+
+if TYPE_CHECKING:
+    from qgis.core import QgsVectorLayer
 
 
 def layer_feature_renderer(renderer: Optional[QgsFeatureRenderer]) -> Optional[FeatureRenderer]:
@@ -93,7 +99,7 @@ def layer_description(
         keywords = layer.keywordList()
     else:
         # Qgis 3.38+
-        properties = layer.serverProperties()
+        properties = _N(layer.serverProperties())
         abstract = properties.abstract()
         datasource = properties.dataUrl()
         keywords = properties.keywordList()
@@ -117,6 +123,7 @@ def layer_description(
             provider_name = provider.name()
 
     if layer_type == Qgis.LayerType.Vector:
+        layer = cast("QgsVectorLayer", layer)
         attribute_aliases = layer.attributeAliases()
         feature_renderer = layer_feature_renderer(layer.renderer())
         display_expression = layer.displayExpression()
@@ -130,9 +137,9 @@ def layer_description(
             # Use QGIS Api
             fields = layer.fields()
 
-            def pred(flag: Qgis.FieldConfigurationFlags) -> Iterator[str]:
+            def pred(flag: Qgis.FieldConfigurationFlag) -> Iterator[str]:
                 for field in fields:
-                    if field.configurationFlags() & flag:
+                    if (field.configurationFlags() & flag) != 0:
                         yield field.name()
 
             exclude_attribute_wms = list(pred(Qgis.FieldConfigurationFlag.HideFromWms))
@@ -146,14 +153,15 @@ def layer_description(
     return LayerDescription(
         id_=layer.id(),
         name=layer.name(),
-        type_=layer.type().name.lower(),
+        # layer.type() is an enum value and so has 'name' attribute
+        type_=layer.type().name.lower(),  # ty: ignore[unresolved-attribute]
         abstract=abstract,
         embedded=project.layerIsEmbedded(layer.id()) != "" if project else False,
         provider=provider_name,
         datasource=datasource,
         opacity=layer.opacity(),
         srs=to_crs(layer.crs()),
-        style_manager=layer_style_manager(layer.styleManager()),
+        style_manager=layer_style_manager(_N(layer.styleManager())),
         keywords=keywords,
         # Vector properties
         feature_renderer=feature_renderer,

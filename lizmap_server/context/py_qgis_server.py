@@ -22,10 +22,7 @@ from .common import (
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar
-
-    LayerDetails = TypeVar("LayerDetails")
-
+    from ..api.schemas import LayerDetails
 
 SERVER_CONTEXT_NAME = "Py-QGIS-Server"
 
@@ -67,7 +64,7 @@ class Context(ContextABC):
             md,
             with_details=with_details,
             with_layouts=with_layouts,
-        )  # type: ignore [return-value]
+        )
 
     def collect_projects(self, location: str) -> Iterator[Tuple[Any, str]]:
         """Collect all projects from 'location'"""

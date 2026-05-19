@@ -11,7 +11,7 @@ from typing import (
 
 import pydantic
 
-from pydantic.config import JsonDict
+from pydantic.config import JsonDict, ConfigDict
 from pydantic import (
     BaseModel,
     JsonValue,
@@ -117,7 +117,7 @@ Nullable = Annotated[T | None, Field(json_schema_extra=fix_optional_schema)]
 
 # Required in model_config for pydantic.mypy to use
 # field name instead of alias
-model_json_properties = {
+model_json_properties: ConfigDict = {
     "alias_generator": alias_generators.to_camel,
     "populate_by_name": True,
     "extra": "allow",

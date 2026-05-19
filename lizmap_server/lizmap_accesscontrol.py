@@ -1,7 +1,11 @@
+from typing import (
+    Optional,
+)
+
 from qgis.core import QgsExpression, QgsMapLayer, QgsProject, QgsVectorLayer
 from qgis.server import QgsAccessControlFilter, QgsServerInterface
 
-from lizmap_server.core import (
+from .core import (
     get_lizmap_config,
     get_lizmap_groups,
     get_lizmap_layer_login_filter,
@@ -10,15 +14,15 @@ from lizmap_server.core import (
     get_lizmap_user_login,
     is_editing_context,
 )
-from lizmap_server.filter_by_polygon import (
+from .filter_by_polygon import (
     ALL_FEATURES,
     NO_FEATURES,
     FilterByPolygon,
     FilterType,
 )
-from lizmap_server import logger
-from lizmap_server.tools import to_bool
-from lizmap_server.tos_definitions import (
+from . import logger
+from .tools import to_bool, _N
+from .tos_definitions import (
     BING_DOMAIN,
     BING_KEY,
     GOOGLE_DOMAIN,
@@ -37,7 +41,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         logger.info(f"LayerAccessControl : Google {self._strict_google}, Bing {self._strict_bing}")
 
-    def layerFilterSubsetString(self, layer: QgsVectorLayer) -> str:
+    def layerFilterSubsetString(self, layer: Optional[QgsVectorLayer]) -> str:
         """Return an additional subset string (typically SQL) filter"""
         logger.info("Lizmap layerFilterSubsetString")
         # We should have a safe SQL query.
@@ -48,22 +52,24 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
         return super().layerFilterSubsetString(layer)
 
-    def layerPermissions(self, layer: QgsMapLayer) -> QgsAccessControlFilter.LayerPermissions:
+    def layerPermissions(self, layer: Optional[QgsMapLayer]) -> QgsAccessControlFilter.LayerPermissions:
         """Return the layer rights"""
+        layer = _N(layer)
+
         # Get default layer rights
         rights = super().layerPermissions(layer)
+
+        # Get Project
+        project = _N(QgsProject.instance())
+
+        # Get request handler
+        request_handler = _N(self.iface.requestHandler())
 
         # Get layer name
         layer_name = layer.name()
 
-        # Get Project
-        project = QgsProject.instance()
-
-        # Get request handler
-        request_handler = self.iface.requestHandler()
-
         # Discard invalid layers for other services than WMS
-        if not layer.isValid() and request_handler.parameter("service").upper() != "WMS":
+        if (layer is None or not layer.isValid()) and request_handler.parameter("service").upper() != "WMS":
             logger.info(f"layerPermission: Layer {layer_name} is invalid in {project.fileName()}!")
             rights.canRead = rights.canInsert = rights.canUpdate = rights.canDelete = False
             return rights
@@ -77,12 +83,13 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         if custom_var.get("lizmap_user", None) != user_login:
             custom_var["lizmap_user"] = user_login
             custom_var["lizmap_user_groups"] = list(groups)  # QGIS can't store a tuple
-            project.setCustomVariables(custom_var)
+            # NOTE: wrong type annotations in QGIS 4
+            project.setCustomVariables(custom_var)  # ty: ignore[invalid-argument-type]
 
         # Try to override filter expression cache
         is_wfs = request_handler.parameter("service").upper() == "WFS"
         if is_wfs and request_handler.parameter("request").upper() == "GETFEATURE":
-            self.iface.accessControls().resolveFilterFeatures([layer])
+            _N(self.iface.accessControls()).resolveFilterFeatures([layer])
 
         datasource = layer.source().lower()
         is_google = GOOGLE_DOMAIN in datasource
@@ -231,7 +238,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         default_cache_key = super().cacheKey()
 
         # Get Lizmap user groups provided by the request
-        groups = get_lizmap_groups(self.iface.requestHandler())
+        groups = get_lizmap_groups(_N(self.iface.requestHandler()))
 
         # If groups is empty, no Lizmap user groups provided by the request
         # The default cache key is returned
@@ -281,14 +288,16 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
     def get_lizmap_layer_filter(self, layer: QgsVectorLayer, filter_type: FilterType) -> str:
         """Get lizmap layer filter based on login filter"""
 
+        request_handler = _N(self.iface.requestHandler())
+
         # Check first the headers to avoid unnecessary config file reading
         # Override filter
-        if get_lizmap_override_filter(self.iface.requestHandler()):
+        if get_lizmap_override_filter(request_handler):
             return ALL_FEATURES
 
         # Get Lizmap user groups provided by the request
-        groups = get_lizmap_groups(self.iface.requestHandler())
-        user_login = get_lizmap_user_login(self.iface.requestHandler())
+        groups = get_lizmap_groups(request_handler)
+        user_login = get_lizmap_user_login(request_handler)
 
         # If groups is empty, no Lizmap user groups provided by the request
         if len(groups) == 0 and not user_login:
@@ -312,7 +321,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             return ALL_FEATURES
 
         try:
-            edition_context = is_editing_context(self.iface.requestHandler())
+            edition_context = is_editing_context(_N(self.iface.requestHandler()))
             filter_polygon_config = FilterByPolygon(
                 cfg.get("filter_by_polygon"),
                 layer,
@@ -378,7 +387,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             cfg_layer_login_filter,
             groups,
             user_login,
-            layer.dataProvider().name(),
+            _N(layer.dataProvider()).name(),
         )
         if polygon_filter:
             return f"{polygon_filter} AND {login_filter}"

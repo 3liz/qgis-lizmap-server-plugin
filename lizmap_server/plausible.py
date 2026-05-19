@@ -9,6 +9,8 @@ from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from lizmap_server import logger
 from lizmap_server.tools import to_bool, version
 
+from .tools import _N
+
 MIN_SECONDS = 3600
 ENV_SKIP_STATS = "3LIZ_SKIP_STATS"
 
@@ -44,7 +46,7 @@ class Plausible:
             return False
 
         current = QDateTime().currentDateTimeUtc()
-        if self.previous_date and self.previous_date.secsTo(current) < MIN_SECONDS:
+        if self.previous_date is not None and self.previous_date.secsTo(current) < MIN_SECONDS:
             # Not more than one request per hour
             # It's done at plugin startup anyway
             return False
@@ -85,7 +87,7 @@ class Plausible:
 
         # Qgis.QGIS_VERSION → 3.34.6-Prizren
         # noinspection PyUnresolvedReferences
-        qgis_version_full = Qgis.QGIS_VERSION.split("-")[0]
+        qgis_version_full = Qgis.version().split("-")[0]
         # qgis_version_full → 3.34.6
         qgis_version_branch = ".".join(qgis_version_full.split(".")[0:2])
         # qgis_version_branch → 3.34
@@ -114,16 +116,16 @@ class Plausible:
         }
 
         # noinspection PyArgumentList
-        r: QNetworkReply = QgsNetworkAccessManager.instance().post(
+        r: QNetworkReply = _N(QgsNetworkAccessManager.instance()).post(  # ty: ignore[invalid-assignment]
             request, QByteArray(str.encode(json.dumps(data)))
         )
         if not is_lizcloud:
             return True
 
         message = f"Request HTTP OS process '{os.getpid()}' sent to '{plausible_url}' with domain '{plausible_domain} : "
-        if r.error() == QNetworkReply.NetworkError.NoError:
+        if r.error() == QNetworkReply.NetworkError.NoError:  # ty: ignore[call-non-callable]
             logger.info(message + "OK")
         else:
-            logger.warning(message + r.error())
+            logger.warning(f"{message} {r.error()}")  # ty: ignore[call-non-callable]
 
         return True

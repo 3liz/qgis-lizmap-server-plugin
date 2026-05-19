@@ -3,6 +3,7 @@ from qgis.server import QgsServerFilter, QgsServerInterface
 
 from .core import get_lizmap_config, get_lizmap_groups
 from .exception import LizmapFilterException
+from .tools import _N
 from . import logger
 
 
@@ -18,7 +19,7 @@ class LizmapFilter(QgsServerFilter):
         try:
             # Check first the headers to avoid unnecessary config file reading
             # Get Lizmap user groups defined in request headers
-            groups = get_lizmap_groups(self.iface.requestHandler())
+            groups = get_lizmap_groups(_N(self.iface.requestHandler()))
 
             # If groups is empty, no Lizmap user groups provided by the request.
             # The request can be evaluated by QGIS Server
@@ -65,7 +66,7 @@ class LizmapFilter(QgsServerFilter):
             exc = LizmapFilterException("Forbidden", "No ACL permissions", response_code=403)
 
             # Get request handler
-            handler = self.iface.requestHandler()
+            handler = _N(self.iface.requestHandler())
             # use setServiceException to be sure to stop the request
             handler.setServiceException(exc)
 
@@ -74,8 +75,9 @@ class LizmapFilter(QgsServerFilter):
 
     def responseComplete(self):
         # Remove lizmap variables for expression
-        project = QgsProject.instance()
+        project = _N(QgsProject.instance())
         custom_var = project.customVariables()
         custom_var.pop("lizmap_user", None)
         custom_var.pop("lizmap_user_groups", None)
-        project.setCustomVariables(custom_var)
+        # NOTE: wrong type annotations in QGIS 4
+        project.setCustomVariables(custom_var)   # ty: ignore[invalid-argument-type]

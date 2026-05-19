@@ -1,6 +1,9 @@
 import traceback
 
-from typing import Dict
+from typing import (
+    Dict,
+    Optional,
+)
 
 from osgeo import gdal
 from qgis.core import Qgis, QgsProject
@@ -28,7 +31,7 @@ from .filter_by_polygon import (
     FilterByPolygon,
     FilterType,
 )
-from .tools import version
+from .tools import version, _N
 from . import logger
 
 
@@ -59,17 +62,19 @@ class LizmapService(QgsService):
         self,
         request: QgsServerRequest,
         response: QgsServerResponse,
-        project: QgsProject,
+        project: Optional[QgsProject],
     ):
         """Execute a 'LIZMAP' request"""
 
+        project = _N(project)
         params = request.parameters()
 
         try:
             req_param = params.get("REQUEST", "").upper()
 
             try:
-                bytes(request.data()).decode()
+                # NOTE: QGIS 4 incomplete type annotation for QByteArray
+                bytes(request.data()).decode()  # ty: ignore[invalid-argument-type]
             except Exception:
                 raise LizmapServiceError("Bad request error", f"Invalid POST DATA for '{req_param}'", 400)
 
@@ -106,7 +111,7 @@ class LizmapService(QgsService):
     ) -> None:
         """The subset string to use a on a layer."""
         layer = find_vector_layer_from_params(params, project)
-        if not layer:
+        if layer is None:
             raise ServiceError("Bad request error", "Invalid LAYER parameter", 400)
 
         body = {
@@ -115,9 +120,11 @@ class LizmapService(QgsService):
             "polygons": "",
         }
 
+        request_handler = _N(self.server_iface.requestHandler())
+
         # Check first the headers to avoid unnecessary config file reading
         # Override filter
-        if get_lizmap_override_filter(self.server_iface.requestHandler()):
+        if get_lizmap_override_filter(request_handler):
             write_json_response(body, response)
             return
 
@@ -152,7 +159,7 @@ class LizmapService(QgsService):
             else:
                 filter_type = FilterType.PlainSqlQuery
 
-            edition_context = is_editing_context(self.server_iface.requestHandler())
+            edition_context = is_editing_context(request_handler)
             filter_polygon_config = FilterByPolygon(
                 cfg.get("filter_by_polygon"),
                 layer,
@@ -173,14 +180,14 @@ class LizmapService(QgsService):
                     return
 
                 # Get Lizmap user groups provided by the request
-                groups = get_lizmap_groups(self.server_iface.requestHandler())
+                groups = get_lizmap_groups(request_handler)
 
                 # polygon_filter is set, we have a value to filter
                 # pass the tuple of groups or the tuple of the user
                 # depending on the filter_by_user boolean variable
                 groups_or_user = groups
                 if filter_polygon_config.is_filtered_by_user():
-                    user_login = get_lizmap_user_login(self.server_iface.requestHandler())
+                    user_login = get_lizmap_user_login(request_handler)
                     groups_or_user = (user_login,)
 
                 # Get the subset SQL
@@ -220,7 +227,7 @@ class LizmapService(QgsService):
         }
 
         # QGIS info
-        qgis_version_split = Qgis.QGIS_VERSION.split("-")
+        qgis_version_split = Qgis.version().split("-")
         body["qgis"]["version"] = qgis_version_split[0]
         body["qgis"]["name"] = qgis_version_split[1]
         body["qgis"]["version_int"] = Qgis.versionInt()
@@ -229,7 +236,7 @@ class LizmapService(QgsService):
         body["gdalogr"]["name"] = gdal.VersionInfo("NAME")
         body["gdalogr"]["version_int"] = gdal.VersionInfo("VERSION_NUM")
 
-        reg = self.server_iface.serviceRegistry()
+        reg = _N(self.server_iface.serviceRegistry())
         services = ["WMS", "WFS", "WCS", "WMTS", "ATLAS", "CADASTRE", "EXPRESSION", "LIZMAP"]
         for s in services:
             if reg.getService(s):

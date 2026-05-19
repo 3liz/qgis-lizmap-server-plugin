@@ -23,7 +23,7 @@ jobs:
       - name: Run linter
         run: | 
             ruff check --output-format=concise lizmap_server
-            #mypy lizmap_server
+            ty check
 
       - name: Run security check
         run: bandit -r lizmap_server --severity-level=high

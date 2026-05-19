@@ -23,6 +23,8 @@ from qgis.core import (
 from qgis.gui import QgsExternalResourceWidget
 from qgis.PyQt.QtXml import QDomDocument
 
+from .tools import _N
+
 LOGGER = logging.getLogger("Lizmap")
 SPACES = "  "
 
@@ -48,7 +50,7 @@ class Tooltip:
     @staticmethod
     def create_popup_node_item_from_form(
         layer: QgsVectorLayer,
-        node: QgsAttributeEditorElement,
+        node: QgsAttributeEditorElement | QgsAttributeEditorContainer | QgsAttributeEditorField | None,
         level: int,
         headers: list,
         html: str,
@@ -99,7 +101,7 @@ class Tooltip:
                 field_view = Tooltip._generate_external_resource(widget_config, name, fname)
 
             if widget_type == "ValueRelation":
-                if not QgsProject.instance().mapLayer(widget_config["Layer"]):
+                if not _N(QgsProject.instance()).mapLayer(widget_config["Layer"]):
                     # Issue #287
                     LOGGER.warning(
                         "Layer {} does not have a valid value relation layer for field {}".format(
@@ -114,7 +116,7 @@ class Tooltip:
                 relation = relation_manager.relation(widget_config["Relation"])
                 referenced_layer = relation.referencedLayer()
 
-                if not referenced_layer:
+                if referenced_layer is None:
                     # Issue #287
                     LOGGER.warning(
                         "Layer {} does not have a valid relation reference layer for field {}".format(
@@ -336,7 +338,8 @@ class Tooltip:
             values = {escape_value(y): escape_value(x) for x, y in values.items()}
 
         # noinspection PyCallByClass,PyArgumentList
-        hstore = QgsHstoreUtils.build(values)
+        # QGIS 4 type annotation mess...
+        hstore = QgsHstoreUtils.build(values)  # ty: ignore[invalid-argument-type]
         # field_view
         return f'''
                 map_get(

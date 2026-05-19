@@ -29,9 +29,9 @@ from lizmap_server.core import (
     find_vector_layer,
     get_server_fid,
 )
-from lizmap_server.exception import ExpressionServiceError
-from lizmap_server.tools import to_bool
-from lizmap_server import logger
+from ..exception import ExpressionServiceError
+from ..tools import to_bool, _N
+from .. import logger
 
 from .models import (
     ALLOWED_SAFE_EXPRESSIONS,
@@ -68,7 +68,7 @@ def virtual_fields(
     # get layer
     layer = find_vector_layer(layer_name, project)
     # layer not found
-    if not layer:
+    if layer is None:
         raise ExpressionServiceError(
             "Bad request", f"Invalid LAYER parameter for 'VirtualFields': {layer_name} provided", 400
         )
@@ -106,6 +106,8 @@ def virtual_fields(
             exp_parser_errors.append(error)
             continue
 
+        exp = _N(exp)
+
         exp.prepare(exp_context)
         exp_map[field] = exp
 
@@ -114,6 +116,8 @@ def virtual_fields(
         if error:
             exp_parser_errors.append(error)
             continue
+
+        exp = _N(exp)
 
         for member in exp.referencedFunctions():
             if member not in ALLOWED_SAFE_EXPRESSIONS:
@@ -192,7 +196,10 @@ def virtual_fields(
     # With geometry
     with_geom = to_bool(params.get("WITH_GEOMETRY"))
     if not with_geom:
-        req.setFlags(QgsFeatureRequest.Flag.NoGeometry)
+        # TODO: change when deprecating QGIS 3.34
+        # Only with QGIS >= 3.36
+        # req.setFlags(Qgis.FeatureRequestFlag.NoGeometry)
+        req.setFlags(QgsFeatureRequest.Flag.NoGeometry)  # ty: ignore[unresolved-attribute]
 
     # Fields
     pk_attributes = layer.primaryKeyAttributes()
@@ -204,7 +211,7 @@ def virtual_fields(
 
     # set extra subset string provided by access control plugins
     subset_sql = layer.subsetString()
-    extra_sql = server_iface.accessControls().extraSubsetString(layer)
+    extra_sql = _N(server_iface.accessControls()).extraSubsetString(layer)
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 
@@ -219,7 +226,7 @@ def virtual_fields(
         json_exporter.setAttributes(attribute_list)
 
     separator = ""
-    for feat in layer.getFeatures(req):
+    for feat in layer.getFeatures(req):  # ty: ignore[not-iterable]
         fid = layer_name + "." + get_server_fid(feat, pk_attributes)
 
         extra: dict = {}
@@ -274,7 +281,7 @@ def check_expression(
     expression_str: str,
     distance_area: QgsDistanceArea,
     project: QgsProject,
-) -> Tuple[QgsExpression, str]:
+) -> Tuple[Optional[QgsExpression], str]:
     """Check if an expression as a string has an error or not."""
     expression = QgsExpression(expression_str)
     expression.setGeomCalculator(distance_area)

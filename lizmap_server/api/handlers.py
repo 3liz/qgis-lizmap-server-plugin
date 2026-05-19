@@ -4,9 +4,9 @@ import traceback
 from typing import (
     Dict,
     Iterator,
+    Optional,
     Sequence,
     Tuple,
-    cast,
 )
 from urllib.parse import quote
 
@@ -60,6 +60,7 @@ def project_summary(project: QgsProject, links: Sequence[Link]) -> ProjectSummar
         links=links,
     )
 
+
 @swagger.model
 class ProjectSummaries(JsonModel):
     projects: Sequence[ProjectSummaryResponse]
@@ -69,7 +70,6 @@ class ProjectSummaries(JsonModel):
 swagger.model(ProjectSummary)
 swagger.model(ProjectDescription)
 swagger.model(LayerDetails)
-
 
 
 @routes.get(v1("projects/list/{PATH:.*}"))
@@ -93,7 +93,7 @@ def get_projects(request: HTTPRequestDelegate, **match_info):
 
     context = request.server_context
 
-    def collect_projects() -> Iterator[ProjectSummary]:
+    def collect_projects() -> Iterator[ProjectSummaryResponse]:
         logger.debug(f"Collecting projects at '{location}'")
         for md, url in context.collect_projects(location):
             project, _ = context.load_project_def(md, with_details=False, with_layouts=False)
@@ -131,7 +131,7 @@ def load_project_def(
 
     context = request.server_context
 
-    project: QgsProject = None
+    project: Optional[QgsProject] = None
     url = context.resolve_path(location)
     if url:
         project, details = context.load_project_def(
@@ -231,11 +231,11 @@ def get_project_layers(request: HTTPRequestDelegate, **match_info):
     loc, _, details = load_project_def(request, with_layouts=False, with_details=True)
     layer_id = match_info["Id"]
 
-    layer_details = cast("LayerDetails", details.get(layer_id))
+    layer_details = details.get(layer_id)
     if not layer_details:
         raise HTTPError(404, reason="Layer not found")
 
-    layer_details.links = [  # type: ignore [union-attr]
+    layer_details.links = [  # ty: ignore[invalid-assignment]
         Link.makelink(request, rel="self", path=v1(f"projects/layers/{layer_id}?p={loc}")),
     ]
     request.write_json(layer_details)
@@ -251,6 +251,7 @@ swagger.model(LayoutDescription)
 @swagger.model
 class LayoutSummaries(JsonModel):
     layouts: Sequence[LayoutSummary]
+    links: Sequence[Link]
 
 
 @routes.get(v1("projects/layouts/"))
@@ -288,7 +289,7 @@ def get_project_layouts(request: HTTPRequestDelegate, **match_info):
 
     def layouts() -> Iterator[LayoutSummary]:
         for layout in builder.project_layouts(project):
-            layout.links = [  # type: ignore [attr-defined]
+            layout.links = [  # ty: ignore [unresolved-attribute]
                 Link.makelink(
                     request,
                     rel="related",
@@ -298,8 +299,10 @@ def get_project_layouts(request: HTTPRequestDelegate, **match_info):
             ]
             yield layout
 
-    summaries = LayoutSummaries(layouts=list(layouts()))
-    summaries.links = [Link.makelink(request, rel="self", path=v1("projects/layouts/"))]  # type: ignore [attr-defined]
+    summaries = LayoutSummaries(
+        layouts=list(layouts()),
+        links=[Link.makelink(request, rel="self", path=v1("projects/layouts/"))],
+    )
 
     request.write_json(summaries)
 
@@ -369,6 +372,7 @@ def openapi(request: HTTPRequestDelegate, **match_info):
     request.set_header("Content-Type", "application/json")
     request.set_header("Content-Length", str(len(content)))
     request.write(content)
+
 
 #
 # QgsApi

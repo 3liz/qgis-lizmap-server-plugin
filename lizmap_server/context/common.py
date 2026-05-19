@@ -12,6 +12,7 @@ from typing import (
     Sequence,
     Tuple,
     Union,
+    cast,
 )
 from urllib.parse import SplitResult as Url
 
@@ -21,7 +22,7 @@ from qgis.core import QgsProject
 def to_iso8601(dt: Union[float, datetime]) -> str:
     if isinstance(dt, float):
         dt = datetime.fromtimestamp(dt)
-    return dt.astimezone(timezone.utc).isoformat(timespec="milliseconds")
+    return cast("datetime", dt).astimezone(timezone.utc).isoformat(timespec="milliseconds")
 
 
 class DataclassEncoder(json.JSONEncoder):
@@ -32,9 +33,7 @@ class DataclassEncoder(json.JSONEncoder):
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar
-
-    LayerDetails = TypeVar("LayerDetails")
+    from ..api.schemas import LayerDetails
 
 
 @dataclass(frozen=True)

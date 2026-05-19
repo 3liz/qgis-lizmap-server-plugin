@@ -100,9 +100,9 @@ class SwaggerError(Exception):
 
 def paths(routes: list[RouteDef]) -> dict:
     """Extract swagger doc from route handlers"""
-    import ruamel.yaml
+    from ruamel.yaml import YAML, scanner, parser
 
-    yaml = ruamel.yaml.YAML()
+    yaml = YAML()
 
     paths: dict[str, dict[str, str]] = {}
     for route in routes:
@@ -110,7 +110,7 @@ def paths(routes: list[RouteDef]) -> dict:
             continue
         try:
             paths.setdefault(route.path, {})[route.method] = yaml.load(route.fn.__doc__)
-        except (ruamel.yaml.scanner.ScannerError, ruamel.yaml.parser.ParserError) as err:
+        except (scanner.ScannerError, parser.ParserError) as err:
             raise SwaggerError(f"Yaml error for {route.fn}: {err}") from None
 
     return paths

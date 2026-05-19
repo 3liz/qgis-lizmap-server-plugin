@@ -22,9 +22,7 @@ from .common import (
 SERVER_CONTEXT_NAME = "FCGI"
 
 if TYPE_CHECKING:
-    from typing import TypeVar
-
-    LayerDetails = TypeVar("LayerDetails")
+    from ..api.schemas import LayerDetails
 
 
 class Context(ContextABC):
@@ -57,12 +55,11 @@ class Context(ContextABC):
         elif not isinstance(md, str):
             raise ValueError(f"Invalid uri: {md}")
 
-
         return builder.open_project_def(
             md,
             with_details=with_details,
             with_layouts=with_layouts,
-        )  # type: ignore [return-value]
+        )
 
     def collect_projects(self, location: str) -> Iterator[Tuple[Any, str]]:
         """Collect all projects from 'location'"""

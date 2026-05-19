@@ -4,11 +4,13 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Dict,
     Mapping,
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 from qgis.core import (
@@ -16,12 +18,15 @@ from qgis.core import (
     QgsFeature,
     QgsMapLayer,
     QgsProject,
-    QgsVectorLayer,
 )
 from qgis.server import QgsRequestHandler, QgsServerResponse
 
-from lizmap_server import logger
-from lizmap_server.tools import to_bool
+from .tools import to_bool
+
+from . import logger
+
+if TYPE_CHECKING:
+    from qgis.core import QgsVectorLayer
 
 
 def write_json_response(
@@ -36,7 +41,7 @@ def write_json_response(
     response.write(json.dumps(data))
 
 
-def find_vector_layer_from_params(params: dict, project: QgsProject) -> Optional[QgsMapLayer]:
+def find_vector_layer_from_params(params: dict, project: QgsProject) -> Optional["QgsVectorLayer"]:
     """Trying to find the layer in the URL in the given project."""
     layer_name = params.get("LAYER", params.get("layer", ""))
     return find_vector_layer(layer_name, project) if layer_name else None
@@ -77,10 +82,10 @@ def find_layer(layer_name: str, project: QgsProject) -> Optional[QgsMapLayer]:
     return found
 
 
-def find_vector_layer(layer_name: str, project: QgsProject) -> Optional[QgsVectorLayer]:
+def find_vector_layer(layer_name: str, project: QgsProject) -> Optional["QgsVectorLayer"]:
     """Find vector layer with name, short name or layer ID."""
-    layer = find_layer(layer_name, project)
-    return layer if layer and layer.type() == QgsMapLayer.LayerType.VectorLayer else None
+    layer = cast("QgsVectorLayer", find_layer(layer_name, project))
+    return layer if layer is not None and layer.type() == Qgis.LayerType.Vector else None
 
 
 def get_server_fid(feature: QgsFeature, pk_attributes: list) -> str:
@@ -202,7 +207,7 @@ def get_lizmap_layer_login_filter(config: Dict, layer_name: str) -> Union[Dict, 
     return cfg_layer_login_filter
 
 
-def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str]:
+def get_lizmap_groups(handler: QgsRequestHandler) -> Tuple[str, ...]:
     """Get Lizmap user groups provided by the request"""
 
     # Defined groups
@@ -314,9 +319,8 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
     if headers:
         editing_context = headers.get("X-Lizmap-Edition-Context")
         if editing_context is not None:
-            result = to_bool(editing_context)
-            logger.info(f"Lizmap editing context is found in request headers : {result}")
-            return result
+            logger.info(f"Lizmap editing context is found in request headers : {editing_context}")
+            return to_bool(editing_context)
 
     logger.info("No editing context found in request headers")
 
@@ -324,9 +328,8 @@ def is_editing_context(handler: QgsRequestHandler) -> bool:
     if params:
         result = params.get("LIZMAP_EDITION_CONTEXT")
         if result is not None:
-            result = to_bool(result)
             logger.info(f"Lizmap editing context is found in parameters : {result}")
-            return result
+            return to_bool(result)
 
     logger.info("No lizmap editing context filter in parameters : default value false")
     return False

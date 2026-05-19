@@ -1,8 +1,10 @@
 import traceback
 
 from typing import (
+    TYPE_CHECKING,
     Iterator,
     Optional,
+    cast,
 )
 
 from qgis.core import (
@@ -29,6 +31,9 @@ from ..schemas.layers import (
     VectorLayerDetails,
 )
 from .layers import attribute_table_config
+
+if TYPE_CHECKING:
+    from qgis.core import QgsVectorLayer
 
 
 def edit_widget(elem: QDomElement) -> Optional[EditWidget]:
@@ -191,7 +196,8 @@ def read_project(
 
     layer_details: dict[str, LayerDetails] = {}
 
-    readflags = Qgis.ProjectReadFlags()
+    # NOTE: ProjectReadFlags attributes is missing from QGIS 4 type annotations.
+    readflags = Qgis.ProjectReadFlags()   # ty: ignore[unresolved-attribute]
     # Activate all optimisation flags
     readflags |= Qgis.ProjectReadFlag.TrustLayerMetadata
     readflags |= Qgis.ProjectReadFlag.ForceReadOnlyLayers
@@ -205,6 +211,7 @@ def read_project(
         # without loading layers
         try:
             if layer.type() == Qgis.LayerType.Vector:
+                layer = cast("QgsVectorLayer", layer)
                 layer_details[layer.id()] = VectorLayerDetails(
                     provider=read_layer_provider(layerElem),
                     editable_fields=dict(read_layer_editable_fields(layerElem)),

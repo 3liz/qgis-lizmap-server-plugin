@@ -1,6 +1,8 @@
 #
 # Expression service
 #
+from typing import Optional
+
 from qgis.core import (
     QgsProject,
 )
@@ -17,6 +19,8 @@ from ..core import (
     get_lizmap_user_login,
 )
 from ..exception import ExpressionServiceError
+from ..tools import _N
+
 from .. import logger
 
 from .request_evaluate import evaluate
@@ -40,14 +44,16 @@ class ExpressionService(QgsService):
 
     def allowMethod(self, method: QgsServerRequest.Method) -> bool:
         """Check supported HTTP methods"""
-        return method in (QgsServerRequest.GetMethod, QgsServerRequest.PostMethod)
+        return method in (QgsServerRequest.Method.GetMethod, QgsServerRequest.Method.PostMethod)
 
     def executeRequest(
         self,
         request: QgsServerRequest,
         response: QgsServerResponse,
-        project: QgsProject,
+        project: Optional[QgsProject],
     ):
+        project = _N(project)
+
         """Execute a 'EXPRESSION' request"""
         if not self.allowMethod(request.method()):
             raise ExpressionServiceError("Method not allowed", "", 405)
@@ -61,7 +67,8 @@ class ExpressionService(QgsService):
         custom_var["lizmap_user"] = user_login
         custom_var["lizmap_user_groups"] = list(groups)  # QGIS can't store a tuple
 
-        project.setCustomVariables(custom_var)
+        # NOTE: QGIS 4 and QGIS 3 type annotations do not agree.
+        project.setCustomVariables(custom_var)  # ty: ignore[invalid-argument-type]
 
         params = request.parameters()
 

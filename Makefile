@@ -57,7 +57,7 @@ LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 lint:: 
 	@ $(UV) ruff check --output-format=concise $(LINT_TARGETS)
 
-#lint:: typecheck
+lint:: typecheck
 
 lint-preview:
 	@ $(UV) ruff check --preview --output-format=concise $(LINT_TARGETS)
@@ -69,8 +69,7 @@ format:
 	@ $(UV) ruff format $(LINT_TARGETS) 
 
 typecheck:
-	@ $(UV) mypy $(PYTHON_MODULE)
-	@ $(UV) mypy --python-version 3.10 tests
+	@ $(UV) ty check
 
 scan:
 	@ $(UV) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)

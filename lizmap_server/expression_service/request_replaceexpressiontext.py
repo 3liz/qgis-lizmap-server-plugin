@@ -10,6 +10,7 @@ from typing import (
     Dict,
     Iterable,
     Tuple,
+    Union,
 )
 
 from qgis.core import (
@@ -40,14 +41,12 @@ from ..qgis4_compat import (
     QgsJsonUtils_stringToFields,
     QgsJsonUtils_stringToFeatureList,
 )
-from ..tools import to_bool
-
+from ..tools import to_bool, _N
 
 from .. import logger
 
-
-
 if TYPE_CHECKING:
+    from qgis.core import QgsFeatureIterator
     from .models import Body
 
 
@@ -85,7 +84,7 @@ def replace_expression_text(
     # get layer
     layer = find_vector_layer(layer_name, project)
     # layer not found
-    if not layer:
+    if layer is None:
         raise ExpressionServiceError(
             "Bad request", f"Invalid LAYER parameter for 'ReplaceExpressionText': {layer_name} provided", 400
         )
@@ -115,16 +114,14 @@ def replace_expression_text(
 
     # set extra subset string provided by access control plugins
     subset_sql = layer.subsetString()
-    extra_sql = server_iface.accessControls().extraSubsetString(layer)
+    extra_sql = _N(server_iface.accessControls()).extraSubsetString(layer)
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 
     # get features
     features = params.get("FEATURES", "")
-    if not features:
-        feature = params.get("FEATURE", "")
-        if feature:
-            features = "[" + feature + "]"
+    if not features and (feat := params.get("FEATURE", "")):
+        features = f"[{feat}]"
 
     # create expression context
     exp_context = QgsExpressionContext()
@@ -171,6 +168,8 @@ def replace_expression_text(
             layer.setSubsetString(subset_sql)
         return
 
+    feature_list: Union["QgsFeatureIterator", Iterable[QgsFeature]]
+
     # Check features
     if features.upper() == "ALL":
         feature_fields = layer.fields()
@@ -211,16 +210,16 @@ def replace_expression_text(
         # try to load features
         # read fields
         feature_fields = QgsJsonUtils_stringToFields(
-            '{ "type": "FeatureCollection","features":' + features + "}",
+            f'{{ "type": "FeatureCollection","features": {features} }}',
         )
         # read features
         feature_list = QgsJsonUtils_stringToFeatureList(
-            '{ "type": "FeatureCollection","features":' + features + "}",
+            f'{{ "type": "FeatureCollection","features": {features} }}',
             feature_fields,
         )
 
     # features not well-formed
-    if not feature_list:
+    if feature_list is None:
         # reset subset string before raising error
         if extra_sql:
             layer.setSubsetString(subset_sql)
@@ -240,44 +239,44 @@ def replace_expression_text(
     add_form_scope = to_bool(params.get("FORM_SCOPE"))
 
     geojson_output = params.get("FORMAT", "").upper() == "GEOJSON"
+    geojson_fields = QgsFields()
     if geojson_output:
         exporter = QgsJsonExporter()
         exporter.setSourceCrs(layer.crs())
-        geojson_fields = QgsFields()
         for k in str_map:
+            # NOTE: QgsField QGIS 4 annotations is incomplete (missing constructors)
             if Qgis.versionInt() < 33800:
-                field = QgsField(str(k), QVariant.String)
+                field = QgsField(str(k), QVariant.String)        # ty: ignore
             else:
-                field = QgsField(str(k), QMetaType.Type.QString)
+                field = QgsField(str(k), QMetaType.Type.QString) # ty: ignore
             geojson_fields.append(field)
     else:
         exporter = None
-        geojson_fields = None
 
     # loop through provided features to replace expression strings
-    for f in feature_list:
+    for f in feature_list:  # ty: ignore[not-iterable]
         # clone the features with all attributes
         # those defined in layer + fields from GeoJSON Features
-        feat = QgsFeature(feat_fields)
-        feat.setGeometry(f.geometry())
+        feature = QgsFeature(feat_fields)
+        feature.setGeometry(f.geometry())
         for field in f.fields():
             field_name = field.name()
             if feat_fields.indexOf(field_name) != -1:
-                feat.setAttribute(field_name, f[field_name])
+                feature.setAttribute(field_name, f[field_name])
 
         # Add form scope to expression context
         if add_form_scope:
-            exp_context.appendScope(QgsExpressionContextUtils.formScope(feat))
+            exp_context.appendScope(QgsExpressionContextUtils.formScope(feature))
 
-        exp_context.setFeature(feat)
-        exp_context.setFields(feat.fields())
+        exp_context.setFeature(feature)
+        exp_context.setFields(feature.fields())
 
         # replace expression strings with the new feature
         result = {}
         for k, s in str_map.items():
             value = QgsExpression.replaceExpressionText(s, exp_context, da)
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
-        if geojson_output:
+        if exporter:
             feature = QgsFeature(geojson_fields, f.id())
             feature.setGeometry(f.geometry())
             feature.setAttributes(list(result.values()))

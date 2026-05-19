@@ -4,7 +4,7 @@ import os
 
 from importlib import resources
 from pathlib import Path
-from typing import Union, cast
+from typing import Optional, Union, TypeVar, cast
 
 
 from . import logger
@@ -56,3 +56,21 @@ def check_environment_variable() -> bool:
         )
 
     return lizmap_enabled
+
+
+#
+# Used for type reduction for value returned by QGIS
+#
+# When using typed informations from pyQGIS, function/methods returning
+# pointer in C++ use return type as  `T|None` in Python.
+#
+# This leads to a considerable amount of useless errors from Mypy and undefined
+# behavior if the return values is indeed None.
+#
+T = TypeVar("T")
+
+
+def _N(value: Optional[T]) -> T:
+    if value is None:
+        raise AssertionError("Unexpected None value")
+    return value

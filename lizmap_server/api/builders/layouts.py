@@ -1,5 +1,7 @@
 from typing import (
     Iterator,
+    List,
+    cast,
 )
 
 from qgis.core import (
@@ -18,17 +20,19 @@ from ..schemas.layouts import (
     LayoutSummary,
 )
 
+from ...tools import _N
+
 
 def layout_summary(layout: QgsPrintLayout) -> LayoutSummary:
     """Return layout summary"""
-    atlas = layout.atlas()
+    atlas = _N(layout.atlas())
     atlas_enabled = atlas.enabled()
     coverage_layer = atlas.coverageLayer()
 
     return LayoutSummary(
         name=layout.name(),
         atlas_enabled=atlas_enabled,
-        atlas_coverage_layer=coverage_layer.id() if coverage_layer else None,
+        atlas_coverage_layer=coverage_layer.id() if coverage_layer is not None else None,
     )
 
 
@@ -39,7 +43,9 @@ def layout_pages(collection: QgsLayoutPageCollection) -> Iterator[LayoutPage]:
         yield LayoutPage(
             width=size.width(),
             heigth=size.height(),
-            units=size.units().name,
+            # LayoutUnit is a enum and so does have a `name` attribute
+            # but Mypy fail here....
+            units=size.units().name,  # ty: ignore[unresolved-attribute]
         )
 
 
@@ -65,13 +71,13 @@ def layout_maps(items: list[QgsLayoutItem]) -> Iterator[LayoutMap]:
             uuid=item.uuid(),
             page=item.page(),
             overview_map=linkedMap.uuid() if linkedMap else None,
-            grid=item.grids().size() > 0,
+            grid=_N(item.grids()).size() > 0,
         )
 
         index += 1
 
 
-def layout_labels(items: list[QgsLayoutItem]) -> Iterator[LayoutLabel]:
+def layout_labels(items: list["QgsLayoutItem"]) -> Iterator[LayoutLabel]:
     """Return iterator to layout labels collection"""
     for item in items:
         if not isinstance(item, QgsLayoutItemLabel):
@@ -79,24 +85,24 @@ def layout_labels(items: list[QgsLayoutItem]) -> Iterator[LayoutLabel]:
 
         yield LayoutLabel(
             id_=item.id(),
-            html_state=item.mode() == QgsLayoutItemLabel.ModeHtml,
+            html_state=item.mode() == QgsLayoutItemLabel.Mode.ModeHtml,
             text=item.text(),
         )
 
 
 def layout_description(layout: QgsPrintLayout) -> LayoutDescription:
     """Return layout details"""
-    atlas = layout.atlas()
+    atlas = _N(layout.atlas())
     atlas_enabled = atlas.enabled()
     coverage_layer = atlas.coverageLayer()
 
-    items = layout.items()
+    items = cast("List[QgsLayoutItem]", layout.items())
 
     return LayoutDescription(
         name=layout.name(),
         atlas_enabled=atlas_enabled,
-        atlas_coverage_layer=coverage_layer.id() if coverage_layer else None,
-        pages=list(layout_pages(layout.pageCollection())),
+        atlas_coverage_layer=coverage_layer.id() if coverage_layer is not None else None,
+        pages=list(layout_pages(_N(layout.pageCollection()))),
         maps=list(layout_maps(items)),
         labels=list(layout_labels(items)),
     )

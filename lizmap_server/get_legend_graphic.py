@@ -9,9 +9,12 @@ import json
 import re
 
 from collections import namedtuple
-from typing import Optional
+from typing import (
+    Optional,
+    cast,
+)
 
-from qgis.core import QgsMapLayer, QgsProject, QgsVectorLayer
+from qgis.core import Qgis, QgsProject, QgsVectorLayer
 from qgis.PyQt.QtCore import QBuffer, QIODevice
 from qgis.PyQt.QtGui import QImage
 from qgis.server import QgsServerFilter
@@ -19,6 +22,8 @@ from qgis.server import QgsServerFilter
 from lizmap_server import logger
 from lizmap_server.core import find_layer
 from lizmap_server.tools import to_bool
+
+from .tools import _N
 
 Category = namedtuple(
     "Category",
@@ -48,7 +53,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
         return bytes(buffer.data().toBase64().data()).decode()
 
     def responseComplete(self) -> None:
-        handler = self.serverInterface().requestHandler()
+        handler = _N(self.serverInterface()).requestHandler()
         if not handler:
             logger.critical("GetLegendGraphicFilter plugin cannot be run in multithreading mode, skipping.")
             return
@@ -74,7 +79,7 @@ class GetLegendGraphicFilter(QgsServerFilter):
             return
 
         # noinspection PyArgumentList
-        project: QgsProject = QgsProject.instance()
+        project = _N(QgsProject.instance())
 
         style = params.get("STYLES", "")
 
@@ -108,15 +113,16 @@ class GetLegendGraphicFilter(QgsServerFilter):
             handler.appendBody(json.dumps(json_data).encode("utf8"))
             return
 
-        if layer.type() != QgsMapLayer.LayerType.VectorLayer:
+        if layer.type() != Qgis.LayerType.Vector:
             logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
             return
 
         try:
-            current_style = layer.styleManager().currentStyle()
+            layer = cast("QgsVectorLayer", layer)
+            current_style = _N(layer.styleManager()).currentStyle()
 
             if current_style and style and style != current_style:
-                layer.styleManager().setCurrentStyle(style)
+                _N(layer.styleManager()).setCurrentStyle(style)
 
             # Force count symbol features
             # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
@@ -127,14 +133,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
 
             # From QGIS source code :
             # https://github.com/qgis/QGIS/blob/71499aacf431d3ac244c9b75c3d345bdc53572fb/src/core/symbology/qgsrendererregistry.cpp#L33
-            if layer.renderer() and layer.renderer().type() in (
+            renderer = layer.renderer()
+            if renderer is not None and renderer.type() in (
                 "categorizedSymbol",
                 "RuleRenderer",
                 "graduatedSymbol",
             ):
                 body = handler.body()
-                # noinspection PyTypeChecker
-                json_data = json.loads(bytes(body))
+                json_data = json.loads(bytes(body))  # ty: ignore[invalid-argument-type]
 
                 symbols = json_data["nodes"][0].get("symbols")
                 if not symbols:
@@ -190,8 +196,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
             # Let QGIS server handle error 500
             raise
         finally:
-            if layer and style and current_style and style != current_style:
-                layer.styleManager().setCurrentStyle(current_style)
+            if layer is not None and style and current_style and style != current_style:
+                _N(layer.styleManager()).setCurrentStyle(current_style)
 
     @classmethod
     def _extract_categories(
@@ -202,14 +208,14 @@ class GetLegendGraphicFilter(QgsServerFilter):
     ) -> dict:
         """Extract categories from the layer legend."""
         # TODO Annotations QGIS 3.22 [str, Category]
-        renderer = layer.renderer()
+        renderer = _N(layer.renderer())
         categories: dict = {}
         for item in renderer.legendSymbolItems():
             # Calculate title if show_feature_count is activated
             # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
             title = item.label()
             if show_feature_count:
-                estimated_count = layer.dataProvider().uri().useEstimatedMetadata()
+                estimated_count = _N(layer.dataProvider()).uri().useEstimatedMetadata()
                 count = layer.featureCount(item.ruleKey())
                 title += " [{}{}]".format(
                     "≈" if estimated_count else "",

@@ -12,11 +12,12 @@ from qgis.server import (
     QgsServerOgcApiHandler,
 )
 
-from .tools import version
+from .tools import version, _N
 from .context import create_server_context
 from .server_info import server_info
 
 from . import logger
+
 
 class ServerInfoHandler(QgsServerOgcApiHandler):
     def __init__(self):
@@ -40,7 +41,7 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
         return "Handler Lizmap API server info"
 
     def linkType(self):
-        return QgsServerOgcApi.data
+        return QgsServerOgcApi.Rel.data
 
     def handleRequest(self, context):
         #
@@ -61,11 +62,10 @@ class ServerInfoHandler(QgsServerOgcApiHandler):
 def register_server_info_handler(server_iface: QgsServerInterface):
     """Register legacy lizmap api endpoint"""
 
-    service_registry = server_iface.serviceRegistry()
+    service_registry = _N(server_iface.serviceRegistry())
 
     # Register API
     lizmap_api = QgsServerOgcApi(server_iface, "/lizmap", "Lizmap", "The Lizmap API endpoint", version())
     service_registry.registerApi(lizmap_api)
     lizmap_api.registerHandler(ServerInfoHandler())
     logger.info('API "/lizmap" loaded with the server info handler')
-

@@ -25,10 +25,7 @@ from .common import (
 )
 
 if TYPE_CHECKING:
-    from typing import TypeVar
-
-    LayerDetails = TypeVar("LayerDetails")
-
+    from ..api.schemas import LayerDetails
 
 SERVER_CONTEXT_NAME = "QJazz"
 
@@ -80,7 +77,7 @@ class Context(ContextABC):
 
         def load(uri: str) -> QgsProject:
             nonlocal details
-            project, details = builder.open_project_def(  # type: ignore [assignment]
+            project, details = builder.open_project_def(
                 uri,
                 with_details=with_details,
                 with_layouts=with_layouts,

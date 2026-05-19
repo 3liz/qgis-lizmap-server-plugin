@@ -6,7 +6,6 @@ import traceback
 
 from typing import (
     TYPE_CHECKING,
-    Any,
     Dict,
     Iterable,
     Tuple,
@@ -39,13 +38,6 @@ from ..tools import to_bool
 from .. import logger
 
 
-try:
-    # QT_VERSION_CHECK only exists in Qt6
-    from qgis.PyQt.QtCore import QT_VERSION_CHECK  # noqa F401
-    QT_VERSION_5 = False
-except ImportError:
-    QT_VERSION_5 = True
-
 if TYPE_CHECKING:
     from .models import Body
 
@@ -77,7 +69,7 @@ def evaluate(params: Dict[str, str], response: QgsServerResponse, project: QgsPr
     # get layer
     layer = find_vector_layer(layer_name, project)
     # layer not found
-    if not layer:
+    if layer is None:
         raise ExpressionServiceError(
             "Bad request",
             f"Invalid LAYER parameter for 'Evaluate': {layer_name} provided",
@@ -123,9 +115,9 @@ def evaluate(params: Dict[str, str], response: QgsServerResponse, project: QgsPr
     exp_map: dict = {}
     exp_parser_errors: list = []
 
-    exp_items: Iterable[Tuple[Any, Any]]
+    exp_items: Iterable[Tuple[int | str, str | QgsExpression]]
     if isinstance(exp_json, list):
-        exp_items = enumerate(exp_json)
+        exp_items = enumerate(exp_json)  # ty: ignore[invalid-assignment]
     elif isinstance(exp_json, dict):
         exp_items = exp_json.items()
     else:

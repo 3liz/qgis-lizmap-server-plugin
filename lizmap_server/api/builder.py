@@ -24,6 +24,8 @@ from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtGui import QColor
 from qgis.server import QgsServerProjectUtils
 
+from ..tools import _N
+
 from .builders.crs import to_crs
 from .builders.layers import layer_description
 from .builders.layouts import (
@@ -163,7 +165,7 @@ def project_gui_properties(project: QgsProject) -> GuiProperties:
 
 def project_layer_tree_root(project: QgsProject) -> LayerTreeRoot:
     """Build the layer tree root"""
-    root = project.layerTreeRoot()
+    root = _N(project.layerTreeRoot())
 
     return LayerTreeRoot(
         custom_properties=root.customProperties(),
@@ -179,14 +181,14 @@ def layer_tree_items(g: QgsLayerTreeNode) -> Iterator[LayerTreeItem]:
         if QgsLayerTree.isLayer(item):
             yield LayerTreeLayer(
                 name=item.name(),
-                id_=item.layerId(),
+                id_=item.layerId(),  # ty: ignore[unresolved-attribute]
                 custom_properties=item.customProperties(),
             )
         elif QgsLayerTree.isGroup(item):
             yield LayerTreeGroup(
                 name=item.name(),
                 custom_properties=item.customProperties(),
-                mutually_exclusive=item.isMutuallyExclusive(),
+                mutually_exclusive=item.isMutuallyExclusive(),  # ty: ignore[unresolved-attribute]
                 items=list(layer_tree_items(item)),
             )
 
@@ -214,13 +216,13 @@ def layers_visibility_presets(project: QgsProject) -> Iterator[LayerVisibilityPr
     """Returns visibility presets"""
     MapThemeLayerRecord: type = QgsMapThemeCollection.MapThemeLayerRecord
 
-    def layers(coll: Sequence[MapThemeLayerRecord]) -> Iterator[LayerVisibility]:  # type: ignore [valid-type]
+    def layers(coll: Sequence[MapThemeLayerRecord]) -> Iterator[LayerVisibility]:
         for record in coll:
             layer_vis = layer_visibility(record)
             if layer_vis:
                 yield layer_vis
 
-    collection = project.mapThemeCollection()
+    collection = _N(project.mapThemeCollection())
     for name in collection.mapThemes():
         state = collection.mapThemeState(name)
         yield LayerVisibilityPreset(
@@ -239,7 +241,7 @@ def project_layouts(project: QgsProject, include_restricted: bool = False) -> It
     if not include_restricted:
         restricted = set(QgsServerProjectUtils.wmsRestrictedComposers(project))
 
-    for layout in project.layoutManager().printLayouts():
+    for layout in _N(project.layoutManager()).printLayouts():
         if not include_restricted and layout.name() in restricted:
             continue
         yield layout_summary(layout)
@@ -247,7 +249,7 @@ def project_layouts(project: QgsProject, include_restricted: bool = False) -> It
 
 def project_layout(project: QgsProject, name: str) -> Optional[LayoutDescription]:
 
-    layout = project.layoutManager().layoutByName(name)
+    layout = _N(project.layoutManager()).layoutByName(name)
     return (
         layout_description(
             layout,
@@ -271,7 +273,8 @@ def open_project_def(
     """Open a project definition without loading any layers"""
     from .builders.project import read_project
 
-    project = QgsProject(capabilities=Qgis.ProjectCapabilities())
+    # NOTE: ProjectCapabilities attributes is missing from QGIS 4 type annotations.
+    project = QgsProject(capabilities=Qgis.ProjectCapabilities())  # ty: ignore[unresolved-attribute]
     ok, layer_details = read_project(
         project,
         uri,
@@ -299,7 +302,7 @@ class StorageMetadata:
 
 def project_storage_metadata(uri: str) -> StorageMetadata:
     """Read metadata about project"""
-    reg = QgsApplication.projectStorageRegistry()
+    reg = _N(QgsApplication.projectStorageRegistry())
     storage = reg.projectStorageFromUri(uri)
     if not storage:
         # Check as file
@@ -320,7 +323,7 @@ def project_storage_metadata(uri: str) -> StorageMetadata:
         last_modified = md.lastModified.toPyDateTime()
         return StorageMetadata(
             uri=uri,
-            name=md.name,
+            name=md.name or "",
             storage=storage.type(),
             last_modified=int(datetime.timestamp(last_modified)),
         )

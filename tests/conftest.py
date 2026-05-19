@@ -76,7 +76,7 @@ def pytest_sessionstart(session: pytest.Session):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def qgis_app(request: pytest.FixtureRequest) -> QgsApplication:
+def qgis_app(request: pytest.FixtureRequest) -> Generator[QgsApplication | None, None, None]:
 
     yield qgis_application
 
@@ -130,7 +130,12 @@ def client(request: pytest.FixtureRequest) -> Client:
             """Return server response from query"""
             if headers is None:
                 headers = {}
-            server_request = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
+            server_request = QgsBufferServerRequest(
+                query,
+                QgsServerRequest.Method.GetMethod,
+                headers,  # type: ignore [arg-type]
+                None,
+            )
             response = QgsBufferServerResponse()
             if project is not None and not os.path.isabs(project):
                 qgsproject = self.get_project(project)
@@ -149,7 +154,12 @@ def client(request: pytest.FixtureRequest) -> Client:
             if headers is None:
                 headers = {}
 
-            server_request = QgsBufferServerRequest(query, QgsServerRequest.GetMethod, headers, None)
+            server_request = QgsBufferServerRequest(
+                query,
+                QgsServerRequest.Method.GetMethod,
+                headers,  # type: ignore [arg-type]
+                None,
+            )
             response = QgsBufferServerResponse()
             self.server.handleRequest(server_request, response, project=project)
             return OWSResponse(response)
@@ -175,7 +185,7 @@ def checkQgisVersion(minver: Optional[str], maxver: Optional[str]) -> bool:
             rev = 99
         return int(f"{major:d}{minor:02d}{rev:02d}")
 
-    version = to_int(Qgis.QGIS_VERSION.split("-")[0])
+    version = to_int(Qgis.version().split("-")[0])
     minver = to_int(minver) if minver else version
     maxver = to_int(maxver) if maxver else version
     return minver <= version <= maxver
@@ -206,7 +216,7 @@ def find_plugins(pluginpath: Path) -> Generator[str, None, None]:
                 f"Unsupported version for {plugin}:"
                 f"\n MinimumVersion: {minver}"
                 f"\n MaximumVersion: {maxver}"
-                f"\n Qgis version: {Qgis.QGIS_VERSION.split('-')[0]}"
+                f"\n Qgis version: {Qgis.version().split('-')[0]}"
                 "\n Discarding",
             )
             continue
@@ -258,7 +268,8 @@ def install_logger_hook() -> None:
             logging.info(arg)
 
     messageLog = QgsApplication.messageLog()
+    assert messageLog is not None
     if Qgis.versionInt() < 40000:
         messageLog.messageReceived.connect(writelogmessage)
     else:
-        messageLog.messageReceivedWithFormat.connect(writelogmessage)
+        messageLog.messageReceivedWithFormat.connect(writelogmessage)  # type: ignore [attr-defined]

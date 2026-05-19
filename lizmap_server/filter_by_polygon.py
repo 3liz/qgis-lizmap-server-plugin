@@ -3,29 +3,36 @@ import binascii
 from enum import Enum, auto
 from functools import lru_cache
 from typing import (
+    TYPE_CHECKING,
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 from qgis.core import (
-    QgsAbstractProviderConnection,
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
     QgsDataSourceUri,
     QgsFeatureRequest,
     QgsGeometry,
-    QgsMapLayer,
     QgsProject,
-    QgsProviderConnectionException,
+    # NOTE: forgotten in type definitions ?
+    QgsProviderConnectionException,  # ty: ignore[unresolved-import]
     QgsProviderRegistry,
     QgsSpatialIndex,
     QgsVectorLayer,
 )
 from qgis.PyQt.QtCore import QVariant
 
-from lizmap_server import logger
-from lizmap_server.tools import to_bool
+from .tools import to_bool, _N
+from . import logger
+
+
+if TYPE_CHECKING:
+    from qgis.core import (
+        QgsAbstractDatabaseProviderConnection,
+    )
 
 CACHE_MAX_SIZE = 100
 
@@ -57,7 +64,7 @@ class FilterByPolygon:
         :param editing: If the filter must be used only for editing
         :param filter_type: If we generate a QGIS expression or a plain SQL with spatial relationship or not.
         """
-        self.connection: Optional[QgsAbstractProviderConnection] = None
+        self.connection: Optional[QgsAbstractDatabaseProviderConnection] = None
         # QGIS Server can consider the ST_Intersect/ST_Contains not safe regarding SQL injection.
         # Using this flag will transform or not the ST_Intersect/ST_Contains into an IN by making the query
         # straight to PostGIS.
@@ -65,7 +72,7 @@ class FilterByPolygon:
         self.config = config
         self.editing = editing
         # noinspection PyArgumentList
-        self.project = QgsProject.instance()
+        self.project = _N(QgsProject.instance())
 
         # Current layer in the request
         self.layer = layer
@@ -77,7 +84,7 @@ class FilterByPolygon:
         self.use_centroid = False
 
         # Will be filled with the polygon layer
-        self._polygon: Optional[QgsMapLayer] = None
+        self._polygon: Optional[QgsVectorLayer] = None
 
         self.group_field: Optional[str] = None
         self.filter_by_user = False
@@ -87,9 +94,9 @@ class FilterByPolygon:
 
     # Ensure that polygon is defined
     @property
-    def polygon(self) -> QgsMapLayer:
+    def polygon(self) -> QgsVectorLayer:
         # Assert precondition
-        if not self._polygon:
+        if self._polygon is None:
             raise AssertionError("polygon is not defined")
 
         return self._polygon
@@ -138,7 +145,7 @@ class FilterByPolygon:
             return
 
         config = self.config["config"]
-        self._polygon = self.project.mapLayer(config["polygon_layer_id"])
+        self._polygon = cast("QgsVectorLayer", self.project.mapLayer(config["polygon_layer_id"]))
         self.group_field = config.get("group_field")
 
         # Filter by groups or by user (check the "filter_by_user" flag)
@@ -146,7 +153,7 @@ class FilterByPolygon:
 
     def is_valid(self) -> bool:
         """If the configuration is valid or not."""
-        if not self._polygon or not self._polygon.isValid():
+        if self._polygon is None or not self._polygon.isValid():
             logger.critical("The polygon layer for filtering is not valid.")
             return False
 
@@ -179,8 +186,10 @@ class FilterByPolygon:
         """For a given URI, execute an SQL query and return the result."""
         if self.connection is None:
             # noinspection PyArgumentList
-            metadata = QgsProviderRegistry.instance().providerMetadata("postgres")
-            self.connection = metadata.createConnection(uri.uri(), {})
+            metadata = _N(_N(QgsProviderRegistry.instance()).providerMetadata("postgres"))
+            self.connection = cast(
+                "QgsAbstractDatabaseProviderConnection", metadata.createConnection(uri.uri(), {})
+            )
             try:
                 self.connection.executeSql("SET application_name='QGIS Lizmap Server : Filter By Polygon';")
             except QgsProviderConnectionException as e:
@@ -216,7 +225,7 @@ class FilterByPolygon:
 
         # We need to have a cache for this, valid for the combo polygon layer id & user_groups
         # Check precondition
-        if not self.polygon:
+        if self.polygon is None:
             raise AssertionError("polygon not defined")
 
         # as it will be done for each WMS or WFS query
@@ -301,7 +310,7 @@ array_intersect(
         request.setFilterExpression(expression)
 
         polygon_geoms = []
-        for feature in self.polygon.getFeatures(request):
+        for feature in self.polygon.getFeatures(request):  # ty: ignore[not-iterable]
             polygon_geoms.append(feature.geometry())
 
         return QgsGeometry().collectGeometry(polygon_geoms)
@@ -398,10 +407,11 @@ c.user_group && (
                 self.polygon.crs().authid(),
             )
         )
-        index.addFeatures(self.layer.getFeatures())
+        index.addFeatures(self.layer.getFeatures())  # ty: ignore[invalid-argument-type]
 
         # Find candidates, if not already in cache
-        transform = QgsCoordinateTransform(self.polygon.crs(), self.layer.crs(), self.project)
+        # NOTE: QGIS 4 incomplete type annotations (missing constructors)
+        transform = QgsCoordinateTransform(self.polygon.crs(), self.layer.crs(), self.project) # ty: ignore
         polygons.transform(transform)
         candidates = index.intersects(polygons.boundingBox())
         if not candidates:

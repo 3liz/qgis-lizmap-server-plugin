@@ -19,10 +19,11 @@ from qgis.core import (
 )
 from qgis.server import QgsServerFeatureId, QgsServerFilter, QgsServerProjectUtils
 
-from lizmap_server.core import find_vector_layer
-from lizmap_server import logger
-from lizmap_server.tools import to_bool
-from lizmap_server.tooltip import Tooltip
+from .core import find_vector_layer
+from .tools import to_bool, _N
+from .tooltip import Tooltip
+
+from . import logger
 
 """
 QGIS Server filter for the GetFeatureInfo according to CFG config.
@@ -85,7 +86,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
         features = []
         for layer_name, feature_id in GetFeatureInfoFilter.parse_xml(xml):
             layer = find_vector_layer(layer_name, project)
-            if not layer:
+            if layer is None:
                 logger.info(f"Skipping the layer '{layer_name}' because it's not a vector layer")
                 continue
 
@@ -115,7 +116,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 continue
 
             config = layer.editFormConfig()
-            if config.layout() != QgsEditFormConfig.EditorLayout.TabLayout:
+            # TODO: check against values of Qgis.AttributeFormLayout
+            if config.layout() != QgsEditFormConfig.EditorLayout.TabLayout:  # ty: ignore[unresolved-attribute]
                 logger.warning(
                     "The CFG is requesting a form popup, but the layer is not a form drag&drop layout"
                 )
@@ -125,7 +127,13 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
             # Need to eval the html_content
             html_content = Tooltip.create_popup_node_item_from_form(
-                layer, root, 0, [], "", relation_manager, css_framework == "BOOTSTRAP5"
+                layer,
+                root,
+                0,
+                [],
+                "",
+                relation_manager,
+                css_framework == "BOOTSTRAP5",
             )
             html_content = Tooltip.create_popup(html_content)
 
@@ -148,7 +156,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
     def responseComplete(self):
         """Intercept the GetFeatureInfo and add the form maptip if needed."""
-        request = self.serverInterface().requestHandler()
+        server_iface = _N(self.serverInterface())
+        request = _N(server_iface.requestHandler())
         # request: QgsRequestHandler
         params = request.parameterMap()
 
@@ -166,19 +175,19 @@ class GetFeatureInfoFilter(QgsServerFilter):
             )
             return
 
-        project_path = Path(self.serverInterface().configFilePath())
+        project_path = Path(server_iface.configFilePath())
         if not project_path.exists():
             logger.info(
                 "The QGIS project {} does not exist as a file, not possible to process with Lizmap this "
-                "request GetFeatureInfo".format(self.serverInterface().configFilePath())
+                "request GetFeatureInfo".format(server_iface.configFilePath())
             )
             return
 
-        config_path = Path(self.serverInterface().configFilePath() + ".cfg")
+        config_path = Path(server_iface.configFilePath() + ".cfg")
         if not config_path.exists():
             logger.info(
                 "The QGIS project {} is not a Lizmap project, not possible to process with Lizmap this "
-                "request GetFeatureInfo".format(self.serverInterface().configFilePath())
+                "request GetFeatureInfo".format(server_iface.configFilePath())
             )
             return
 
@@ -186,8 +195,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
         with open(str(config_path), encoding="utf-8") as cfg_file:
             cfg = json.loads(cfg_file.read())
 
-        project = QgsProject.instance()
-        relation_manager = project.relationManager()
+        project = _N(QgsProject.instance())
+        relation_manager = _N(project.relationManager())
 
         xml = request.body().data().decode("utf-8")
 
@@ -240,7 +249,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 if expression:
                     expression_request = QgsFeatureRequest(QgsExpression(expression))
                     if not geometry_result:
-                        expression_request.setFlags(QgsFeatureRequest.Flag.NoGeometry)
+                        expression_request.setFlags(Qgis.FeatureRequestFlag.NoGeometry)
                     feature = QgsFeature()
                     result.layer.getFeatures(expression_request).nextFeature(feature)
                 else:
