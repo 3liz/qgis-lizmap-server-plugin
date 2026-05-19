@@ -55,6 +55,11 @@ class HTTPRequestDelegate:
     def scheme(self) -> str:
         return self._request.url().scheme()
 
+    @property
+    def port(self) -> str:
+        port = self._request.url().port()
+        return f":{port}" if port > 0 else ""
+
     @cached_property
     def query(self) -> Dict[str, str]:
         return {k: v[0] for k, v in parse_qs(self._request.url().query().removeprefix("?")).items()}
@@ -125,7 +130,8 @@ class HTTPRequestDelegate:
 
     def public_url(self, path: str) -> str:
         """Return the public base url"""
-        host = self.host
+
+        host = f"{self.host}{self.port}"
         protocol = self.scheme
 
         rootpath = self._context.matchedPath().removesuffix("/")

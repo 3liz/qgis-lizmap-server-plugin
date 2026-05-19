@@ -54,7 +54,7 @@ class Route(Protocol):
     @property
     def is_dynamic(self) -> bool: ...
 
-    def match(self, location: str) -> Optional[Dict[str, str]]:
+    def match(self, path: str) -> Optional[Dict[str, str]]:
         """Partial match
 
         Check if location ends with the corresponding pattern
@@ -70,8 +70,8 @@ class StaticRoute(Route):
     def __init__(self, location: str):
         self._location = location
 
-    def match(self, location: str) -> Optional[Dict[str, str]]:
-        return {} if self._location.endswith(location) else None
+    def match(self, path: str) -> Optional[Dict[str, str]]:
+        return {} if self._location == path else None
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]:
         if path.is_relative_to(self._location):
@@ -114,8 +114,7 @@ class DynamicRoute(Route):
             pattern += re.escape(part)
 
         try:
-            # Match **the end** of the path
-            compiled = re.compile(f"{pattern}$")
+            compiled = re.compile(f"{pattern}")
         except re.error as exc:
             raise ValueError(f"Bad pattern '{pattern}': {exc}") from None
 
@@ -124,9 +123,8 @@ class DynamicRoute(Route):
         self._pattern = compiled
         self._formatter = formatter
 
-    def match(self, location: str) -> Optional[Dict[str, str]]:
-        # Cf above: **the end** of the location must match the pattern
-        pmatch = self._pattern.search(location)
+    def match(self, path: str) -> Optional[Dict[str, str]]:
+        pmatch = self._pattern.fullmatch(path)
         return pmatch.groupdict() if pmatch else None
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]:

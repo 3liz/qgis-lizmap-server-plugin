@@ -10,7 +10,6 @@ from typing import (
 )
 from urllib.parse import quote
 
-from qgis.PyQt.QtCore import QUrl
 from qgis.core import QgsProject
 from qgis.server import (
     QgsServerApi,
@@ -402,17 +401,13 @@ class LizmapApi(QgsServerApi):
     def rootPath(self) -> str:
         return ROOTPATH
 
-    def accept(self, url: QUrl) -> bool:
-        """Override the api to actually match the rootpath"""
-        path = url.path()
-        return path.startswith(ROOTPATH)
-
     def executeRequest(self, context: QgsServerApiContext):
         """Execute the request"""
         # Take care that QGIS is header case sensitive
         req = HTTPRequestDelegate(context)
         try:
-            route, values = routes.find_route(req.method, req.path.removeprefix(ROOTPATH))
+            _, _, path = req.path.partition(ROOTPATH)
+            route, values = routes.find_route(req.method, path)
             if req._finished:
                 return
 
