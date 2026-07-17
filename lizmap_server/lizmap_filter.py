@@ -80,4 +80,4 @@ class LizmapFilter(QgsServerFilter):
         custom_var.pop("lizmap_user", None)
         custom_var.pop("lizmap_user_groups", None)
         # NOTE: wrong type annotations in QGIS 4
-        project.setCustomVariables(custom_var)   # ty: ignore[invalid-argument-type]
+        project.setCustomVariables(custom_var)  # ty: ignore[invalid-argument-type]

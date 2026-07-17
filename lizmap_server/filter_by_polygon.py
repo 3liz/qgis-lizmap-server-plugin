@@ -411,7 +411,7 @@ c.user_group && (
 
         # Find candidates, if not already in cache
         # NOTE: QGIS 4 incomplete type annotations (missing constructors)
-        transform = QgsCoordinateTransform(self.polygon.crs(), self.layer.crs(), self.project) # ty: ignore
+        transform = QgsCoordinateTransform(self.polygon.crs(), self.layer.crs(), self.project)  # ty: ignore
         polygons.transform(transform)
         candidates = index.intersects(polygons.boundingBox())
         if not candidates:
