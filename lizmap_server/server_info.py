@@ -145,7 +145,7 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
     else:
         qgis_server_meta = {"found": False, "version": "not used"}
 
-    qfontdb = QFontDatabase() if Qgis.versionInt() < 40000 else QFontDatabase # ty: ignore
+    qfontdb = QFontDatabase() if Qgis.versionInt() < 40000 else QFontDatabase  # ty: ignore
 
     return {
         # Only the "qgis_server" section is forwarded in LWC source code

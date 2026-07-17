@@ -197,7 +197,7 @@ def read_project(
     layer_details: dict[str, LayerDetails] = {}
 
     # NOTE: ProjectReadFlags attributes is missing from QGIS 4 type annotations.
-    readflags = Qgis.ProjectReadFlags()   # ty: ignore[unresolved-attribute]
+    readflags = Qgis.ProjectReadFlags()  # ty: ignore[unresolved-attribute]
     # Activate all optimisation flags
     readflags |= Qgis.ProjectReadFlag.TrustLayerMetadata
     readflags |= Qgis.ProjectReadFlag.ForceReadOnlyLayers

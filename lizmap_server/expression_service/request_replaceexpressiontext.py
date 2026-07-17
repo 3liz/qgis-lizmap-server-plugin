@@ -246,9 +246,9 @@ def replace_expression_text(
         for k in str_map:
             # NOTE: QgsField QGIS 4 annotations is incomplete (missing constructors)
             if Qgis.versionInt() < 33800:
-                field = QgsField(str(k), QVariant.String)        # ty: ignore
+                field = QgsField(str(k), QVariant.String)  # ty: ignore
             else:
-                field = QgsField(str(k), QMetaType.Type.QString) # ty: ignore
+                field = QgsField(str(k), QMetaType.Type.QString)  # ty: ignore
             geojson_fields.append(field)
     else:
         exporter = None
