@@ -310,7 +310,7 @@ class Tooltip:
             %]'''
 
     @staticmethod
-    def _generate_value_map(widget_config: list | dict, name: str) -> str:
+    def _generate_value_map(widget_config: dict, name: str) -> str:
         def escape_value(value: str) -> str:
             """Change ' to ’ for the HStore function."""
             return value.replace("'", "’")
