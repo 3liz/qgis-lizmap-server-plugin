@@ -10,7 +10,7 @@ license-files = ["LICENSE"]
 readme = "README.md"
 keywords = [
     "online", "server", "web", "webgis", "webservice", "webmapping", "mobile",
-    "publication", "wms", "wfs" , "internet" , "cloud", 
+    "publication", "wms", "wfs" , "internet" , "cloud",
 ]
 classifiers = [
     "Programming Language :: Python :: 3.14",
@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
-     
+
 ]
 
 [project.optional-dependencies]
@@ -94,7 +94,7 @@ ignore = [
     "SIM108",  # Use ternary operator
     "RUF067",  # module should only contain docstrings and re-exports
     "PLC0414", # useless-import-alias (conflict with re-export accepted syntax)
-    # XXX Fix 
+    # XXX Fix
     "E501",    # Line too long
 ]
 
@@ -172,6 +172,7 @@ allowed-unresolved-imports = [
     "qjazz_core.**",
     "qjazz_cache.**",
     "pyqgisserver.**",
+    "qgis.**",
 ]
 
 #

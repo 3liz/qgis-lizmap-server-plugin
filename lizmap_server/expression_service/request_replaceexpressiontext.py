@@ -159,7 +159,7 @@ def replace_expression_text(
     if not features:
         result = {}
         for k, s in str_map.items():
-            value = QgsExpression.replaceExpressionText(s, exp_context, da)
+            value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
         body["results"].append(result)
         write_json_response(body, response)
@@ -274,7 +274,7 @@ def replace_expression_text(
         # replace expression strings with the new feature
         result = {}
         for k, s in str_map.items():
-            value = QgsExpression.replaceExpressionText(s, exp_context, da)
+            value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
         if exporter:
             feature = QgsFeature(geojson_fields, f.id())
