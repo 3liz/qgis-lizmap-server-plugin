@@ -12,10 +12,11 @@ pydantic-extra-types==2.11.1
 pygments==2.20.0
 pyyaml==6.0.3
 rich==15.0.0
-ruff==0.15.13
-stevedore==5.8.0
+ruff==0.15.22
+stevedore==5.8.0 ; python_full_version < '3.11'
+stevedore==5.9.0 ; python_full_version >= '3.11'
 tomli==2.4.1 ; python_full_version < '3.11'
-ty==0.0.37
-typing-extensions==4.15.0
+ty==0.0.61
+typing-extensions==4.16.0
 typing-inspection==0.4.2
 vulture==2.16
