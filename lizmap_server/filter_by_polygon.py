@@ -461,7 +461,7 @@ c.user_group && (
             table_name=sql.Identifier(FilterByPolygon._format_table_name(datasource)),
             st_intersect=st_intersect,
         )
-        logger.info(f"Requesting the database about IDs to filter with {sql[0:90]}...")
+        logger.info(f"Requesting the database about IDs to filter with {query[0:90]}...")
 
         # psycopg2 connection
         conn = connect(datasource.connectionInfo())
