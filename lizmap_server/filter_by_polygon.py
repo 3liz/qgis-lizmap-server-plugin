@@ -451,22 +451,23 @@ c.user_group && (
 
         :returns: The subset SQL string.
         """
-        datasource = QgsDataSourceUri(self.polygon.source())
+        datasource = QgsDataSourceUri(self.layer.source())
 
         # psycopg2 composed request
         query = sql.SQL("""
             SELECT {pk} FROM {table_name} WHERE {st_intersect}
         """).format(
             pk=sql.Identifier(self.primary_key),
-            table_name=sql.Identifier(FilterByPolygon._format_table_name(datasource)),
-            st_intersect=st_intersect,
+            table_name=sql.SQL(FilterByPolygon._format_table_name(datasource)),
+            st_intersect=sql.SQL(st_intersect),
         )
-        logger.info(f"Requesting the database about IDs to filter with {query[0:90]}...")
 
         # psycopg2 connection
         conn = connect(datasource.connectionInfo())
         # psycopg2 recomposed request as string
-        results = self.sql_query(datasource, query.as_string(conn))
+        query_string = query.as_string(conn)
+        logger.info(f"Requesting the database about IDs to filter with {query_string[0:90]}...")
+        results = self.sql_query(datasource, query_string)
         unique_ids = [str(row[0]) for row in results]
 
         return self._format_sql_in(self.primary_key, unique_ids)

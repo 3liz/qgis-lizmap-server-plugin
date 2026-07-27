@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix List all features using a SQL query after compositing SQL
+
 ## 2.15.0 - 2026-07-27
 
 * Security scan, put bandit to medium severity check
