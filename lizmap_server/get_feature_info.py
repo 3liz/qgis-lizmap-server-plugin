@@ -1,5 +1,4 @@
 import json
-import xml.etree.ElementTree as ET
 
 from collections import namedtuple
 from pathlib import Path
@@ -18,6 +17,7 @@ from qgis.core import (
     QgsRelationManager,
 )
 from qgis.server import QgsServerFeatureId, QgsServerFilter, QgsServerProjectUtils
+from qgis.PyQt.QtXml import QDomDocument
 
 from .core import find_vector_layer
 from .tools import to_bool, _N
@@ -36,42 +36,68 @@ class GetFeatureInfoFilter(QgsServerFilter):
     @classmethod
     def parse_xml(cls, string: str) -> Generator[Tuple[str, str], None, None]:
         """Generator for layer and feature found in the XML GetFeatureInfo."""
-        root = ET.fromstring(string)
-        for layer in root:
-            for feature in layer:
-                if feature.attrib.get("id"):
-                    yield layer.attrib["name"], feature.attrib["id"]
+        dom_doc = QDomDocument("gfi")
+        dom_doc.setContent(string)
+        doc_elem = dom_doc.documentElement()
+
+        layer_elem = doc_elem.firstChildElement()
+        while not layer_elem.isNull():
+            if layer_elem.nodeName().upper() != "LAYER":
+                layer_elem = layer_elem.nextSiblingElement()
+                continue
+
+            feature_elem = layer_elem.firstChildElement()
+            while not feature_elem.isNull():
+                if feature_elem.hasAttribute("id"):
+                    yield layer_elem.attribute("name"), feature_elem.attribute('id')
+
+                feature_elem = feature_elem.nextSiblingElement()
+
+            layer_elem = layer_elem.nextSiblingElement()
 
     @classmethod
     def append_maptip(cls, string: str, layer_name: str, feature_id: Union[str, int], maptip: str) -> str:
         """Edit the XML GetFeatureInfo by adding a maptip for a given layer and feature ID."""
-        root = ET.fromstring(string)
-        for layer in root:
-            if layer.tag.upper() != "LAYER":
-                # The XML can be <BoundingBox />
+        dom_doc = QDomDocument("gfi")
+        dom_doc.setContent(string)
+        doc_elem = dom_doc.documentElement()
+        layer_elem = doc_elem.firstChildElement()
+        while not layer_elem.isNull():
+            if layer_elem.nodeName().upper() != "LAYER":
+                layer_elem = layer_elem.nextSiblingElement()
                 continue
 
-            if layer.attrib["name"] != layer_name:
+            if layer_elem.attribute("name") != layer_name:
+                layer_elem = layer_elem.nextSiblingElement()
                 continue
 
-            for feature in layer:
-                # feature_id can be int if QgsFeature.id() is used
-                # Otherwise it's string from QgsServerFeatureId
-                if feature.attrib["id"] != str(feature_id):
+            feature_elem = layer_elem.firstChildElement()
+            while not feature_elem.isNull():
+                if feature_elem.attribute("id") != str(feature_id):
+                    feature_elem = feature_elem.nextSiblingElement()
                     continue
 
-                item = feature.find("Attribute[@name='maptip']")
-                if item is not None:
-                    item.attrib["value"] = maptip
-                else:
-                    item = ET.Element("Attribute")
-                    item.attrib["name"] = "maptip"
-                    item.attrib["value"] = maptip
-                    feature.append(item)
+                # We found the feature, now we look for the maptip attribute
+                maptip_found = False
+                attr_elem = feature_elem.firstChildElement()
+                while not attr_elem.isNull():
+                    if attr_elem.attribute("name") == "maptip":
+                        attr_elem.setAttribute("value", maptip)
+                        maptip_found = True
+                        break
+                    attr_elem = attr_elem.nextSiblingElement()
 
-        xml_lines = ET.tostring(root, encoding="utf8", method="xml").decode("utf-8").split("\n")
-        xml_string = "\n".join(xml_lines[1:])
-        return xml_string.strip()
+                if not maptip_found:
+                    attr_elem = dom_doc.createElement("Attribute")
+                    attr_elem.setAttribute("name", "maptip")
+                    attr_elem.setAttribute("value", maptip)
+                    feature_elem.appendChild(attr_elem)
+
+                break
+
+            break
+
+        return dom_doc.toString()
 
     @classmethod
     def feature_list_to_replace(

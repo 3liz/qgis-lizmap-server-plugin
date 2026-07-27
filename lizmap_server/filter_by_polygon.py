@@ -10,6 +10,7 @@ from typing import (
     cast,
 )
 
+from psycopg2 import connect, sql
 from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransform,
@@ -323,23 +324,25 @@ array_intersect(
 
         Only for QGIS >= 3.10
         """
-        uri = QgsDataSourceUri(self.polygon.source())
 
         try:
-            sql = r"""
+            datasource = QgsDataSourceUri(self.polygon.source())
+
+            # psycopg2 composed request
+            query = sql.SQL("""
 WITH current_groups AS (
     SELECT
         ARRAY_REMOVE(
             STRING_TO_ARRAY(
                 regexp_replace(
-                    '{groups_or_user}', '[^a-zA-Z0-9_-]', ',', 'g'
+                    {groups_or_user}, '[^a-zA-Z0-9_-]', ',', 'g'
                 ),
                 ','
             ),
         '') AS user_group
 )
 SELECT
-        1 AS id, ST_AsBinary(ST_Union("{geom}")) AS geom
+        1 AS id, ST_AsBinary(ST_Union({geom})) AS geom
 FROM
         {table_name} AS p,
         current_groups AS c
@@ -348,7 +351,7 @@ c.user_group && (
     ARRAY_REMOVE(
         STRING_TO_ARRAY(
             regexp_replace(
-                "{polygon_field}", '[^a-zA-Z0-9_-]', ',', 'g'
+                {polygon_field}, '[^a-zA-Z0-9_-]', ',', 'g'
             ),
             ','
         ),
@@ -357,17 +360,20 @@ c.user_group && (
 
 
 
-""".format(
-                polygon_field=self.group_field,
-                groups_or_user=",".join(groups_or_user),
-                geom=uri.geometryColumn(),
-                table_name=FilterByPolygon._format_table_name(uri),
+""").format(
+                polygon_field=sql.Identifier(self.group_field),
+                groups_or_user=sql.Literal(",".join(groups_or_user)),
+                geom=sql.Identifier(datasource.geometryColumn()),
+                table_name=sql.Identifier(FilterByPolygon._format_table_name(datasource)),
             )
             logger.info(
                 f"Requesting the database about polygons for the current groups or user with : \n{sql}"
             )
 
-            results = self.sql_query(uri, sql)
+            # psycopg2 connection
+            conn = connect(datasource.connectionInfo())
+            # psycopg2 recomposed request as string
+            results = self.sql_query(datasource, query.as_string(conn))
             wkb = results[0][1]
 
             geom = QgsGeometry()
@@ -445,16 +451,22 @@ c.user_group && (
 
         :returns: The subset SQL string.
         """
-        uri = QgsDataSourceUri(self.layer.source())
+        datasource = QgsDataSourceUri(self.polygon.source())
 
-        sql = 'SELECT "{pk}" FROM {table_name} WHERE {st_intersect}'.format(
-            pk=self.primary_key,
-            table_name=FilterByPolygon._format_table_name(uri),
+        # psycopg2 composed request
+        query = sql.SQL("""
+            SELECT {pk} FROM {table_name} WHERE {st_intersect}
+        """).format(
+            pk=sql.Identifier(self.primary_key),
+            table_name=sql.Identifier(FilterByPolygon._format_table_name(datasource)),
             st_intersect=st_intersect,
         )
         logger.info(f"Requesting the database about IDs to filter with {sql[0:90]}...")
 
-        results = self.sql_query(uri, sql)
+        # psycopg2 connection
+        conn = connect(datasource.connectionInfo())
+        # psycopg2 recomposed request as string
+        results = self.sql_query(datasource, query.as_string(conn))
         unique_ids = [str(row[0]) for row in results]
 
         return self._format_sql_in(self.primary_key, unique_ids)
