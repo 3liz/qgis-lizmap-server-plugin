@@ -179,27 +179,41 @@ class TestServerCore(unittest.TestCase):
         </GetFeatureInfoResponse>
         """
 
-        response = GetFeatureInfoFilter.append_maptip(string, "qgis_popup", 1, "<b>foo</b>")
+        # build expected unchanged attributes
+        expected_unchanged_attributes = {}
+        gfi = ET.fromstring(string)
+        for attr in gfi[0][0].findall("Attribute"):
+            expected_unchanged_attributes[attr.attrib.get("name")] = attr.attrib.get("value")
 
-        # ElementTree adds a space at the end " />" instead of "/>"
-        # maptip line is un-indented from 1 space, with feature on the same line. !!
-        expected = """<GetFeatureInfoResponse>
-         <Layer name="qgis_popup">
-          <Feature id="1">
-           <Attribute name="OBJECTID" value="2662" />
-           <Attribute name="NAME_0" value="France" />
-           <Attribute name="VARNAME_1" value="Bretaa|Brittany" />
-           <Attribute name="Region" value="Bretagne" />
-           <Attribute name="Shape_Leng" value="18.39336934850" />
-           <Attribute name="Shape_Area" value="3.30646936365" />
-          <Attribute name="maptip" value="&lt;b&gt;foo&lt;/b&gt;" /></Feature>
-         </Layer>
-        </GetFeatureInfoResponse>
-        """
-        self.assertEqual(
-            ET.tostring(ET.fromstring(expected)).decode("utf-8"),
-            ET.tostring(ET.fromstring(response)).decode("utf-8"),
-        )
+        maptip_value = "<b>foo</b>"
+        response = GetFeatureInfoFilter.append_maptip(string, "qgis_popup", 1, maptip_value)
+
+        # Check the response
+        gfi = ET.fromstring(response)
+        self.assertIsNotNone(gfi)
+        self.assertEqual(gfi.tag, "GetFeatureInfoResponse")
+        layer = gfi[0]
+        self.assertIsNotNone(layer)
+        self.assertEqual(layer.tag, "Layer")
+        self.assertEqual(layer.attrib.get("name"), "qgis_popup")
+        feat = layer[0]
+        self.assertIsNotNone(feat)
+        self.assertEqual(feat.tag, "Feature")
+        self.assertEqual(feat.attrib.get("id"), "1")
+        # maptip has been added
+        maptip = feat.find("Attribute[@name='maptip']")
+        self.assertIsNotNone(maptip)
+        self.assertIsNotNone(maptip.attrib.get("value"))
+        self.assertEqual(maptip.attrib.get("value"), maptip_value)
+
+        # Check that the other attributes than maptip are unchanged
+        for attr in feat.findall("Attribute"):
+            name = attr.attrib.get("name")
+            if name == "maptip":
+                continue
+            self.assertIn(name, expected_unchanged_attributes)
+            self.assertEqual(attr.attrib.get("value"), expected_unchanged_attributes.get(name))
+
 
     def test_edit_xml_get_feature_info_with_maptip(self):
         """Test to edit a GetFeatureInfo xml with maptip."""
@@ -219,24 +233,47 @@ class TestServerCore(unittest.TestCase):
         </GetFeatureInfoResponse>
         """
 
-        response = GetFeatureInfoFilter.append_maptip(string, "qgis_popup", 1, "<b>foo</b>")
+        # build expected unchanged attributes
+        # catch initial maptip
+        expected_unchanged_attributes = {}
+        initial_maptip = None
+        gfi = ET.fromstring(string)
+        for attr in gfi[1][0].findall("Attribute"):
+            name = attr.attrib.get("name")
+            if name == "maptip":
+                initial_maptip = attr.attrib.get("value")
+                continue
+            expected_unchanged_attributes[name] = attr.attrib.get("value")
 
-        expected = """<GetFeatureInfoResponse>
-         <BoundingBox minx="0" maxy="1" maxx="1" CRS="EPSG:2154" miny="0"/>
-         <Layer name="qgis_popup">
-          <Feature id="1">
-           <Attribute name="OBJECTID" value="2662" />
-           <Attribute name="NAME_0" value="France" />
-           <Attribute name="VARNAME_1" value="Bretaa|Brittany" />
-           <Attribute name="Region" value="Bretagne" />
-           <Attribute name="Shape_Leng" value="18.39336934850" />
-           <Attribute name="Shape_Area" value="3.30646936365" />
-           <Attribute name="maptip" value="&lt;b&gt;foo&lt;/b&gt;" />
-          </Feature>
-         </Layer>
-        </GetFeatureInfoResponse>
-        """
-        self.assertEqual(
-            ET.tostring(ET.fromstring(expected)).decode("utf-8"),
-            ET.tostring(ET.fromstring(response)).decode("utf-8"),
-        )
+        override_maptip = "<b>foo</b>"
+        response = GetFeatureInfoFilter.append_maptip(string, "qgis_popup", 1, override_maptip)
+
+        # Check the response
+        gfi = ET.fromstring(response)
+        self.assertIsNotNone(gfi)
+        self.assertEqual(gfi.tag, "GetFeatureInfoResponse")
+        bbox = gfi[0]
+        self.assertIsNotNone(bbox)
+        self.assertEqual(bbox.tag, "BoundingBox")
+        layer = gfi[1]
+        self.assertIsNotNone(layer)
+        self.assertEqual(layer.tag, "Layer")
+        self.assertEqual(layer.attrib.get("name"), "qgis_popup")
+        feat = layer[0]
+        self.assertIsNotNone(feat)
+        self.assertEqual(feat.tag, "Feature")
+        self.assertEqual(feat.attrib.get("id"), "1")
+        # maptip has been updated
+        maptip = feat.find("Attribute[@name='maptip']")
+        self.assertIsNotNone(maptip)
+        self.assertIsNotNone(maptip.attrib.get("value"))
+        self.assertNotEqual(maptip.attrib.get("value"), initial_maptip)
+        self.assertEqual(maptip.attrib.get("value"), override_maptip)
+
+        # Check that the other attributes than maptip are unchanged
+        for attr in feat.findall("Attribute"):
+            name = attr.attrib.get("name")
+            if name == "maptip":
+                continue
+            self.assertIn(name, expected_unchanged_attributes)
+            self.assertEqual(attr.attrib.get("value"), expected_unchanged_attributes.get(name))

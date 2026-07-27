@@ -1,6 +1,7 @@
 SHELL:=bash
 
 PYTHON_MODULE=lizmap_server
+SCAN_OPTS=-ll
 
 TESTS=tests
 
@@ -54,7 +55,7 @@ openapi:
 
 LINT_TARGETS=$(PYTHON_MODULE) $(TESTS) $(EXTRA_LINT_TARGETS)
 
-lint:: 
+lint::
 	@ $(UV) ruff check --output-format=concise $(LINT_TARGETS)
 
 lint:: typecheck
@@ -66,7 +67,7 @@ lint-fix:
 	@ $(UV) ruff check  --fix $(LINT_TARGETS)
 
 format:
-	@ $(UV) ruff format $(LINT_TARGETS) 
+	@ $(UV) ruff format $(LINT_TARGETS)
 
 typecheck:
 	@ $(UV) ty check
