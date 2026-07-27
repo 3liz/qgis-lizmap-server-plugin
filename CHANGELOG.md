@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.15.1 - 2026-07-27
+
 * Fix List all features using a SQL query after compositing SQL
 
 ## 2.15.0 - 2026-07-27
