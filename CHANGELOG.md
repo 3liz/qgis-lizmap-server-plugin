@@ -2,10 +2,15 @@
 
 ## Unreleased
 
-- QGIS4 support
-- Fix deprecated `setUseAdvancedEffects` for QGIS >= 3.44
-- Replace `QGIS_VERSION_INT` by `versionInt()` call
-- Clean up legacy code support for QGIS < 3.34
+## 2.15.0 - 2026-07-27
+
+* Security scan, put bandit to medium severity check
+* Fix tooltip for Bootstrap 5 / LWC 3.10
+* Add Lizmap API supports for projects details
+* QGIS4 support
+* Fix deprecated `setUseAdvancedEffects` for QGIS >= 3.44
+* Replace `QGIS_VERSION_INT` by `versionInt()` call
+* Clean up legacy code support for QGIS < 3.34
 
 ## 2.14.1 - 2025-09-29
 
