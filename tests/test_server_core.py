@@ -163,6 +163,28 @@ class TestServerCore(unittest.TestCase):
             self.assertEqual(layer, "qgis_popup")
             self.assertEqual(feature, "1")
 
+        string = """<?xml version="1.0" encoding="UTF-8"?>
+         <GetFeatureInfoResponse>
+          <BoundingBox maxy="-0.22573099" minx="-0.83625731" miny="-0.29824561" maxx="-0.21871345" CRS="EPSG:4326"/>
+          <Layer title="child_layer" name="child_layer">
+           <Feature id="1">
+            <Attribute value="1" name="fid"/>
+            <Attribute value="1" name="father_id"/>
+            <Attribute value="Child 1" name="description"/>
+           </Feature>
+           <Feature id="2">
+            <Attribute value="2" name="fid"/>
+            <Attribute value="1" name="father_id"/>
+            <Attribute value="Child 2" name="description"/>
+           </Feature>
+          </Layer>
+         </GetFeatureInfoResponse>
+        """
+
+        for layer, feature in GetFeatureInfoFilter.parse_xml(string):
+            self.assertEqual(layer, "child_layer")
+            self.assertIn(feature, ["1", "2"])
+
     def test_edit_xml_get_feature_info_without_maptip(self):
         """Test to edit a GetFeatureInfo xml without maptip."""
         string = """<GetFeatureInfoResponse>
