@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.15.2 - 2026-07-28
+
+* Fix: Invalid widget config for embedded layers
+
 ## 2.15.1 - 2026-07-27
 
 * Fix List all features using a SQL query after compositing SQL
