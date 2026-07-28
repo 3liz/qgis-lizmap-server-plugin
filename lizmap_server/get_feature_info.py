@@ -21,7 +21,7 @@ from qgis.PyQt.QtXml import QDomDocument
 
 from .core import find_vector_layer
 from .tools import to_bool, _N
-from .tooltip import Tooltip
+from .tooltip import InvalidWidgetConfig, Tooltip
 
 from . import logger
 
@@ -231,6 +231,13 @@ class GetFeatureInfoFilter(QgsServerFilter):
         # noinspection PyBroadException
         try:
             features = self.feature_list_to_replace(cfg, project, relation_manager, xml, css_framework)
+        except InvalidWidgetConfig as e:
+            logger.warning(
+                f"A field widget config has been invalid: {e}"
+            )
+            # For embedded layer the widget config is empty, so the form could not be
+            # translated to HTML. The default response is returned.
+            return
         except Exception:
             logger.critical(
                 "Error while reading the XML response GetFeatureInfo for project {}, returning default "
