@@ -282,7 +282,10 @@ class GetFeatureInfoFilter(QgsServerFilter):
                 if expression:
                     expression_request = QgsFeatureRequest(QgsExpression(expression))
                     if not geometry_result:
-                        expression_request.setFlags(Qgis.FeatureRequestFlag.NoGeometry)
+                        # TODO: change when deprecating QGIS 3.34
+                        # Only with QGIS >= 3.36
+                        # expression_request.setFlags(Qgis.FeatureRequestFlag.NoGeometry)
+                        expression_request.setFlags(QgsFeatureRequest.Flag.NoGeometry)  # ty: ignore [unresolved-attribute]
                     feature = QgsFeature()
                     result.layer.getFeatures(expression_request).nextFeature(feature)
                 else:
