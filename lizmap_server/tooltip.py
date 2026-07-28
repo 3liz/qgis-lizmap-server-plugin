@@ -33,6 +33,9 @@ LOGGER = logging.getLogger("Lizmap")
 SPACES = "  "
 
 
+class InvalidWidgetConfig(Exception):
+    pass
+
 class Tooltip:
     @staticmethod
     def create_popup(html: str) -> str:
@@ -105,6 +108,11 @@ class Tooltip:
                 field_view = Tooltip._generate_external_resource(widget_config, name, fname)
 
             if widget_type == "ValueRelation":
+                if "Layer" not in widget_config:
+                    raise InvalidWidgetConfig(
+                        f"ValueRelation widget config has no Layer property for {name} ({fname})"
+                    )
+
                 if not _N(QgsProject.instance()).mapLayer(widget_config["Layer"]):
                     # Issue #287
                     LOGGER.warning(
@@ -115,6 +123,11 @@ class Tooltip:
                 field_view = Tooltip._generate_represent_value(name)
 
             if widget_type == "RelationReference":
+                if "Relation" not in widget_config:
+                    raise InvalidWidgetConfig(
+                        f"RelationReference widget config has no Relation property for {name} ({fname})"
+                    )
+
                 relation = relation_manager.relation(widget_config["Relation"])
                 referenced_layer = relation.referencedLayer()
 
