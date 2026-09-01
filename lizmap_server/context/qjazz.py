@@ -81,6 +81,10 @@ class Context(ContextABC):
                 raise FileNotFoundError(uri)
             return project
 
+        # Take care if the project is already in cache
+        if isinstance(md, CacheEntry):
+            md = md.md
+
         handler = self._cm.get_protocol_handler(md.scheme)
         try:
             project = handler.load_project(md, load)
