@@ -71,7 +71,7 @@ swagger.model(ProjectDescription)
 swagger.model(LayerDetails)
 
 @routes.get(v1("/projects/list"))
-def get_project_from_path(request: HTTPRequestDelegate, **match_info):
+def get_project(request: HTTPRequestDelegate, **match_info):
     """
     summary: List projects from PATH
     description: |
