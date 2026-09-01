@@ -20,12 +20,12 @@ from ..schemas.layouts import (
     LayoutSummary,
 )
 
-from ...tools import _N
+from ...tools import unwrap
 
 
 def layout_summary(layout: QgsPrintLayout) -> LayoutSummary:
     """Return layout summary"""
-    atlas = _N(layout.atlas())
+    atlas = unwrap(layout.atlas())
     atlas_enabled = atlas.enabled()
     coverage_layer = atlas.coverageLayer()
 
@@ -71,7 +71,7 @@ def layout_maps(items: list[QgsLayoutItem]) -> Iterator[LayoutMap]:
             uuid=item.uuid(),
             page=item.page(),
             overview_map=linkedMap.uuid() if linkedMap else None,
-            grid=_N(item.grids()).size() > 0,
+            grid=unwrap(item.grids()).size() > 0,
         )
 
         index += 1
@@ -92,7 +92,7 @@ def layout_labels(items: list["QgsLayoutItem"]) -> Iterator[LayoutLabel]:
 
 def layout_description(layout: QgsPrintLayout) -> LayoutDescription:
     """Return layout details"""
-    atlas = _N(layout.atlas())
+    atlas = unwrap(layout.atlas())
     atlas_enabled = atlas.enabled()
     coverage_layer = atlas.coverageLayer()
 
@@ -102,7 +102,7 @@ def layout_description(layout: QgsPrintLayout) -> LayoutDescription:
         name=layout.name(),
         atlas_enabled=atlas_enabled,
         atlas_coverage_layer=coverage_layer.id() if coverage_layer is not None else None,
-        pages=list(layout_pages(_N(layout.pageCollection()))),
+        pages=list(layout_pages(unwrap(layout.pageCollection()))),
         maps=list(layout_maps(items)),
         labels=list(layout_labels(items)),
     )

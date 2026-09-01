@@ -12,7 +12,7 @@ from .lizmap_accesscontrol import LizmapAccessControlFilter
 from .lizmap_filter import LizmapFilter
 from .lizmap_service import LizmapService
 from .plausible import Plausible
-from .tools import version, _N
+from .tools import version, unwrap
 
 from . import logger
 
@@ -35,7 +35,7 @@ class LizmapServer:
         register_lizmap_api(server_iface)
 
         # Register services
-        service_registry = _N(self.server_iface.serviceRegistry())
+        service_registry = unwrap(self.server_iface.serviceRegistry())
 
         try:
             service_registry.registerService(ExpressionService(self.server_iface))

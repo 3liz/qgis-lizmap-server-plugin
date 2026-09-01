@@ -70,7 +70,7 @@ format:
 	@ $(UV) ruff format $(LINT_TARGETS)
 
 typecheck:
-	@ $(UV) ty check
+	@ $(UV) ty check --output-format concise
 
 scan:
 	@ $(UV) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)
@@ -109,6 +109,12 @@ coverage: covtest
 	@echo "Building coverage html"
 	@ $(UV) coverage html
 
+#
+#  Sync requirements
+#
+sync:
+	@echo "Synchronizing with lock file..."
+	@uv sync $(ACTIVE_VENV) --frozen --all-extras --all-groups
 
 #
 # Code managment

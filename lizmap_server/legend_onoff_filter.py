@@ -23,7 +23,7 @@ from qgis.server import (
 )
 
 from .core import find_vector_layer
-from .tools import _N
+from .tools import unwrap
 
 from . import logger
 
@@ -40,7 +40,7 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         if Qgis.versionInt() < 33800:
             layer_short_name = layer.shortName()
         else:
-            layer_short_name = _N(layer.serverProperties()).shortName()
+            layer_short_name = unwrap(layer.serverProperties()).shortName()
 
         for legend_layer in qs.split(";"):
             layer_name, key_list = legend_layer.split(":")
@@ -57,11 +57,11 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
 
     def layerPermissions(self, layer: Optional[QgsMapLayer]) -> QgsAccessControlFilter.LayerPermissions:
 
-        layer = _N(layer)
+        layer = unwrap(layer)
 
         rights = super().layerPermissions(layer)
 
-        handler = _N(self.iface.requestHandler())
+        handler = unwrap(self.iface.requestHandler())
         params = handler.parameterMap()
 
         styles = params.get("STYLES", "").split(",")
@@ -82,14 +82,14 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         except Exception:
             style_map = {}
 
-        sm = _N(layer.styleManager())
+        sm = unwrap(layer.styleManager())
         style = sm.currentStyle()
 
         # check short name
         if Qgis.versionInt() < 33800:
             layer_short_name = layer.shortName()
         else:
-            layer_short_name = _N(layer.serverProperties()).shortName()
+            layer_short_name = unwrap(layer.serverProperties()).shortName()
         if layer_short_name in style_map:
             style = style_map[layer_short_name]
 
@@ -160,12 +160,12 @@ class LegendOnOffFilter(QgsServerFilter):
                 continue
 
             for key in keys:
-                _N(layer.renderer()).checkLegendSymbolItem(key, True)
+                unwrap(layer.renderer()).checkLegendSymbolItem(key, True)
 
     def responseComplete(self) -> None:
         """Restore legend customized renderers"""
         try:
-            handler = _N(self.serverInterface()).requestHandler()
+            handler = unwrap(self.serverInterface()).requestHandler()
             if not handler:
                 logger.critical("LegendOnOffFilter plugin cannot be run in multithreading mode, skipping.")
                 return
@@ -175,7 +175,7 @@ class LegendOnOffFilter(QgsServerFilter):
             if "LEGEND_ON" not in params and "LEGEND_OFF" not in params:
                 return
 
-            project: QgsProject = _N(QgsProject.instance())
+            project: QgsProject = unwrap(QgsProject.instance())
 
             if "LEGEND_ON" in params:
                 self._reset_legend(params["LEGEND_ON"], project)

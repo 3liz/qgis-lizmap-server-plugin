@@ -11,7 +11,7 @@ from qgis.core import (
 )
 from qgis.utils import qgsfunction
 
-from .tools import _N
+from .tools import unwrap
 
 LOGGER = logging.getLogger("Lizmap")
 SPACES = "  "
@@ -32,10 +32,10 @@ def layer_renderer_used_attributes(
     use to render a vector layer
     """
     # Get layer by ID
-    layer = _N(QgsProject.instance()).mapLayer(layer_identifier)
+    layer = unwrap(QgsProject.instance()).mapLayer(layer_identifier)
     if not layer:
         # Get layer by name if no layer found
-        get_layers = _N(QgsProject.instance()).mapLayersByName(layer_identifier)
+        get_layers = unwrap(QgsProject.instance()).mapLayersByName(layer_identifier)
         if len(get_layers) > 0:
             layer = get_layers[0]
 

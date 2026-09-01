@@ -20,7 +20,7 @@ from qgis.server import QgsServerFeatureId, QgsServerFilter, QgsServerProjectUti
 from qgis.PyQt.QtXml import QDomDocument
 
 from .core import find_vector_layer
-from .tools import to_bool, _N
+from .tools import to_bool, unwrap
 from .tooltip import InvalidWidgetConfig, Tooltip
 
 from . import logger
@@ -182,8 +182,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
 
     def responseComplete(self):
         """Intercept the GetFeatureInfo and add the form maptip if needed."""
-        server_iface = _N(self.serverInterface())
-        request = _N(server_iface.requestHandler())
+        server_iface = unwrap(self.serverInterface())
+        request = unwrap(server_iface.requestHandler())
         # request: QgsRequestHandler
         params = request.parameterMap()
 
@@ -221,8 +221,8 @@ class GetFeatureInfoFilter(QgsServerFilter):
         with open(str(config_path), encoding="utf-8") as cfg_file:
             cfg = json.loads(cfg_file.read())
 
-        project = _N(QgsProject.instance())
-        relation_manager = _N(project.relationManager())
+        project = unwrap(QgsProject.instance())
+        relation_manager = unwrap(project.relationManager())
 
         xml = request.body().data().decode("utf-8")
 

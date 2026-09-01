@@ -27,7 +27,7 @@ from qgis.core import (
 from qgis.gui import QgsExternalResourceWidget
 from qgis.PyQt.QtXml import QDomDocument
 
-from .tools import _N
+from .tools import unwrap
 
 LOGGER = logging.getLogger("Lizmap")
 SPACES = "  "
@@ -113,7 +113,7 @@ class Tooltip:
                         f"ValueRelation widget config has no Layer property for {name} ({fname})"
                     )
 
-                if not _N(QgsProject.instance()).mapLayer(widget_config["Layer"]):
+                if not unwrap(QgsProject.instance()).mapLayer(widget_config["Layer"]):
                     # Issue #287
                     LOGGER.warning(
                         f"Layer {layer.id()} does not have a valid value relation layer for field {fname}"

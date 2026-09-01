@@ -31,7 +31,7 @@ from .filter_by_polygon import (
     FilterByPolygon,
     FilterType,
 )
-from .tools import version, _N
+from .tools import version, unwrap
 from . import logger
 
 
@@ -66,7 +66,7 @@ class LizmapService(QgsService):
     ):
         """Execute a 'LIZMAP' request"""
 
-        project = _N(project)
+        project = unwrap(project)
         params = request.parameters()
 
         try:
@@ -120,7 +120,7 @@ class LizmapService(QgsService):
             "polygons": "",
         }
 
-        request_handler = _N(self.server_iface.requestHandler())
+        request_handler = unwrap(self.server_iface.requestHandler())
 
         # Check first the headers to avoid unnecessary config file reading
         # Override filter
@@ -236,7 +236,7 @@ class LizmapService(QgsService):
         body["gdalogr"]["name"] = gdal.VersionInfo("NAME")
         body["gdalogr"]["version_int"] = gdal.VersionInfo("VERSION_NUM")
 
-        reg = _N(self.server_iface.serviceRegistry())
+        reg = unwrap(self.server_iface.serviceRegistry())
         services = ["WMS", "WFS", "WCS", "WMTS", "ATLAS", "CADASTRE", "EXPRESSION", "LIZMAP"]
         for s in services:
             if reg.getService(s):

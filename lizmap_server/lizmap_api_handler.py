@@ -4,7 +4,7 @@
 
 from qgis.server import QgsServerInterface
 
-from .tools import check_environment_variable, _N
+from .tools import check_environment_variable, unwrap
 
 from . import logger
 
@@ -29,7 +29,7 @@ def register_lizmap_api(server_iface: QgsServerInterface):
         from .api.handlers import LizmapApi
 
         logger.info("Lizmap api endpoint enabled")
-        service_registry = _N(server_iface.serviceRegistry())
+        service_registry = unwrap(server_iface.serviceRegistry())
         service_registry.registerApi(LizmapApi(server_iface))
     else:
         from .legacy_server_info_handler import register_server_info_handler

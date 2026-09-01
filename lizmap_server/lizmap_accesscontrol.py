@@ -21,7 +21,7 @@ from .filter_by_polygon import (
     FilterType,
 )
 from . import logger
-from .tools import to_bool, _N
+from .tools import to_bool, unwrap
 from .tos_definitions import (
     BING_DOMAIN,
     BING_KEY,
@@ -54,16 +54,16 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
 
     def layerPermissions(self, layer: Optional[QgsMapLayer]) -> QgsAccessControlFilter.LayerPermissions:
         """Return the layer rights"""
-        layer = _N(layer)
+        layer = unwrap(layer)
 
         # Get default layer rights
         rights = super().layerPermissions(layer)
 
         # Get Project
-        project = _N(QgsProject.instance())
+        project = unwrap(QgsProject.instance())
 
         # Get request handler
-        request_handler = _N(self.iface.requestHandler())
+        request_handler = unwrap(self.iface.requestHandler())
 
         # Get layer name
         layer_name = layer.name()
@@ -89,7 +89,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Try to override filter expression cache
         is_wfs = request_handler.parameter("service").upper() == "WFS"
         if is_wfs and request_handler.parameter("request").upper() == "GETFEATURE":
-            _N(self.iface.accessControls()).resolveFilterFeatures([layer])
+            unwrap(self.iface.accessControls()).resolveFilterFeatures([layer])
 
         datasource = layer.source().lower()
         is_google = GOOGLE_DOMAIN in datasource
@@ -238,7 +238,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         default_cache_key = super().cacheKey()
 
         # Get Lizmap user groups provided by the request
-        groups = get_lizmap_groups(_N(self.iface.requestHandler()))
+        groups = get_lizmap_groups(unwrap(self.iface.requestHandler()))
 
         # If groups is empty, no Lizmap user groups provided by the request
         # The default cache key is returned
@@ -288,7 +288,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
     def get_lizmap_layer_filter(self, layer: QgsVectorLayer, filter_type: FilterType) -> str:
         """Get lizmap layer filter based on login filter"""
 
-        request_handler = _N(self.iface.requestHandler())
+        request_handler = unwrap(self.iface.requestHandler())
 
         # Check first the headers to avoid unnecessary config file reading
         # Override filter
@@ -321,7 +321,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             return ALL_FEATURES
 
         try:
-            edition_context = is_editing_context(_N(self.iface.requestHandler()))
+            edition_context = is_editing_context(unwrap(self.iface.requestHandler()))
             filter_polygon_config = FilterByPolygon(
                 cfg.get("filter_by_polygon"),
                 layer,
@@ -387,7 +387,7 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
             cfg_layer_login_filter,
             groups,
             user_login,
-            _N(layer.dataProvider()).name(),
+            unwrap(layer.dataProvider()).name(),
         )
         if polygon_filter:
             return f"{polygon_filter} AND {login_filter}"

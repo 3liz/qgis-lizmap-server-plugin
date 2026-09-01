@@ -12,7 +12,7 @@ from qgis.server import (
 )
 
 
-from .tools import _N
+from .tools import unwrap
 
 from .tos_definitions import (
     BING_KEY,
@@ -116,7 +116,7 @@ def server_info(context: ServerContext, server_iface: QgsServerInterface) -> Dic
 
     services_available = []
     for service in EXPECTED_SERVICES:
-        if _N(server_iface.serviceRegistry()).getService(service):
+        if unwrap(server_iface.serviceRegistry()).getService(service):
             services_available.append(service)
 
     if Qgis.devVersion() != "exported":

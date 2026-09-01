@@ -24,7 +24,7 @@ from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtGui import QColor
 from qgis.server import QgsServerProjectUtils
 
-from ..tools import _N
+from ..tools import unwrap
 
 from .builders.crs import to_crs
 from .builders.layers import layer_description
@@ -165,7 +165,7 @@ def project_gui_properties(project: QgsProject) -> GuiProperties:
 
 def project_layer_tree_root(project: QgsProject) -> LayerTreeRoot:
     """Build the layer tree root"""
-    root = _N(project.layerTreeRoot())
+    root = unwrap(project.layerTreeRoot())
 
     return LayerTreeRoot(
         custom_properties=root.customProperties(),
@@ -222,7 +222,7 @@ def layers_visibility_presets(project: QgsProject) -> Iterator[LayerVisibilityPr
             if layer_vis:
                 yield layer_vis
 
-    collection = _N(project.mapThemeCollection())
+    collection = unwrap(project.mapThemeCollection())
     for name in collection.mapThemes():
         state = collection.mapThemeState(name)
         yield LayerVisibilityPreset(
@@ -241,7 +241,7 @@ def project_layouts(project: QgsProject, include_restricted: bool = False) -> It
     if not include_restricted:
         restricted = set(QgsServerProjectUtils.wmsRestrictedComposers(project))
 
-    for layout in _N(project.layoutManager()).printLayouts():
+    for layout in unwrap(project.layoutManager()).printLayouts():
         if not include_restricted and layout.name() in restricted:
             continue
         yield layout_summary(layout)
@@ -249,7 +249,7 @@ def project_layouts(project: QgsProject, include_restricted: bool = False) -> It
 
 def project_layout(project: QgsProject, name: str) -> Optional[LayoutDescription]:
 
-    layout = _N(project.layoutManager()).layoutByName(name)
+    layout = unwrap(project.layoutManager()).layoutByName(name)
     return (
         layout_description(
             layout,
@@ -302,7 +302,7 @@ class StorageMetadata:
 
 def project_storage_metadata(uri: str) -> StorageMetadata:
     """Read metadata about project"""
-    reg = _N(QgsApplication.projectStorageRegistry())
+    reg = unwrap(QgsApplication.projectStorageRegistry())
     storage = reg.projectStorageFromUri(uri)
     if not storage:
         # Check as file

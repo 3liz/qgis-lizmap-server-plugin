@@ -70,7 +70,11 @@ def check_environment_variable() -> bool:
 T = TypeVar("T")
 
 
-def _N(value: Optional[T]) -> T:
+def unwrap(value: Optional[T]) -> T:
     if value is None:
         raise AssertionError("Unexpected None value")
     return value
+
+
+# DEPRECATED
+_N = unwrap

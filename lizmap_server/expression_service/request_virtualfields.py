@@ -30,7 +30,7 @@ from lizmap_server.core import (
     get_server_fid,
 )
 from ..exception import ExpressionServiceError
-from ..tools import to_bool, _N
+from ..tools import to_bool, unwrap
 from .. import logger
 
 from .models import (
@@ -106,7 +106,7 @@ def virtual_fields(
             exp_parser_errors.append(error)
             continue
 
-        exp = _N(exp)
+        exp = unwrap(exp)
 
         exp.prepare(exp_context)
         exp_map[field] = exp
@@ -117,7 +117,7 @@ def virtual_fields(
             exp_parser_errors.append(error)
             continue
 
-        exp = _N(exp)
+        exp = unwrap(exp)
 
         for member in exp.referencedFunctions():
             if member not in ALLOWED_SAFE_EXPRESSIONS:
@@ -211,7 +211,7 @@ def virtual_fields(
 
     # set extra subset string provided by access control plugins
     subset_sql = layer.subsetString()
-    extra_sql = _N(server_iface.accessControls()).extraSubsetString(layer)
+    extra_sql = unwrap(server_iface.accessControls()).extraSubsetString(layer)
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 

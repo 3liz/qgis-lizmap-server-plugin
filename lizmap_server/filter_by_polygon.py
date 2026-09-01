@@ -26,7 +26,7 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QVariant
 
-from .tools import to_bool, _N
+from .tools import to_bool, unwrap
 from . import logger
 
 
@@ -73,7 +73,7 @@ class FilterByPolygon:
         self.config = config
         self.editing = editing
         # noinspection PyArgumentList
-        self.project = _N(QgsProject.instance())
+        self.project = unwrap(QgsProject.instance())
 
         # Current layer in the request
         self.layer = layer
@@ -187,7 +187,7 @@ class FilterByPolygon:
         """For a given URI, execute an SQL query and return the result."""
         if self.connection is None:
             # noinspection PyArgumentList
-            metadata = _N(_N(QgsProviderRegistry.instance()).providerMetadata("postgres"))
+            metadata = unwrap(unwrap(QgsProviderRegistry.instance()).providerMetadata("postgres"))
             self.connection = cast(
                 "QgsAbstractDatabaseProviderConnection", metadata.createConnection(uri.uri(), {})
             )

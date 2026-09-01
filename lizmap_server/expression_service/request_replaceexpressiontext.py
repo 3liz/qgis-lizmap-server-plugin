@@ -41,7 +41,7 @@ from ..qgis4_compat import (
     QgsJsonUtils_stringToFields,
     QgsJsonUtils_stringToFeatureList,
 )
-from ..tools import to_bool, _N
+from ..tools import to_bool, unwrap
 
 from .. import logger
 
@@ -114,7 +114,7 @@ def replace_expression_text(
 
     # set extra subset string provided by access control plugins
     subset_sql = layer.subsetString()
-    extra_sql = _N(server_iface.accessControls()).extraSubsetString(layer)
+    extra_sql = unwrap(server_iface.accessControls()).extraSubsetString(layer)
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 
@@ -135,6 +135,7 @@ def replace_expression_text(
     da.setEllipsoid(project.ellipsoid())
 
     # organized strings
+    # TODO: add type annotation
     str_map = {}
     str_items: Iterable[Tuple[Any, Any]]
     if isinstance(str_json, list):
@@ -159,6 +160,7 @@ def replace_expression_text(
     if not features:
         result = {}
         for k, s in str_map.items():
+            #value = QgsExpression.replaceExpressionText(cast("str", s), exp_context, da)
             value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
         body["results"].append(result)
@@ -274,6 +276,7 @@ def replace_expression_text(
         # replace expression strings with the new feature
         result = {}
         for k, s in str_map.items():
+            #value = QgsExpression.replaceExpressionText(cast("str", s), exp_context, da)
             value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
         if exporter:

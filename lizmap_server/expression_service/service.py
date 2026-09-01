@@ -19,7 +19,7 @@ from ..core import (
     get_lizmap_user_login,
 )
 from ..exception import ExpressionServiceError
-from ..tools import _N
+from ..tools import unwrap
 
 from .. import logger
 
@@ -52,7 +52,7 @@ class ExpressionService(QgsService):
         response: QgsServerResponse,
         project: Optional[QgsProject],
     ):
-        project = _N(project)
+        project = unwrap(project)
 
         """Execute a 'EXPRESSION' request"""
         if not self.allowMethod(request.method()):

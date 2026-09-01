@@ -17,7 +17,7 @@ from qgis.core import (
     QgsVectorLayerJoinInfo,
 )
 
-from ...tools import _N
+from ...tools import unwrap
 
 from ..schemas.layers import (
     AttributeTableColumn,
@@ -99,7 +99,7 @@ def layer_description(
         keywords = layer.keywordList()
     else:
         # Qgis 3.38+
-        properties = _N(layer.serverProperties())
+        properties = unwrap(layer.serverProperties())
         abstract = properties.abstract()
         datasource = properties.dataUrl()
         keywords = properties.keywordList()
@@ -161,7 +161,7 @@ def layer_description(
         datasource=datasource,
         opacity=layer.opacity(),
         srs=to_crs(layer.crs()),
-        style_manager=layer_style_manager(_N(layer.styleManager())),
+        style_manager=layer_style_manager(unwrap(layer.styleManager())),
         keywords=keywords,
         # Vector properties
         feature_renderer=feature_renderer,

@@ -9,7 +9,7 @@ from qgis.PyQt.QtNetwork import QNetworkReply, QNetworkRequest
 from lizmap_server import logger
 from lizmap_server.tools import to_bool, version
 
-from .tools import _N
+from .tools import unwrap
 
 MIN_SECONDS = 3600
 ENV_SKIP_STATS = "3LIZ_SKIP_STATS"
@@ -116,7 +116,7 @@ class Plausible:
         }
 
         # noinspection PyArgumentList
-        r: QNetworkReply = _N(QgsNetworkAccessManager.instance()).post(  # ty: ignore[invalid-assignment]
+        r: QNetworkReply = unwrap(QgsNetworkAccessManager.instance()).post(  # ty: ignore[invalid-assignment]
             request, QByteArray(str.encode(json.dumps(data)))
         )
         if not is_lizcloud:
