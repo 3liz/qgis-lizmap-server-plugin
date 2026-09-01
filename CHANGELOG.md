@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Fix GetLegendGraphic JSON when a rule based renderer uses the same label in
+  several branches, the rule keys were duplicated and the legend tree was broken
+
 ## 2.15.3 - 2026-07-28
 
 * Fix: QGIS 3.34, type object 'Qgis' has no attribute 'FeatureRequestFlag'
