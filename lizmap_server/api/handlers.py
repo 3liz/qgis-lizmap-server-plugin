@@ -70,13 +70,12 @@ swagger.model(ProjectSummary)
 swagger.model(ProjectDescription)
 swagger.model(LayerDetails)
 
-
-@routes.get(v1("projects/list/{PATH:.*}"))
-def get_projects(request: HTTPRequestDelegate, **match_info):
+@routes.get(v1("/projects/list"))
+def get_project_from_path(request: HTTPRequestDelegate, **match_info):
     """
-    summary: List projects
+    summary: List projects from PATH
     description: |
-        List available projects
+        List available projects from a given PATH
     tags:
         - project
     responses:
@@ -88,7 +87,31 @@ def get_projects(request: HTTPRequestDelegate, **match_info):
                     schema:
                         $ref: '#/definitions/ProjectSummaries'
     """
-    location = f"/{match_info.get('PATH')}"
+    _get_projects(request, **match_info)
+
+
+@routes.get(v1("/projects/list/{PATH:.+}"))
+def get_project_from_path(request: HTTPRequestDelegate, **match_info):
+    """
+    summary: List projects from PATH
+    description: |
+        List available projects from a given PATH
+    tags:
+        - project
+    responses:
+        "200":
+            description: >
+                The list of project summaries
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/definitions/ProjectSummaries'
+    """
+    _get_projects(request, **match_info)
+
+
+def _get_projects(request: HTTPRequestDelegate, **match_info):
+    location = f"/{match_info.get('PATH', '')}"
 
     context = request.server_context
 
@@ -105,7 +128,7 @@ def get_projects(request: HTTPRequestDelegate, **match_info):
                     Link.makelink(
                         request,
                         rel="related",
-                        path=v1(f"projects/description?p={url}"),
+                        path=v1(f"/projects/description?p={url}"),
                     ),
                 ],
             )
@@ -113,7 +136,7 @@ def get_projects(request: HTTPRequestDelegate, **match_info):
     request.write_json(
         ProjectSummaries(
             projects=list(collect_projects()),
-            links=[Link.makelink(request, rel="self", path=v1("projects/list/"))],
+            links=[Link.makelink(request, rel="self", path=v1("/projects/list/"))],
         )
     )
 
@@ -145,7 +168,7 @@ def load_project_def(
     return location, project, details
 
 
-@routes.get(v1("projects/description"))
+@routes.get(v1("/projects/description"))
 def get_project_description(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project description
@@ -190,7 +213,7 @@ def get_project_description(request: HTTPRequestDelegate, **match_info):
     request.write_json(builder.project_description(project, layers))
 
 
-@routes.get(v1("projects/layers/{Id}"))
+@routes.get(v1("/projects/layers/{Id}"))
 def get_project_layers(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project's layer details
@@ -235,7 +258,7 @@ def get_project_layers(request: HTTPRequestDelegate, **match_info):
         raise HTTPError(404, reason="Layer not found")
 
     layer_details.links = [  # ty: ignore[invalid-assignment]
-        Link.makelink(request, rel="self", path=v1(f"projects/layers/{layer_id}?p={loc}")),
+        Link.makelink(request, rel="self", path=v1(f"/projects/layers/{layer_id}?p={loc}")),
     ]
     request.write_json(layer_details)
 
@@ -253,7 +276,7 @@ class LayoutSummaries(JsonModel):
     links: Sequence[Link]
 
 
-@routes.get(v1("projects/layouts/"))
+@routes.get(v1("/projects/layouts"))
 def get_project_layouts(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project's layout summary
@@ -292,7 +315,7 @@ def get_project_layouts(request: HTTPRequestDelegate, **match_info):
                 Link.makelink(
                     request,
                     rel="related",
-                    path=v1(f"projects/layouts/{quote(layout.name)}?p={uri}"),
+                    path=v1(f"/projects/layouts/{quote(layout.name)}?p={uri}"),
                     title=layout.name,
                 ),
             ]
@@ -300,13 +323,13 @@ def get_project_layouts(request: HTTPRequestDelegate, **match_info):
 
     summaries = LayoutSummaries(
         layouts=list(layouts()),
-        links=[Link.makelink(request, rel="self", path=v1("projects/layouts/"))],
+        links=[Link.makelink(request, rel="self", path=v1("/projects/layouts"))],
     )
 
     request.write_json(summaries)
 
 
-@routes.get(v1("projects/layouts/{Name}"))
+@routes.get(v1("/projects/layouts/{Name}"))
 def get_layout(request: HTTPRequestDelegate, **match_info):
     """
     summary: Project's layout details
@@ -407,6 +430,11 @@ class LizmapApi(QgsServerApi):
         req = HTTPRequestDelegate(context)
         try:
             _, _, path = req.path.partition(ROOTPATH)
+
+            # Remove trailing slash
+            if path != "/":
+                path = path.removesuffix('/')
+
             route, values = routes.find_route(req.method, path)
             if req._finished:
                 return

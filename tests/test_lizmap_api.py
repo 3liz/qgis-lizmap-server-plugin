@@ -39,9 +39,9 @@ def test_lizmap_api_default_path_resolution(rootdir: Path):
 def test_lizmap_api_routes(client):
     from lizmap_server.api import errors, routes
 
-    route, match_infos = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list/")
+    route, match_infos = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list")
     assert route is not None
-    assert match_infos.get("PATH") == ""
+    assert match_infos.get("PATH") is None
 
     route, match_infos = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/list/foo/bar")
     assert route is not None
@@ -60,7 +60,7 @@ def test_lizmap_api_routes(client):
     assert route is not None
     assert match_infos.get("Id") == "bar"
 
-    route, _ = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/layouts/")
+    route, _ = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/layouts")
     assert route is not None
 
     route, match_infos = routes.find_route(QgsServerRequest.GetMethod, "/api/v1/projects/layouts/foobar")
@@ -107,7 +107,7 @@ def test_lizmap_api_projects_layers(client):
 def test_lizmap_api_projects_layouts(client):
     """Test the Lizmap API for server settings"""
 
-    rv = client.get("/lizmap/api/v1/projects/layouts/?p=/data/montpellier/montpellier.qgs")
+    rv = client.get("/lizmap/api/v1/projects/layouts?p=/data/montpellier/montpellier.qgs")
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("application/json") == 0
 
@@ -124,12 +124,17 @@ def test_lizmap_api_projects_layouts(client):
 
 def test_lizmap_api_openapi(client):
     """Test lizmap openapi specifications"""
-    rv = client.get("/lizmap/api/v1/")
+    rv = client.get("/lizmap/api/v1")
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("application/json") == 0
 
     content = json.loads(rv.content.decode("utf-8"))
     print("\n::test_lizmap_openapi::content\n", content)
+
+
+def test_lizmap_api_trailing_slash(client):
+    rv = client.get("/lizmap/api/v1/")
+    assert rv.status_code == 200
 
 
 def test_lizmap_api_landinpage(client):

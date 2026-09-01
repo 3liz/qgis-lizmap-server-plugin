@@ -11,7 +11,7 @@ from . import swagger
 
 
 def v1(path: str) -> str:
-    return f"/api/v1/{path}"
+    return f"/api/v1{path}"
 
 
 #
@@ -58,31 +58,31 @@ def landing_page(request: HTTPRequestDelegate, **match_info):
                     request,
                     rel="collection",
                     title="Available projects",
-                    path=v1("projects/list/{Path}"),
+                    path=v1("/projects/list/{Path}"),
                 ),
                 Link.makelink(
                     request,
                     rel="section",
                     title="Project's description",
-                    path=v1("projects/description?p={Path}"),
+                    path=v1("/projects/description?p={Path}"),
                 ),
                 Link.makelink(
                     request,
                     rel="section",
                     title="Project's layer details",
-                    path=v1("projects/layers/{Id}"),
+                    path=v1("/projects/layers/{Id}?p={Path}"),
                 ),
                 Link.makelink(
                     request,
                     rel="collection",
                     title="Project's layouts",
-                    path=v1("projects/layouts/"),
+                    path=v1("/projects/layouts?p={Path}"),
                 ),
                 Link.makelink(
                     request,
                     rel="section",
                     title="Project's layout details",
-                    path=v1("projects/layouts/{Name}"),
+                    path=v1("/projects/layouts/{Name}?p={Path}"),
                 ),
                 Link.makelink(
                     request,
