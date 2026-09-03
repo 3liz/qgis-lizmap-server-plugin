@@ -41,10 +41,9 @@ qgis-server:
   parallel:
     matrix:
       - QGIS_FLAVOR: [
-        "3.34",
         "3.40",
         "3.44",
-        "4.0",
+        "4.2",
       ]
 
 

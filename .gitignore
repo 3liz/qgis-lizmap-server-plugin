@@ -32,3 +32,5 @@ test/data/*.asc.aux.xml
 .localconfig.mk
 .coverage
 .bin
+
+*.aux.xml

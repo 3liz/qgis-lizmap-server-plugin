@@ -131,3 +131,119 @@ def test_acl_headers(client):
     assert rv.status_code == 403
 
     assert rv.headers.get("Content-Type", "").find("text/xml") == 0
+
+
+#
+# Configuration edge cases
+#
+
+
+class FakeRequestHandler:
+    """Minimal duck typing of a QgsRequestHandler."""
+
+    def __init__(self, headers=None, params=None):
+        self._headers = headers if headers is not None else {}
+        self._params = params if params is not None else {}
+        self.exception = None
+
+    def requestHeaders(self):
+        return self._headers
+
+    def parameterMap(self):
+        return self._params
+
+    def setServiceException(self, exception):
+        self.exception = exception
+
+
+class FakeServerInterface:
+    """Minimal duck typing of a QgsServerInterface."""
+
+    def __init__(self, handler, config_path=""):
+        self._handler = handler
+        self._config_path = str(config_path)
+
+    def requestHandler(self):
+        return self._handler
+
+    def configFilePath(self):
+        return self._config_path
+
+
+def _make_filter(client, tmp_path, config=None, headers=None):
+    import json
+
+    from lizmap_server.lizmap_filter import LizmapFilter
+
+    qgs = tmp_path.joinpath("project.qgs")
+    qgs.write_text("")
+    if config is not None:
+        tmp_path.joinpath("project.qgs.cfg").write_text(json.dumps(config))
+
+    handler = FakeRequestHandler(headers)
+    lizmap_filter = LizmapFilter(client.server.serverInterface())
+    lizmap_filter.iface = FakeServerInterface(handler, qgs)
+    return lizmap_filter, handler
+
+
+def test_lizmap_filter_config_without_options(client, tmp_path):
+    """A configuration without any option lets the request go through."""
+    lizmap_filter, handler = _make_filter(
+        client,
+        tmp_path,
+        config={"layers": {}},
+        headers={"X-Lizmap-User-Groups": "test1"},
+    )
+
+    assert lizmap_filter.requestReady() is None
+    assert handler.exception is None
+
+
+def test_lizmap_filter_config_without_acl(client, tmp_path):
+    """A configuration without any acl lets the request go through."""
+    lizmap_filter, handler = _make_filter(
+        client,
+        tmp_path,
+        config={"options": {}},
+        headers={"X-Lizmap-User-Groups": "test1"},
+    )
+
+    assert lizmap_filter.requestReady() is None
+    assert handler.exception is None
+
+
+def test_lizmap_filter_forbidden(client, tmp_path):
+    """A group which is not in the acl is forbidden."""
+    lizmap_filter, handler = _make_filter(
+        client,
+        tmp_path,
+        config={"options": {"acl": ["admins"]}},
+        headers={"X-Lizmap-User-Groups": "test1"},
+    )
+
+    lizmap_filter.requestReady()
+    assert handler.exception is not None
+
+    # A group in the acl is allowed
+    lizmap_filter, handler = _make_filter(
+        client,
+        tmp_path,
+        config={"options": {"acl": ["admins"]}},
+        headers={"X-Lizmap-User-Groups": "admins"},
+    )
+    lizmap_filter.requestReady()
+    assert handler.exception is None
+
+
+def test_lizmap_filter_error(client, tmp_path):
+    """An error must be logged and swallowed."""
+    from lizmap_server.lizmap_filter import LizmapFilter
+
+    class BrokenHandler:
+        def requestHeaders(self):
+            raise RuntimeError("Broken")
+
+    lizmap_filter = LizmapFilter(client.server.serverInterface())
+    lizmap_filter.iface = FakeServerInterface(BrokenHandler())
+
+    assert lizmap_filter.requestReady() is None
