@@ -8,8 +8,9 @@
 import json
 import re
 
-from collections import namedtuple
 from typing import (
+    List,
+    NamedTuple,
     Optional,
     cast,
 )
@@ -25,10 +26,18 @@ from lizmap_server.tools import to_bool
 
 from .tools import unwrap
 
-Category = namedtuple(
-    "Category",
-    ["ruleKey", "checked", "parentRuleKey", "scaleMaxDenom", "scaleMinDenom", "expression", "title"],
-)
+
+class Category(NamedTuple):
+    """A legend symbol item from the layer renderer."""
+
+    label: str
+    ruleKey: str
+    checked: bool
+    parentRuleKey: str
+    scaleMaxDenom: float
+    scaleMinDenom: float
+    expression: str
+    title: str
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
@@ -154,8 +163,8 @@ class GetLegendGraphicFilter(QgsServerFilter):
                     project.homePath(),
                 )
 
-                for idx in range(len(symbols)):
-                    symbol = symbols[idx]
+                labels = []
+                for symbol in symbols:
                     symbol_label = symbol["title"]
                     if show_feature_count:
                         match_label = self.match_label_feature_count(symbol_label)
@@ -167,16 +176,16 @@ class GetLegendGraphicFilter(QgsServerFilter):
                                     self.FEATURE_COUNT_REGEXP, symbol["title"]
                                 )
                             )
-                    try:
-                        category = categories[symbol_label]
+                    labels.append(symbol_label)
+
+                for symbol, category in zip(symbols, self._match_categories(labels, categories)):
+                    if category is not None:
                         symbol["ruleKey"] = category.ruleKey
                         symbol["checked"] = category.checked
                         symbol["parentRuleKey"] = category.parentRuleKey
                         symbol["expression"] = category.expression
                         if symbol["title"] != category.title:
                             symbol["title"] = category.title
-                    except (IndexError, KeyError):
-                        pass
 
                     new_symbols.append(symbol)
 
@@ -200,16 +209,46 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 unwrap(layer.styleManager()).setCurrentStyle(current_style)
 
     @classmethod
+    def _match_categories(
+        cls,
+        labels: List[str],
+        categories: List[Category],
+    ) -> List[Optional[Category]]:
+        """Match the JSON legend symbols with the renderer legend items.
+
+        Labels are not unique, a rule based renderer can reuse one in several
+        branches, so both lists being in the renderer order, each category is
+        consumed once. The JSON can hold fewer symbols than the renderer has
+        items, hence a forward search instead of an index match.
+        """
+        matches: List[Optional[Category]] = []
+        cursor = 0
+        for label in labels:
+            match = None
+            for index in range(cursor, len(categories)):
+                if categories[index].label == label:
+                    match = categories[index]
+                    cursor = index + 1
+                    break
+
+            if match is None:
+                # Legend nodes reordered or relabelled in the project
+                match = next((item for item in categories if item.label == label), None)
+
+            matches.append(match)
+
+        return matches
+
+    @classmethod
     def _extract_categories(
         cls,
         layer: QgsVectorLayer,
         show_feature_count: bool = False,
         project_path: str = "",
-    ) -> dict:
-        """Extract categories from the layer legend."""
-        # TODO Annotations QGIS 3.22 [str, Category]
+    ) -> List[Category]:
+        """Extract categories from the layer legend, in the renderer order."""
         renderer = unwrap(layer.renderer())
-        categories: dict = {}
+        categories: List[Category] = []
         for item in renderer.legendSymbolItems():
             # Calculate title if show_feature_count is activated
             # It seems that in QGIS Server 3.22 countSymbolFeatures is not used for JSON
@@ -230,19 +269,16 @@ class GetLegendGraphicFilter(QgsServerFilter):
                 )
                 expression = ""
 
-            if item.label() in categories:
-                logger.warning(
-                    f"The label key '{item.label()}' is not unique, expect the legend to be broken in the project "
-                    f"'{project_path}', layer '{layer.name()}'.",
+            categories.append(
+                Category(
+                    label=item.label(),
+                    ruleKey=item.ruleKey(),
+                    checked=renderer.legendSymbolItemChecked(item.ruleKey()),
+                    parentRuleKey=item.parentRuleKey(),
+                    scaleMaxDenom=item.scaleMaxDenom(),
+                    scaleMinDenom=item.scaleMinDenom(),
+                    expression=expression,
+                    title=title,
                 )
-
-            categories[item.label()] = Category(
-                ruleKey=item.ruleKey(),
-                checked=renderer.legendSymbolItemChecked(item.ruleKey()),
-                parentRuleKey=item.parentRuleKey(),
-                scaleMaxDenom=item.scaleMaxDenom(),
-                scaleMinDenom=item.scaleMinDenom(),
-                expression=expression,
-                title=title,
             )
         return categories
