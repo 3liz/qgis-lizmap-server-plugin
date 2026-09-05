@@ -23,7 +23,7 @@ rich==15.0.0
 ruamel-yaml==0.19.1
 ruff==0.15.22
 stevedore==5.8.0 ; python_full_version < '3.11'
-stevedore==5.9.0 ; python_full_version >= '3.11'
+stevedore==5.9.1 ; python_full_version >= '3.11'
 tomli==2.4.1 ; python_full_version <= '3.11'
 ty==0.0.61
 typing-extensions==4.16.0
