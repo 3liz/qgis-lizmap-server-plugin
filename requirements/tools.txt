@@ -18,6 +18,6 @@ ptyprocess==0.7.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
 pure-eval==0.2.3
 pygments==2.20.0
 stack-data==0.6.3
-traitlets==5.15.1
+traitlets==5.16.1
 typing-extensions==4.16.0 ; python_full_version < '3.12'
 wcwidth==0.8.2
