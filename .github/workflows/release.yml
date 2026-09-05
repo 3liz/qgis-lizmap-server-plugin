@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.repository_owner == '3liz' && inputs.dry_run == true}}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Fetch yapt
         run: |
@@ -36,7 +36,7 @@ jobs:
     if: ${{ github.repository_owner == '3liz' && contains(github.ref, 'refs/tags/') && inputs.dry_run == false }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       
       - name: Fetch yapt
         run: curl ${{ vars.YAPT_REPOSITORY_URL }} | tar -xzf -
