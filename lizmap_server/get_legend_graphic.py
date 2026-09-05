@@ -8,9 +8,9 @@
 import json
 import re
 
-from collections import namedtuple
 from typing import (
     List,
+    NamedTuple,
     Optional,
     cast,
 )
@@ -26,19 +26,18 @@ from lizmap_server.tools import to_bool
 
 from .tools import unwrap
 
-Category = namedtuple(
-    "Category",
-    [
-        "label",
-        "ruleKey",
-        "checked",
-        "parentRuleKey",
-        "scaleMaxDenom",
-        "scaleMinDenom",
-        "expression",
-        "title",
-    ],
-)
+
+class Category(NamedTuple):
+    """A legend symbol item from the layer renderer."""
+
+    label: str
+    ruleKey: str
+    checked: bool
+    parentRuleKey: str
+    scaleMaxDenom: float
+    scaleMinDenom: float
+    expression: str
+    title: str
 
 
 class GetLegendGraphicFilter(QgsServerFilter):
