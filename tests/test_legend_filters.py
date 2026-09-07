@@ -282,7 +282,10 @@ def test_legend_expression_error(client):
             return "a layer"
 
     categories = GetLegendGraphicFilter._extract_categories(FakeLayer())
-    assert categories["A label"].expression == ""
+    assert len(categories) == 2
+    assert categories[0].label == "A label"
+    assert categories[1].label == "A label"
+    assert categories[0].expression == ""
 
 
 #
