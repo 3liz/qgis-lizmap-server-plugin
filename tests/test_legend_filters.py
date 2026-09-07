@@ -5,6 +5,7 @@ import json
 import pytest
 
 from qgis.core import (
+    Qgis,
     QgsCategorizedSymbolRenderer,
     QgsProject,
     QgsRendererCategory,
@@ -296,7 +297,10 @@ def test_legend_expression_error(client):
 def test_legend_onoff_setup_legend(project):
     """The legend keys are only applied on the matching layer."""
     layer = _categorized_layer()
-    layer.serverProperties().setShortName("short_name")
+    if Qgis.versionInt() < 33800:
+        layer.setShortName("short_name")
+    else:
+        layer.serverProperties().setShortName("short_name")
     project.addMapLayer(layer)
 
     keys = [item.ruleKey() for item in layer.renderer().legendSymbolItems()]
@@ -321,7 +325,10 @@ def test_legend_onoff_setup_legend(project):
 def test_legend_onoff_permissions(client, project):
     """The style is chosen from the request parameters."""
     layer = _categorized_layer()
-    layer.serverProperties().setShortName("short_name")
+    if Qgis.versionInt() < 33800:
+        layer.setShortName("short_name")
+    else:
+        layer.serverProperties().setShortName("short_name")
     assert layer.styleManager().addStyleFromLayer("other")
     project.addMapLayer(layer)
 
