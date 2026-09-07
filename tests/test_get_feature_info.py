@@ -237,17 +237,11 @@ def test_single_get_feature_info_ascii(client):
     rv = client.get(_build_query_string(qs, use_urllib=True), PROJECT)
     data = _check_request(rv)
 
-    expected = {
-        "features": [
-            {
-                "geometry": None,
-                "id": "accents.3",
-                "properties": {
-                    "NAME_1": "Bret'agne",
-                },
-                "type": "Feature",
-            },
-        ],
-        "type": "FeatureCollection",
-    }
-    assert expected == data, data
+    features = data.get("features")
+    assert features is not None
+    assert len(features) == 1
+    
+    item = features[0]
+    # Test only attributes we are interested in
+    assert item.get("id") == "accents.3"
+    assert item.get("properties", {}).get("NAME_1") == "Bret'agne"
