@@ -15,7 +15,7 @@ from lizmap_server.core import (
     is_editing_context,
 )
 
-from qgis.core import QgsFeature, QgsFields, QgsField
+from qgis.core import Qgis, QgsFeature, QgsFields, QgsField
 from qgis.PyQt.QtCore import QMetaType
 
 
@@ -112,7 +112,10 @@ def test_core_find_layer(client):
     assert find_layer(layer.id(), project) is layer
 
     # By short name
-    layer.serverProperties().setShortName("a_short_name")
+    if Qgis.versionInt() < 33800:
+        layer.setShortName("a_short_name")
+    else:
+        layer.serverProperties().setShortName("a_short_name")
     assert find_layer("a_short_name", project) is layer
 
     # Unknown layer
