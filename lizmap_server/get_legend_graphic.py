@@ -48,7 +48,10 @@ class GetLegendGraphicFilter(QgsServerFilter):
         """Warning icon as base 64."""
         buffer = QBuffer()
         buffer.open(QIODevice.OpenModeFlag.WriteOnly)
+        # XXX This path does not work with QGIS4/QT6
         qp = QImage(":/images/themes/default/mIconWarning.svg")
+        if qp.isNull():
+            logger.error("Failed to load warning icon")
         qp.save(buffer, "PNG")
         return bytes(buffer.data().toBase64().data()).decode()
 

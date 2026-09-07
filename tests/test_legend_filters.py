@@ -153,7 +153,7 @@ def test_legend_invalid_layer(client, project):
 
     content = handler.json()
     assert content["nodes"][0]["valid"] is False
-    assert content["nodes"][0]["icon"]
+    assert content["nodes"][0]["icon"] == GetLegendGraphicFilter.warning_icon()
 
 
 def test_legend_nodes_without_symbols(client, project):

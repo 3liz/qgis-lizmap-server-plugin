@@ -240,7 +240,7 @@ def test_single_get_feature_info_ascii(client):
     features = data.get("features")
     assert features is not None
     assert len(features) == 1
-    
+
     item = features[0]
     # Test only attributes we are interested in
     assert item.get("id") == "accents.3"
