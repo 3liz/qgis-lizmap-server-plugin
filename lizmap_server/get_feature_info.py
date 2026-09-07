@@ -314,10 +314,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
                     )
                     continue
 
-                if Qgis.versionInt() < 33800:
-                    layer_name = result.layer.shortName()
-                else:
-                    layer_name = result.layer.serverProperties().shortName()
+                layer_name = result.layer.serverProperties().shortName()
 
                 if not layer_name:
                     layer_name = result.layer.name()

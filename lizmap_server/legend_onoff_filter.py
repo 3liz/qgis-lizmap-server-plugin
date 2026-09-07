@@ -37,10 +37,7 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
     @staticmethod
     def _setup_legend(layer: QgsMapLayer, qs: str, onoff: bool):
 
-        if Qgis.versionInt() < 33800:
-            layer_short_name = layer.shortName()
-        else:
-            layer_short_name = unwrap(layer.serverProperties()).shortName()
+        layer_short_name = unwrap(layer.serverProperties()).shortName()
 
         for legend_layer in qs.split(";"):
             layer_name, key_list = legend_layer.split(":")
@@ -86,10 +83,7 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         style = sm.currentStyle()
 
         # check short name
-        if Qgis.versionInt() < 33800:
-            layer_short_name = layer.shortName()
-        else:
-            layer_short_name = unwrap(layer.serverProperties()).shortName()
+        layer_short_name = unwrap(layer.serverProperties()).shortName()
         if layer_short_name in style_map:
             style = style_map[layer_short_name]
 

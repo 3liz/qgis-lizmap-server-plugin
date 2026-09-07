@@ -93,16 +93,10 @@ def layer_description(
 ) -> LayerDescription:
     """Build layer description"""
 
-    if Qgis.versionInt() < 33800:
-        abstract = layer.abstract()
-        datasource = layer.dataUrl()
-        keywords = layer.keywordList()
-    else:
-        # Qgis 3.38+
-        properties = unwrap(layer.serverProperties())
-        abstract = properties.abstract()
-        datasource = properties.dataUrl()
-        keywords = properties.keywordList()
+    properties = unwrap(layer.serverProperties())
+    abstract = properties.abstract()
+    datasource = properties.dataUrl()
+    keywords = properties.keywordList()
 
     project = project or layer.project()
 
