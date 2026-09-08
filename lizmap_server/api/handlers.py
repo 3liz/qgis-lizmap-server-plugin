@@ -70,6 +70,7 @@ swagger.model(ProjectSummary)
 swagger.model(ProjectDescription)
 swagger.model(LayerDetails)
 
+
 @routes.get(v1("/projects/list"))
 def get_project(request: HTTPRequestDelegate, **match_info):
     """
@@ -433,7 +434,7 @@ class LizmapApi(QgsServerApi):
 
             # Remove trailing slash
             if path != "/":
-                path = path.removesuffix('/')
+                path = path.removesuffix("/")
 
             route, values = routes.find_route(req.method, path)
             if req._finished:

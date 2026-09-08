@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
 SERVER_CONTEXT_NAME = "QJazz"
 
+
 class Context(ContextABC):
     def __init__(self):
         self._cm = CacheManager.get_service()
@@ -61,7 +62,7 @@ class Context(ContextABC):
         from ..api import builder
 
         if isinstance(md, Url):
-            md, co =  self._cm.checkout(md)
+            md, co = self._cm.checkout(md)
             if co in (Co.REMOVED, Co.NOTFOUND):
                 return None, {}
         elif not isinstance(md, ProjectMetadata):

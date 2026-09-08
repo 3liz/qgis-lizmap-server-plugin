@@ -4,7 +4,6 @@ from urllib.parse import quote
 
 import pytest
 
-from qgis.core import QgsExpression
 from qgis.server import (
     QgsBufferServerRequest,
     QgsBufferServerResponse,
@@ -103,21 +102,14 @@ def test_expression_evaluate_scalar_expressions(client):
 
 def test_expression_evaluate_invalid_expression(client, monkeypatch):
     """An expression which is not valid must be reported."""
-    from lizmap_server.expression_service import request_evaluate
-
-    class NeverValid(QgsExpression):
-        def isValid(self):
-            return False
-
-    monkeypatch.setattr(request_evaluate, "QgsExpression", NeverValid)
 
     body = _bad_request(
         client,
         REQUEST="Evaluate",
         LAYER=LAYER,
-        EXPRESSIONS='{{"a":"{}"}}'.format(quote("1 + 1", safe="")),
+        EXPRESSIONS='{{"a":"{}"}}'.format(quote("1 + (", safe="")),
     )
-    assert "Expression not valid" in body["message"]
+    assert "Invalid EXPRESSIONS for" in body["message"]
 
 
 def test_expression_evaluate_eval_error(client):
@@ -215,9 +207,7 @@ def test_expression_replace_no_feature_parsed(client, monkeypatch):
     """Features which cannot be parsed must be reported."""
     from lizmap_server.expression_service import request_replaceexpressiontext
 
-    monkeypatch.setattr(
-        request_replaceexpressiontext, "QgsJsonUtils_stringToFeatureList", lambda *args: None
-    )
+    monkeypatch.setattr(request_replaceexpressiontext, "QgsJsonUtils_stringToFeatureList", lambda *args: None)
 
     body = _bad_request(
         client,
@@ -258,6 +248,18 @@ def test_expression_virtual_fields_virtuals_not_an_object(client):
     assert "not well formed" in body["message"]
 
 
+def test_expression_virtual_unauthorized_safe_expression(client):
+    """Invalid expressions must be reported."""
+    body = _bad_request(
+        client,
+        REQUEST="VirtualFields",
+        LAYER=LAYER,
+        VIRTUALS='{{"a":"{}"}}'.format(quote("1", safe="")),
+        SAFE_VIRTUALS='{{"b":"{}"}}'.format(quote("md5('hello')", safe="")),
+    )
+    assert "Invalid SAFE_VIRTUALS expression 'md5'" in body["message"]
+
+
 def test_expression_virtual_fields_expression_errors(client):
     """Invalid expressions must be reported."""
     body = _bad_request(
@@ -276,25 +278,6 @@ def test_expression_virtual_fields_expression_errors(client):
         SAFE_VIRTUALS='{{"b":"{}"}}'.format(quote("foobar(", safe="")),
     )
     assert "Invalid VIRTUALS or SAFE_VIRTUALS" in body["message"]
-
-
-def test_expression_virtual_fields_invalid_expression(client, monkeypatch):
-    """An expression which is not valid must be reported."""
-    from lizmap_server.expression_service import request_virtualfields
-
-    class NeverValid(QgsExpression):
-        def isValid(self):
-            return False
-
-    monkeypatch.setattr(request_virtualfields, "QgsExpression", NeverValid)
-
-    body = _bad_request(
-        client,
-        REQUEST="VirtualFields",
-        LAYER=LAYER,
-        VIRTUALS='{{"a":"{}"}}'.format(quote("1", safe="")),
-    )
-    assert "Expression not valid" in body["message"]
 
 
 def test_expression_virtual_fields_filter_errors(client):
@@ -330,7 +313,7 @@ def test_expression_virtual_fields_invalid_filter(client, monkeypatch):
         REQUEST="VirtualFields",
         LAYER=LAYER,
         VIRTUALS="{}",
-        FILTER=quote('"NAME_1" = \'Bretagne\'', safe=""),
+        FILTER=quote("\"NAME_1\" = 'Bretagne'", safe=""),
     )
     assert "Expression not valid" in body["message"]
 
@@ -395,9 +378,7 @@ def test_expression_form_scope_missing_form_feature(client):
         LAYER=LAYER,
         FILTER=quote("1", safe=""),
     )
-    assert (
-        body["message"] == "Invalid 'GetFeatureWithFormScope' REQUEST: FORM_FEATURE parameter is mandatory"
-    )
+    assert body["message"] == "Invalid 'GetFeatureWithFormScope' REQUEST: FORM_FEATURE parameter is mandatory"
 
 
 def test_expression_form_scope_form_feature_not_an_object(client):
@@ -416,9 +397,7 @@ def test_expression_form_scope_no_feature_parsed(client, monkeypatch):
     """A form feature which cannot be parsed must be reported."""
     from lizmap_server.expression_service import request_getfeaturewithformscope
 
-    monkeypatch.setattr(
-        request_getfeaturewithformscope, "QgsJsonUtils_stringToFeatureList", lambda *args: []
-    )
+    monkeypatch.setattr(request_getfeaturewithformscope, "QgsJsonUtils_stringToFeatureList", lambda *args: [])
 
     body = _bad_request(
         client,
@@ -506,28 +485,6 @@ def test_expression_form_scope_filter_errors(client):
         FORM_FEATURE='{"type":"Feature", "geometry": null, "properties": {}}',
     )
     assert "Invalid FILTER" in body["message"]
-
-
-def test_expression_form_scope_invalid_filter(client, monkeypatch):
-    """A FILTER which is not valid must be reported."""
-    from lizmap_server.expression_service import request_getfeaturewithformscope
-
-    real_expression = request_getfeaturewithformscope.QgsExpression
-
-    class NeverValid(real_expression):
-        def isValid(self):
-            return False
-
-    monkeypatch.setattr(request_getfeaturewithformscope, "QgsExpression", NeverValid)
-
-    body = _bad_request(
-        client,
-        REQUEST="GetFeatureWithFormScope",
-        LAYER=LAYER,
-        FILTER=quote("1", safe=""),
-        FORM_FEATURE='{"type":"Feature", "geometry": null, "properties": {}}',
-    )
-    assert "Expression not valid" in body["message"]
 
 
 def test_expression_form_scope_malformed_parent_feature(client):

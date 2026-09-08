@@ -56,7 +56,7 @@ def test_tooltip_helpers():
 
 def test_tooltip_generate_date():
     """The date widget must use the configured format."""
-    assert '\'yyyy-MM-dd\'' in Tooltip._generate_date({}, "day")
+    assert "'yyyy-MM-dd'" in Tooltip._generate_date({}, "day")
     assert "format_date(" in Tooltip._generate_date({}, "day")
 
     result = Tooltip._generate_date({"display_format": "dd/MM/yyyy"}, "day")
@@ -189,9 +189,7 @@ def test_tooltip_value_relation():
     referenced = _layer("referenced")
     project.addMapLayer(referenced)
     try:
-        layer.setEditorWidgetSetup(
-            index, QgsEditorWidgetSetup("ValueRelation", {"Layer": referenced.id()})
-        )
+        layer.setEditorWidgetSetup(index, QgsEditorWidgetSetup("ValueRelation", {"Layer": referenced.id()}))
         html = Tooltip.create_popup_node_item_from_form(layer, node, 1, [], "", relation_manager)
         assert 'represent_value("code")' in html
     finally:
@@ -283,7 +281,7 @@ def test_tooltip_containers(bootstrap_5):
     assert '<div class="tab-content">' in html
     assert '<div class="after-tabs">' in html
     assert "<fieldset" in html
-    assert "<legend class=\"float-none\">Group</legend>" in html
+    assert '<legend class="float-none">Group</legend>' in html
     assert "[% if (\"id\" = 1, '', 'hidden') %]" in html
     # The first tab is active and has a visibility expression
     assert "active [% if (\"id\" > 0, '', 'hidden') %]" in html

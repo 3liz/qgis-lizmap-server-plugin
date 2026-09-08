@@ -62,12 +62,13 @@ class Route(Protocol):
         ...
 
     def resolve_path(self, path: PurePosixPath) -> Optional[Tuple[Dict[str, str], str]]:
-        """ Resolve path
+        """Resolve path
 
         Note that resolve_path does *NOT* normalize path, the caller must ensure that
         the given path cannot escape the root.
         """
         ...
+
 
 class StaticRoute(Route):
     is_dynamic: Final[bool] = False

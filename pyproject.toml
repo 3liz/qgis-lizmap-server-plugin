@@ -70,7 +70,7 @@ plugin_source = "lizmap_server"
 
 [tool.ruff]
 line-length = 110
-target-version = "py39"
+target-version = "py310"
 exclude = [
     ".venv",
     ".local",

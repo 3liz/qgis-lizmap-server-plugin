@@ -37,6 +37,8 @@ from ..qgis4_compat import (
 from ..tools import to_bool
 from .. import logger
 
+from .validate import check_expression
+
 
 if TYPE_CHECKING:
     from .models import Body
@@ -124,17 +126,9 @@ def evaluate(params: Dict[str, str], response: QgsServerResponse, project: QgsPr
         exp_items = ()
 
     for k, e in exp_items:
-        exp = QgsExpression(e)
-        exp.setGeomCalculator(da)
-        exp.setDistanceUnits(project.distanceUnits())
-        exp.setAreaUnits(project.areaUnits())
-
-        if exp.hasParserError():
-            exp_parser_errors.append(f'Error "{e}": {exp.parserErrorString()}')
-            continue
-
-        if not exp.isValid():
-            exp_parser_errors.append(f'Expression not valid "{e}"')
+        exp, msg = check_expression(e, da, project)
+        if exp is None:
+            exp_parser_errors.append(msg)
             continue
 
         exp.prepare(exp_context)

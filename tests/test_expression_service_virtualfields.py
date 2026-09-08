@@ -1,7 +1,12 @@
 import json
 
 from urllib.parse import quote
-from .utils import PROJECT_FILE, BASE, _build_query_string, _check_request
+from .utils import (
+    PROJECT_FILE,
+    BASE,
+    _build_query_string,
+    _check_request,
+)
 
 BASE = dict(
     BASE,
@@ -339,11 +344,7 @@ def test_request_safe_virtuals(client):
     )
     qs = _build_query_string(qs)
     rv = client.get(qs, PROJECT_FILE)
-    b = _check_request(rv)
-    # On local, and GitHub Action, it's 'True', while on GitLab, it's 'true'.
-    assert str(b["features"][0]["properties"]["a"]).lower() == "true"
-    assert b["features"][0]["properties"]["b"] == "not allowed"
-    assert int(b["features"][0]["properties"]["c"]) >= 2000
+    _check_request(rv, http_code=400)
 
 
 def test_request_access_control(client):

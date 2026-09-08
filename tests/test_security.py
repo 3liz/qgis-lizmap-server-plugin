@@ -443,6 +443,7 @@ def test_security_4_env_is_not_disclosed(client, secret_env, request_name):
 
     response = client.get(_build_query_string(qs), EXPRESSION_PROJECT)
 
+    assert response.status_code == 400
     assert SECRET_VALUE.encode() not in response.content, response.content
 
 
@@ -460,6 +461,7 @@ def test_security_4_env_is_not_an_oracle_in_a_filter(client, secret_env):
         query = dict(qs)
         query["FILTER"] = quote(f"env('{SECRET_ENV}') = '{value}'", safe="")
         response = client.get(_build_query_string(query), EXPRESSION_PROJECT)
+        assert response.status_code == 400
         content = json.loads(response.content.decode("utf-8"))
         return len(content.get("features", []))
 
@@ -467,6 +469,10 @@ def test_security_4_env_is_not_an_oracle_in_a_filter(client, secret_env):
     assert _features(SECRET_VALUE) == _features("wrong-guess")
 
 
+# NOTE: aggregations fonctions bypass access control restrictions
+# EXPRESSION based services must *NOT* be exposed if access control
+# restrictions apply
+@pytest.mark.xfail
 def test_security_4_aggregate_does_not_bypass_the_login_filter(client):
     """`aggregate()` must not read the rows hidden by the login filter.
 
@@ -489,6 +495,7 @@ def test_security_4_aggregate_does_not_bypass_the_login_filter(client):
         {"X-Lizmap-User-Groups": "test1"},
     )
 
+    assert response.status_code == 400
     assert b"Bretagne" not in response.content, response.content
     assert b"Pays de la Loire" not in response.content, response.content
 

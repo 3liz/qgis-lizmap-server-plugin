@@ -15,7 +15,6 @@ from typing import (
 
 from qgis.core import (
     QgsDistanceArea,
-    QgsExpression,
     QgsExpressionContext,
     QgsExpressionContextUtils,
     QgsFeature,
@@ -43,6 +42,8 @@ from ..qgis4_compat import (
 from ..tools import to_bool, unwrap
 
 from .. import logger
+
+from .validate import ReplaceExpressionError, safe_replace_expression_text
 
 if TYPE_CHECKING:
     from qgis.core import QgsFeatureIterator
@@ -159,8 +160,11 @@ def replace_expression_text(
     if not features:
         result = {}
         for k, s in str_map.items():
-            #value = QgsExpression.replaceExpressionText(cast("str", s), exp_context, da)
-            value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
+            try:
+                value = safe_replace_expression_text(f"{s}", exp_context, da)
+            except ReplaceExpressionError as err:
+                raise ExpressionServiceError("Bad request", f"{err}", 400) from None
+
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
         body["results"].append(result)
         write_json_response(body, response)
@@ -272,8 +276,11 @@ def replace_expression_text(
         # replace expression strings with the new feature
         result = {}
         for k, s in str_map.items():
-            #value = QgsExpression.replaceExpressionText(cast("str", s), exp_context, da)
-            value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
+            try:
+                value = safe_replace_expression_text(f"{s}", exp_context, da)
+            except ReplaceExpressionError as err:
+                raise ExpressionServiceError("Bad request", f"{err}", 400) from None
+
             result[k] = json.loads(QgsJsonUtils.encodeValue(value))
         if exporter:
             feature = QgsFeature(geojson_fields, f.id())

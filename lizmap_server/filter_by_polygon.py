@@ -17,6 +17,7 @@ from qgis.core import (
     QgsDataSourceUri,
     QgsFeatureRequest,
     QgsGeometry,
+    QgsExpression,
     QgsProject,
     # NOTE: forgotten in type definitions ?
     QgsProviderConnectionException,  # ty: ignore[unresolved-import]
@@ -492,14 +493,18 @@ c.user_group && (
             logger.info(f"No values, returning default NO VALUES {NO_FEATURES}")
             return NO_FEATURES
 
-        cleaned = []
-        for value in values:
-            if isinstance(value, str):
-                cleaned.append(f"'{value}'")
-            else:
-                cleaned.append(str(value))
+        def clean(value):
+            match value:
+                case str():
+                    return QgsExpression.quotedString(value)
+                case int()|float()|bool():
+                    return str(value)
+                case _:
+                    raise TypeError(f"Unsupported sql value: {value} ({type(value)}")
 
-        return f'"{primary_key}" IN ( {" , ".join(cleaned)} )'
+        cleaned = (clean(value) for value in values)
+        primary_key = QgsExpression.quotedColumnRef(primary_key)
+        return f'{primary_key} IN ( {" , ".join(cleaned)} )'
 
     @classmethod
     def _format_sql_st_relationship(

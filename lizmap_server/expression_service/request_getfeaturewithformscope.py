@@ -10,7 +10,6 @@ from typing import (
 
 from qgis.core import (
     QgsDistanceArea,
-    QgsExpression,
     QgsExpressionContext,
     QgsExpressionContextUtils,
     QgsFeatureRequest,
@@ -32,6 +31,10 @@ from ..qgis4_compat import (
 )
 from ..tools import to_bool
 from .. import logger
+
+from .validate import (
+    check_expression,
+)
 
 
 def get_feature_with_form_scope(
@@ -209,23 +212,12 @@ def get_feature_with_form_scope(
     da.setEllipsoid(project.ellipsoid())
 
     # Get filter expression
-    exp_f = QgsExpression(exp_filter)
-    exp_f.setGeomCalculator(da)
-    exp_f.setDistanceUnits(project.distanceUnits())
-    exp_f.setAreaUnits(project.areaUnits())
+    exp_f, msg = check_expression(exp_filter, da, project)
 
-    if exp_f.hasParserError():
+    if exp_f is None:
         raise ExpressionServiceError(
             "Bad request",
-            "Invalid FILTER for 'GetFeatureWithFormScope': "
-            f'Error "{exp_filter}": {exp_f.parserErrorString()}',
-            400,
-        )
-
-    if not exp_f.isValid():
-        raise ExpressionServiceError(
-            "Bad request",
-            f"Invalid FILTER for 'GetFeatureWithFormScope': Expression not valid \"{exp_filter}\"",
+            f"Invalid FILTER for 'GetFeatureWithFormScope': {msg}",
             400,
         )
 

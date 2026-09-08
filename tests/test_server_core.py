@@ -236,7 +236,6 @@ class TestServerCore(unittest.TestCase):
             self.assertIn(name, expected_unchanged_attributes)
             self.assertEqual(attr.attrib.get("value"), expected_unchanged_attributes.get(name))
 
-
     def test_edit_xml_get_feature_info_with_maptip(self):
         """Test to edit a GetFeatureInfo xml with maptip."""
         string = """<GetFeatureInfoResponse>

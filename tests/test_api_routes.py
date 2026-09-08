@@ -14,7 +14,6 @@ from lizmap_server.api.conditions import (
     assert_precondition,
 )
 
-
 #
 # Conditions
 #
@@ -171,7 +170,7 @@ def test_api_defaults_unmatched_path(rootdir):
     """A path which is not under the search path must not be resolved."""
     assert defaults.resolve_project_uri("/somewhere/else") is None
 
-    with pytest.raises(PreconditionError, match="absolute"):
+    with pytest.raises(errors.HTTPForbidden):
         defaults.resolve_project_uri("data/legend")
 
 

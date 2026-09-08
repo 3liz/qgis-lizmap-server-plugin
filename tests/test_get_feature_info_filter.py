@@ -213,9 +213,7 @@ def test_gfi_feature_list_css(project, tmp_path):
     layer = _layer(tmp_path)
     project.addMapLayer(layer)
 
-    results = GetFeatureInfoFilter.feature_list_to_replace(
-        CFG, project, project.relationManager(), XML, ""
-    )
+    results = GetFeatureInfoFilter.feature_list_to_replace(CFG, project, project.relationManager(), XML, "")
     assert "<style>" in results[0].expression
 
 

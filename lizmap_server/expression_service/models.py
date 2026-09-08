@@ -10,15 +10,34 @@ class Body(TypedDict):
     features: int
 
 
-# Some expressions which can be evaluated on the server
-ALLOWED_SAFE_EXPRESSIONS = {
-    "area",
+# A curated list of QgsExpression functions that
+# are unsafe to be called from the server in any case
+FORBIDDEN_EXPRESSIONS = {
+    "base_file_name",
+    "decode_uri",
+    "env",
+    "eval",
+    "eval_template",
+    "exif",
+    "exif_geotag",
+    "file_exists",
+    "file_name",
+    "file_path",
+    "file_size",
+    "file_suffix",
+    "is_directory",
+    "is_file",
+    "layer_property",
+    "sqlite_fetch_and_increment",
+}
+
+# While list usable with SAFE_VIRTUALS parameters
+SAFE_EXPRESSIONS = {
+    "area"
     "$area",
     "display_expression",
     "format_date",
-    "now",
-    "represent_value",
+    "now"
+    "represent_values",
     "round",
 }
-
-NOT_ALLOWED_EXPRESSION = "'not allowed'"

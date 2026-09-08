@@ -466,7 +466,7 @@ def test_request_with_form_scope(client):
         "EXPRESSIONS": '{{"a":"{}", "b":"{}", "c":"{}", "d":"{}"}}'.format(
             quote("1", safe=""),
             quote("1 + 1", safe=""),
-            quote("current_value('prop0')", safe=""),
+            quote("var('prop0')", safe=""),
             quote("$x", safe=""),
         ),
         "FEATURE": '{"type":"Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]}, "properties": {"prop0": "value0"}}',

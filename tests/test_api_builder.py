@@ -324,7 +324,7 @@ def project_with_details(tmp_path, rootdir):
     vector.setEditorWidgetSetup(index, QgsEditorWidgetSetup("TextEdit", {"IsMultiline": False}))
     vector.setDefaultValueDefinition(index, QgsDefaultValue("'a default'", False))
     vector.setFieldConstraint(index, QgsFieldConstraints.Constraint.ConstraintNotNull)
-    vector.setConstraintExpression(index, '"NAME_1" != \'\'', "Not empty")
+    vector.setConstraintExpression(index, "\"NAME_1\" != ''", "Not empty")
 
     raster = QgsRasterLayer(str(rootdir.joinpath("data/raster.asc")), "raster", "gdal")
     assert raster.isValid()
@@ -402,9 +402,7 @@ def test_builder_layer_description_from_api():
     layer = QgsVectorLayer("Point?crs=epsg:4326&field=a:string&field=b:string", "points", "memory")
     fields = layer.fields()
 
-    layer.setFieldConfigurationFlag(
-        fields.indexOf("a"), Qgis.FieldConfigurationFlag.HideFromWms, True
-    )
+    layer.setFieldConfigurationFlag(fields.indexOf("a"), Qgis.FieldConfigurationFlag.HideFromWms, True)
 
     description = layers_builder.layer_description(layer, QgsProject())
 

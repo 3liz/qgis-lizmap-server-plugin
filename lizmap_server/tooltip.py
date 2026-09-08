@@ -35,6 +35,7 @@ SPACES = "  "
 class InvalidWidgetConfig(Exception):
     pass
 
+
 class Tooltip:
     @staticmethod
     def create_popup(html: str) -> str:

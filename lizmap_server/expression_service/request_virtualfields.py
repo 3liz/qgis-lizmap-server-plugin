@@ -7,7 +7,6 @@ import traceback
 from typing import (
     Dict,
     Optional,
-    Tuple,
 )
 
 from qgis.core import (
@@ -33,10 +32,8 @@ from ..exception import ExpressionServiceError
 from ..tools import to_bool, unwrap
 from .. import logger
 
-from .models import (
-    ALLOWED_SAFE_EXPRESSIONS,
-    NOT_ALLOWED_EXPRESSION,
-)
+from .models import SAFE_EXPRESSIONS
+from .validate import check_expression
 
 
 def virtual_fields(
@@ -102,34 +99,27 @@ def virtual_fields(
     exp_parser_errors = []
     for field, expression in vir_json.items():
         exp, error = check_expression(expression, distance_area, project)
-        if error:
+        if exp is None:
             exp_parser_errors.append(error)
-            continue
-
-        exp = unwrap(exp)
+            break
 
         exp.prepare(exp_context)
         exp_map[field] = exp
 
     for field, expression in safe_vir_json.items():
         exp, error = check_expression(expression, distance_area, project)
-        if error:
+        if exp is None:
             exp_parser_errors.append(error)
-            continue
+            break
 
-        exp = unwrap(exp)
-
+        # Check safe expressions
         for member in exp.referencedFunctions():
-            if member not in ALLOWED_SAFE_EXPRESSIONS:
-                allowed = ",".join(ALLOWED_SAFE_EXPRESSIONS)
-                logger.warning(
-                    f"Project {project.fileName()}, "
-                    f"layer {layer_name}, "
-                    f"input expression '{expression}' has been discarded from evaluation, "
-                    f"replaced by '{NOT_ALLOWED_EXPRESSION}'. "
-                    f"Only '{allowed}' are allowed.",
+            if member not in SAFE_EXPRESSIONS:
+                raise ExpressionServiceError(
+                    "Bad request",
+                    f"Invalid SAFE_VIRTUALS expression '{member}' for 'VirtualFields",
+                    400,
                 )
-                exp = QgsExpression(NOT_ALLOWED_EXPRESSION)
 
         exp.prepare(exp_context)
         exp_map[field] = exp
@@ -275,23 +265,3 @@ def check_json_virtuals(name: str, virtuals: Optional[str]) -> dict:
         )
 
     return virtual_json
-
-
-def check_expression(
-    expression_str: str,
-    distance_area: QgsDistanceArea,
-    project: QgsProject,
-) -> Tuple[Optional[QgsExpression], str]:
-    """Check if an expression as a string has an error or not."""
-    expression = QgsExpression(expression_str)
-    expression.setGeomCalculator(distance_area)
-    expression.setDistanceUnits(project.distanceUnits())
-    expression.setAreaUnits(project.areaUnits())
-
-    if expression.hasParserError():
-        return None, f'Error "{expression_str}": {expression.parserErrorString()}'
-
-    if not expression.isValid():
-        return None, f'Expression not valid "{expression_str}"'
-
-    return expression, ""
