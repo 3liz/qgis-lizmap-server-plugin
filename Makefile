@@ -72,6 +72,8 @@ format:
 typecheck:
 	@ $(UV) ty check --output-format concise
 
+SCAN_OPTS=--severity-level all
+
 scan:
 	@ $(UV) bandit -r $(PYTHON_MODULE) $(SCAN_OPTS)
 
