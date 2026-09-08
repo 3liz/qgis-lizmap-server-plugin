@@ -24,8 +24,8 @@ jobs:
         run: |
             ruff check --output-format=concise lizmap_server
 
-      - name: Run security check
-        run: bandit -r lizmap_server -ll
+      - name: Run QGIS plugins security check
+        run: bandit -r lizmap_server --severity-level all
 
   tests:
     needs: [linter]
