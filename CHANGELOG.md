@@ -9,6 +9,7 @@
   several branches, the rule keys were duplicated and the legend tree was broken
 * Update dependecies
 * Fix single quotes escaping to avoid broken HTML output
+* Remove QGIS 3.34 support
 
 ## 2.15.3 - 2026-07-28
 
