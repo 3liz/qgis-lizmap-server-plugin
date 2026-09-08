@@ -38,3 +38,8 @@ class HTTPBadRequest(HTTPError):
 class HTTPNotFound(HTTPError):
     def __init__(self):
         super().__init__(404, reason="Not found")
+
+
+class HTTPForbidden(HTTPError):
+    def __init__(self):
+        super().__init__(403, reason="Forbidden")

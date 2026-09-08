@@ -1,7 +1,7 @@
 """Regression tests for security breaches.
 
-Each test below asserts the *security property* a fix has to establish, 
-not a particular implementation of the fix, so that the tests stay valid 
+Each test below asserts the *security property* a fix has to establish,
+not a particular implementation of the fix, so that the tests stay valid
 whichever remediation is chosen.
 """
 
@@ -10,7 +10,7 @@ import json
 import os
 import weakref
 
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Sequence
 from urllib.parse import quote
 
@@ -35,7 +35,7 @@ from qgis.core import (
 )
 from qgis.server import QgsBufferServerResponse
 
-from lizmap_server.api import defaults, errors, routes
+from lizmap_server.api import defaults, errors
 from lizmap_server.core import (
     get_lizmap_groups,
     get_lizmap_override_filter,
