@@ -14,7 +14,6 @@ from typing import (
 )
 
 from qgis.core import (
-    Qgis,
     QgsDistanceArea,
     QgsExpression,
     QgsExpressionContext,
@@ -26,7 +25,7 @@ from qgis.core import (
     QgsJsonUtils,
     QgsProject,
 )
-from qgis.PyQt.QtCore import QMetaType, QVariant
+from qgis.PyQt.QtCore import QMetaType
 from qgis.server import (
     QgsServerInterface,
     QgsServerResponse,

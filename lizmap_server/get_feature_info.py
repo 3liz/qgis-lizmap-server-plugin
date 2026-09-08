@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Generator, List, Tuple, Union
 
 from qgis.core import (
-    Qgis,
     QgsDistanceArea,
     QgsEditFormConfig,
     QgsExpression,
