@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+* API: Remove trailing slash from api spec
+* API: Fix url in Qjazz context project loader
+* API: Take care of projects already in Qjazz cache
 * Fix GetLegendGraphic JSON when a rule based renderer uses the same label in
   several branches, the rule keys were duplicated and the legend tree was broken
+* Update dependecies
+* Fix single quotes escaping to avoid broken HTML output
 
 ## 2.15.3 - 2026-07-28
 
