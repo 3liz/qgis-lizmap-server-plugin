@@ -6,9 +6,11 @@ on:
       - '*'
     branches:
       - master
+      - release-2_*
   pull_request:
     branches:
       - master
+      - release-2_*
 
 jobs:
   tests:
