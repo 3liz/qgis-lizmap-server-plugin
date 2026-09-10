@@ -15,6 +15,7 @@ from qgis.core import (
     Qgis,
     QgsMapLayer,
     QgsProject,
+    QgsVectorLayer,
 )
 from qgis.server import (
     QgsAccessControlFilter,
@@ -40,19 +41,25 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         layer_short_name = unwrap(layer.serverProperties()).shortName()
 
         for legend_layer in qs.split(";"):
-            layer_name, key_list = legend_layer.split(":")
+            layer_split = legend_layer.split(":")
+            # NOTE: may be this should be an error 400
+            if len(layer_split) < 2:
+                continue
             # not empty
+            layer_name, key_list, *_ = layer_split
             if layer_name == "" or key_list == "":
                 continue
             # for the layer
             if layer_name not in (layer_short_name, layer.name(), layer.id()):
                 continue
 
-            # TODO: check that layer is a vector layer
-            for key in key_list.split(","):
-                layer.renderer().checkLegendSymbolItem(key, onoff)  # ty: ignore[unresolved-attribute]
+            if isinstance(layer, QgsVectorLayer):
+                for key in key_list.split(","):
+                    layer.renderer().checkLegendSymbolItem(key, onoff)  # ty: ignore[unresolved-attribute]
 
     def layerPermissions(self, layer: Optional[QgsMapLayer]) -> QgsAccessControlFilter.LayerPermissions:
+
+        # TODO: Check style restoration
 
         layer = unwrap(layer)
 
@@ -73,14 +80,13 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             # TODO: check return type
             layers = params.get("LAYER", [])
 
-        # noinspection PyBroadException
         try:
             style_map = dict(zip(layers, styles))
         except Exception:
             style_map = {}
 
         sm = unwrap(layer.styleManager())
-        current_style = sm.currentStyle()
+        # current_style = sm.currentStyle()
 
         style = None
 
@@ -98,33 +104,28 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         if style is not None:
             sm.setCurrentStyle(style)
 
-        try:
-            if "LEGEND_ON" in params:
-                self._setup_legend(layer, params["LEGEND_ON"], True)
-            if "LEGEND_OFF" in params:
-                self._setup_legend(layer, params["LEGEND_OFF"], False)
+        if "LEGEND_ON" in params:
+            self._setup_legend(layer, params["LEGEND_ON"], True)
+        if "LEGEND_OFF" in params:
+            self._setup_legend(layer, params["LEGEND_OFF"], False)
 
-            if (
-                "LEGEND_ON" not in params
-                and "LEGEND_OFF" not in params
-                and layer.type() == Qgis.LayerType.Vector
-                and layer.renderer()  # ty: ignore[unresolved-attribute]
-                and layer.renderer().type()  # ty: ignore[unresolved-attribute]
-                in (
-                    "categorizedSymbol",
-                    "RuleRenderer",
-                    "graduatedSymbol",
-                )
-            ):
-                renderer = layer.renderer()  # ty: ignore[unresolved-attribute]
-                for item in renderer.legendSymbolItems():
-                    renderer.checkLegendSymbolItem(item.ruleKey(), True)
+        if (
+            "LEGEND_ON" not in params
+            and "LEGEND_OFF" not in params
+            and layer.type() == Qgis.LayerType.Vector
+            and layer.renderer()  # ty: ignore[unresolved-attribute]
+            and layer.renderer().type()  # ty: ignore[unresolved-attribute]
+            in (
+                "categorizedSymbol",
+                "RuleRenderer",
+                "graduatedSymbol",
+            )
+        ):
+            renderer = layer.renderer()  # ty: ignore[unresolved-attribute]
+            for item in renderer.legendSymbolItems():
+                renderer.checkLegendSymbolItem(item.ruleKey(), True)
 
-            return rights
-        finally:
-            # Restore style
-            if style is not None:
-                sm.setCurrentStyle(current_style)
+        return rights
 
 
 class LegendOnOffFilter(QgsServerFilter):
@@ -140,11 +141,11 @@ class LegendOnOffFilter(QgsServerFilter):
 
     @staticmethod
     def _reset_legend(qs: str, project: QgsProject):
-        if not qs or ":" not in qs:
-            return
-
         for legend_layer in qs.split(";"):
-            layer_name, key_list = legend_layer.split(":")
+            layer_split = legend_layer.split(":")
+            if len(layer_split) < 2:
+                continue
+            layer_name, key_list, *_ = layer_split
             if layer_name == "" or key_list == "":
                 continue
 
