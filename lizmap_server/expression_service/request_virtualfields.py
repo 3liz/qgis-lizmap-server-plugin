@@ -162,6 +162,7 @@ def virtual_fields(
         req = QgsFeatureRequest(req_exp, exp_context)
 
     # set limit
+    # XXX Set hard limit instead of -1
     req_limit = params.get("LIMIT", "-1")
     try:
         req.setLimit(int(req_limit))
@@ -205,45 +206,46 @@ def virtual_fields(
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 
-    # response
-    response.setStatusCode(200)
-    response.setHeader("Content-Type", "application/json")
-    response.write('{ "type": "FeatureCollection","features":[')
-    response.flush()
-
-    json_exporter = QgsJsonExporter(layer)
-    if attribute_list:
-        json_exporter.setAttributes(attribute_list)
-
-    separator = ""
-    for feat in layer.getFeatures(req):  # ty: ignore[not-iterable]
-        fid = layer_name + "." + get_server_fid(feat, pk_attributes)
-
-        extra: dict = {}
-
-        # Update context
-        exp_context.setFeature(feat)
-        exp_context.setFields(feat.fields())
-
-        # Evaluate expressions for virtual fields
-        errors = {}
-        for field, exp in exp_map.items():
-            value = exp.evaluate(exp_context)
-            if exp.hasEvalError():
-                extra[field] = None
-                errors[field] = exp.evalErrorString()
-            else:
-                extra[field] = json.loads(QgsJsonUtils.encodeValue(value))
-                errors[field] = exp.expression()
-
-        response.write(separator + json_exporter.exportFeature(feat, extra, fid))
+    try:
+        # response
+        response.setStatusCode(200)
+        response.setHeader("Content-Type", "application/json")
+        response.write('{ "type": "FeatureCollection","features":[')
         response.flush()
-        separator = ",\n"
-    response.write("]}")
 
-    # reset subset string before ending request
-    if extra_sql:
-        layer.setSubsetString(subset_sql)
+        json_exporter = QgsJsonExporter(layer)
+        if attribute_list:
+            json_exporter.setAttributes(attribute_list)
+
+        separator = ""
+        for feat in layer.getFeatures(req):  # ty: ignore[not-iterable]
+            fid = f"{layer_name}.{get_server_fid(feat, pk_attributes)}"
+
+            extra: dict = {}
+
+            # Update context
+            exp_context.setFeature(feat)
+            exp_context.setFields(feat.fields())
+
+            # Evaluate expressions for virtual fields
+            errors = {}
+            for field, exp in exp_map.items():
+                value = exp.evaluate(exp_context)
+                if exp.hasEvalError():
+                    extra[field] = None
+                    errors[field] = exp.evalErrorString()
+                else:
+                    extra[field] = json.loads(QgsJsonUtils.encodeValue(value))
+                    errors[field] = exp.expression()
+
+            response.write(separator + json_exporter.exportFeature(feat, extra, fid))
+            response.flush()
+            separator = ",\n"
+        response.write("]}")
+    finally:
+        # reset subset string before ending request
+        if extra_sql:
+            layer.setSubsetString(subset_sql)
 
 
 def check_json_virtuals(name: str, virtuals: Optional[str]) -> dict:

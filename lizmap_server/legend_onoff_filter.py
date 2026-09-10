@@ -80,13 +80,14 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             style_map = {}
 
         sm = unwrap(layer.styleManager())
-        style = sm.currentStyle()
+        current_style = sm.currentStyle()
+
+        style = None
 
         # check short name
         layer_short_name = unwrap(layer.serverProperties()).shortName()
         if layer_short_name in style_map:
             style = style_map[layer_short_name]
-
         # check layer name
         elif layer.name() in style_map:
             style = style_map[layer.name()]
@@ -94,30 +95,36 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         elif layer.id() in style_map:
             style = style_map[layer.id()]
 
-        sm.setCurrentStyle(style)
+        if style is not None:
+            sm.setCurrentStyle(style)
 
-        if "LEGEND_ON" in params:
-            self._setup_legend(layer, params["LEGEND_ON"], True)
-        if "LEGEND_OFF" in params:
-            self._setup_legend(layer, params["LEGEND_OFF"], False)
+        try:
+            if "LEGEND_ON" in params:
+                self._setup_legend(layer, params["LEGEND_ON"], True)
+            if "LEGEND_OFF" in params:
+                self._setup_legend(layer, params["LEGEND_OFF"], False)
 
-        if (
-            "LEGEND_ON" not in params
-            and "LEGEND_OFF" not in params
-            and layer.type() == Qgis.LayerType.Vector
-            and layer.renderer()  # ty: ignore[unresolved-attribute]
-            and layer.renderer().type()  # ty: ignore[unresolved-attribute]
-            in (
-                "categorizedSymbol",
-                "RuleRenderer",
-                "graduatedSymbol",
-            )
-        ):
-            renderer = layer.renderer()  # ty: ignore[unresolved-attribute]
-            for item in renderer.legendSymbolItems():
-                renderer.checkLegendSymbolItem(item.ruleKey(), True)
+            if (
+                "LEGEND_ON" not in params
+                and "LEGEND_OFF" not in params
+                and layer.type() == Qgis.LayerType.Vector
+                and layer.renderer()  # ty: ignore[unresolved-attribute]
+                and layer.renderer().type()  # ty: ignore[unresolved-attribute]
+                in (
+                    "categorizedSymbol",
+                    "RuleRenderer",
+                    "graduatedSymbol",
+                )
+            ):
+                renderer = layer.renderer()  # ty: ignore[unresolved-attribute]
+                for item in renderer.legendSymbolItems():
+                    renderer.checkLegendSymbolItem(item.ruleKey(), True)
 
-        return rights
+            return rights
+        finally:
+            # Restore style
+            if style is not None:
+                sm.setCurrentStyle(current_style)
 
 
 class LegendOnOffFilter(QgsServerFilter):

@@ -33,11 +33,11 @@ FORBIDDEN_EXPRESSIONS = {
 
 # While list usable with SAFE_VIRTUALS parameters
 SAFE_EXPRESSIONS = {
-    "area"
+    "area",
     "$area",
     "display_expression",
     "format_date",
-    "now"
+    "now",
     "represent_values",
     "round",
 }

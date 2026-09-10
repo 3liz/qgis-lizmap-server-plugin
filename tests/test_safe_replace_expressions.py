@@ -174,12 +174,15 @@ def test_unknown_function_is_a_parser_error(context: QgsExpressionContext) -> No
 # Unauthorized functions
 #
 
+
 def test_unauthorized_function_is_rejected(context: QgsExpressionContext) -> None:
     """The error lists the functions the caller may use."""
     for name in FORBIDDEN_EXPRESSIONS:
         with pytest.raises(ForbiddenExpressionError):
             if name == "layer_property":
                 safe_replace_expression_text(f"[% {name}('a','b') %]", context, None)
+            elif name == "sqlite_fetch_and_increment":
+                safe_replace_expression_text(f"[% {name}('a','b', 'c', 'd', 'e') %]", context, None)
             else:
                 safe_replace_expression_text(f"[% {name}('1') %]", context, None)
 

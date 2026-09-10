@@ -497,14 +497,14 @@ c.user_group && (
             match value:
                 case str():
                     return QgsExpression.quotedString(value)
-                case int()|float()|bool():
+                case int() | float() | bool():
                     return str(value)
                 case _:
                     raise TypeError(f"Unsupported sql value: {value} ({type(value)}")
 
         cleaned = (clean(value) for value in values)
         primary_key = QgsExpression.quotedColumnRef(primary_key)
-        return f'{primary_key} IN ( {" , ".join(cleaned)} )'
+        return f"{primary_key} IN ( {' , '.join(cleaned)} )"
 
     @classmethod
     def _format_sql_st_relationship(
