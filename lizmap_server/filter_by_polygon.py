@@ -199,6 +199,11 @@ class FilterByPolygon:
 
         return self.connection.executeSql(sql)
 
+    @staticmethod
+    def sanitize_group_or_users(groups_or_user: tuple) -> tuple[str]:
+        """Sanitize the list of groups or user"""
+        return tuple(gu.strip() for gu in groups_or_user)
+
     @logger.profiling
     def subset_sql(self, groups_or_user: tuple) -> Tuple[str, str]:
         """Get the SQL subset string for the current groups of the user or the user.
@@ -207,6 +212,7 @@ class FilterByPolygon:
                                or the user if we need to filter by user.
         :returns: The subset SQL string to use
         """
+
         # Disabled, sometimes featureCount is expansive it seems ?
         # if self.layer.featureCount() == 0:
         #     # Layer is empty, let's go faster ...
@@ -294,6 +300,9 @@ class FilterByPolygon:
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_qgis_api(self, groups_or_user: tuple) -> QgsGeometry:
         """All features from the polygon layer corresponding to the user groups or the user"""
+
+        safe_groups_or_user = (gu.replace("'", "''") for gu in self.sanitize_group_or_users(groups_or_user))
+
         expression = f"""
 array_intersect(
     array_foreach(
@@ -301,7 +310,7 @@ array_intersect(
         trim(@element)
     ),
     array_foreach(
-        string_to_array('{",".join(groups_or_user)}'),
+        string_to_array('{",".join(safe_groups_or_user)}'),
         trim(@element)
     )
 )"""
@@ -325,6 +334,7 @@ array_intersect(
 
         Only for QGIS >= 3.10
         """
+        safe_groups_or_user = self.sanitize_group_or_users(groups_or_user)
 
         try:
             datasource = QgsDataSourceUri(self.polygon.source())
@@ -333,12 +343,11 @@ array_intersect(
             query = sql.SQL("""
 WITH current_groups AS (
     SELECT
-        ARRAY_REMOVE(
-            STRING_TO_ARRAY(
-                regexp_replace(
-                    {groups_or_user}, '[^a-zA-Z0-9_-]', ',', 'g'
-                ),
-                ','
+        ARRAY(
+            SELECT trim(
+                unnest(
+                    STRING_TO_ARRAY({groups_or_user}, ',')
+                )
             ),
         '') AS user_group
 )
@@ -349,12 +358,11 @@ FROM
         current_groups AS c
 WHERE
 c.user_group && (
-    ARRAY_REMOVE(
-        STRING_TO_ARRAY(
-            regexp_replace(
-                {polygon_field}, '[^a-zA-Z0-9_-]', ',', 'g'
-            ),
-            ','
+    ARRAY(
+        SELECT trim(
+            unnest(
+                STRING_TO_ARRAY({groups_or_user}, ',')
+            )
         ),
     '')
 )
@@ -363,7 +371,7 @@ c.user_group && (
 
 """).format(
                 polygon_field=sql.Identifier(self.group_field),
-                groups_or_user=sql.Literal(",".join(groups_or_user)),
+                groups_or_user=sql.Literal(",".join(safe_groups_or_user)),
                 geom=sql.Identifier(datasource.geometryColumn()),
             )
             logger.info(
