@@ -2,14 +2,24 @@
 
 ## Unreleased
 
-* API: Remove trailing slash from api spec
-* API: Fix url in Qjazz context project loader
-* API: Take care of projects already in Qjazz cache
+* Remove QGIS 3.34 support
+* Fix QGIS expression injection via user group/login
+* Mitigate parsing errors in `legend_onoff_filter`
+* Restore mutated state per-request
+* Handle clients expressions restrictions
+* Handle path traversal in the Lizmap API project endpoints
+* Fix operator precedence in polygon filter
+* Improve test coverage
+* Fix single quotes escaping to avoid broken HTML output
+* Fix GetLegendGraphic JSON with duplicated rule labels
+    - Contributed from https://github.com/3liz/qgis-lizmap-server-plugin/pull/158    
 * Fix GetLegendGraphic JSON when a rule based renderer uses the same label in
   several branches, the rule keys were duplicated and the legend tree was broken
 * Update dependecies
 * Fix single quotes escaping to avoid broken HTML output
-* Remove QGIS 3.34 support
+* API: Remove trailing slash from api spec
+* API: Fix url in Qjazz context project loader
+* API: Take care of projects already in Qjazz cache
 
 ## 2.15.3 - 2026-07-28
 
