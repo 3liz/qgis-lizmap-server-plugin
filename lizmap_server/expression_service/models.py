@@ -38,6 +38,6 @@ SAFE_EXPRESSIONS = {
     "display_expression",
     "format_date",
     "now",
-    "represent_values",
+    "represent_value",
     "round",
 }
