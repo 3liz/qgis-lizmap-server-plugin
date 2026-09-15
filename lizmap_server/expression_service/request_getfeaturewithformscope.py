@@ -33,6 +33,7 @@ from ..tools import to_bool
 from .. import logger
 
 from .validate import (
+    ExpressionError,
     check_expression,
 )
 
@@ -212,14 +213,14 @@ def get_feature_with_form_scope(
     da.setEllipsoid(project.ellipsoid())
 
     # Get filter expression
-    exp_f, msg = check_expression(exp_filter, da, project)
-
-    if exp_f is None:
+    try:
+        exp_f = check_expression(exp_filter, da, project)
+    except ExpressionError as err:
         raise ExpressionServiceError(
             "Bad request",
-            f"Invalid FILTER for 'GetFeatureWithFormScope': {msg}",
+            f"Invalid FILTER for 'GetFeatureWithFormScope': {err}",
             400,
-        )
+        ) from None
 
     exp_f.prepare(exp_context)
 

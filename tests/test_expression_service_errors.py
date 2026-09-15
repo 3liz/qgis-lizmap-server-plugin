@@ -250,14 +250,18 @@ def test_expression_virtual_fields_virtuals_not_an_object(client):
 
 def test_expression_virtual_unauthorized_safe_expression(client):
     """Invalid expressions must be reported."""
-    body = _bad_request(
-        client,
-        REQUEST="VirtualFields",
-        LAYER=LAYER,
-        VIRTUALS='{{"a":"{}"}}'.format(quote("1", safe="")),
-        SAFE_VIRTUALS='{{"b":"{}"}}'.format(quote("md5('hello')", safe="")),
+    rv = client.get(
+        _query(
+            REQUEST="VirtualFields",
+            LAYER=LAYER,
+            VIRTUALS='{{"a":"{}"}}'.format(quote("1", safe="")),
+            SAFE_VIRTUALS='{{"b":"{}"}}'.format(quote("md5('hello')", safe="")),
+        ),
+        PROJECT_FILE,
     )
-    assert "Invalid SAFE_VIRTUALS expression 'md5'" in body["message"]
+
+    body = _check_request(rv)
+    assert body["features"][0]["properties"]["b"] == "not allowed"
 
 
 def test_expression_virtual_fields_expression_errors(client):

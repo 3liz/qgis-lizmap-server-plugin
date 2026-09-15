@@ -33,7 +33,11 @@ from ..tools import to_bool, unwrap
 from .. import logger
 
 from .models import SAFE_EXPRESSIONS
-from .validate import check_expression
+from .validate import (
+    ExpressionError,
+    ForbiddenExpressionError,
+    check_expression,
+)
 
 
 def virtual_fields(
@@ -98,28 +102,28 @@ def virtual_fields(
     exp_map = {}
     exp_parser_errors = []
     for field, expression in vir_json.items():
-        exp, error = check_expression(expression, distance_area, project)
-        if exp is None:
-            exp_parser_errors.append(error)
+        try:
+            exp = check_expression(expression, distance_area, project)
+        except ExpressionError as err:
+            exp_parser_errors.append(str(err))
             break
 
         exp.prepare(exp_context)
         exp_map[field] = exp
 
     for field, expression in safe_vir_json.items():
-        exp, error = check_expression(expression, distance_area, project)
-        if exp is None:
-            exp_parser_errors.append(error)
-            break
-
-        # Check safe expressions
-        for member in exp.referencedFunctions():
-            if member not in SAFE_EXPRESSIONS:
-                raise ExpressionServiceError(
-                    "Bad request",
-                    f"Invalid SAFE_VIRTUALS expression '{member}' for 'VirtualFields",
-                    400,
-                )
+        try:
+            exp = check_expression(expression, distance_area, project)
+            # Check safe expressions
+            for member in exp.referencedFunctions():
+                if member not in SAFE_EXPRESSIONS:
+                    raise ForbiddenExpressionError(f"Expression '{member}' not allowed")
+        except ForbiddenExpressionError as err:
+            logger.error(f"Forbidden SAFE_VIRTUALS expression: {err}")
+            exp = QgsExpression("'not allowed'")
+        except ExpressionError as err:
+            exp_parser_errors.append(str(err))
+            continue
 
         exp.prepare(exp_context)
         exp_map[field] = exp

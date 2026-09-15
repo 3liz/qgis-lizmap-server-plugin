@@ -29,7 +29,7 @@ from qgis.core import (
 from lizmap_server.expression_service.models import FORBIDDEN_EXPRESSIONS
 from lizmap_server.expression_service.validate import (
     ForbiddenExpressionError,
-    ReplaceExpressionError,
+    ExpressionError,
     safe_replace_expression_text,
 )
 
@@ -117,7 +117,7 @@ def test_expression_may_span_several_lines(context: QgsExpressionContext) -> Non
 
 def test_nested_blocks_are_not_supported(context: QgsExpressionContext) -> None:
     """The inner-most opening marker wins, which leaves an invalid expression."""
-    with pytest.raises(ReplaceExpressionError):
+    with pytest.raises(ExpressionError):
         safe_replace_expression_text("[% 'a[%b%]c' %]", context, None)
 
 
@@ -143,7 +143,7 @@ def test_numeric_result_is_stringified(context: QgsExpressionContext) -> None:
 @pytest.mark.xfail(reason="Fail with QGIS 3.40-")
 def test_parser_error_reports_the_expression(context: QgsExpressionContext) -> None:
     """A syntax error names the offending block and the QGIS parser message."""
-    with pytest.raises(ReplaceExpressionError) as excinfo:
+    with pytest.raises(ExpressionError) as excinfo:
         safe_replace_expression_text("[% round( %]", context, None)
 
     message = str(excinfo.value)
@@ -158,13 +158,13 @@ def test_empty_expression_is_a_parser_error(context: QgsExpressionContext) -> No
     False, so the `Expression not valid` branch is shadowed by this one and
     cannot be reached.
     """
-    with pytest.raises(ReplaceExpressionError):
+    with pytest.raises(ExpressionError):
         safe_replace_expression_text("[%%]", context, None)
 
 
 def test_unknown_function_is_a_parser_error(context: QgsExpressionContext) -> None:
     """A function QGIS does not know about is caught by the parser."""
-    with pytest.raises(ReplaceExpressionError) as excinfo:
+    with pytest.raises(ExpressionError) as excinfo:
         safe_replace_expression_text("[% not_a_qgis_function(1) %]", context, None)
 
     assert "Function not_a_qgis_function is not known" in str(excinfo.value)
@@ -208,7 +208,7 @@ def test_evaluation_error(context: QgsExpressionContext) -> None:
     """An evaluation error is an internal error, reported as an HTTP 500."""
     expression = "round('not a number')"
 
-    with pytest.raises(ReplaceExpressionError) as excinfo:
+    with pytest.raises(ExpressionError) as excinfo:
         safe_replace_expression_text(f"[% {expression} %]", context, None)
 
     assert str(excinfo.value).startswith(f"Expression '{expression}' evaluation error")

@@ -43,7 +43,7 @@ from ..tools import to_bool, unwrap
 
 from .. import logger
 
-from .validate import ReplaceExpressionError, safe_replace_expression_text
+from .validate import ExpressionError, safe_replace_expression_text
 
 if TYPE_CHECKING:
     from qgis.core import QgsFeatureIterator
@@ -163,7 +163,7 @@ def replace_expression_text(
             for k, s in str_map.items():
                 try:
                     value = safe_replace_expression_text(f"{s}", exp_context, da)
-                except ReplaceExpressionError as err:
+                except ExpressionError as err:
                     raise ExpressionServiceError("Bad request", f"{err}", 400) from None
 
                 result[k] = json.loads(QgsJsonUtils.encodeValue(value))
@@ -280,7 +280,7 @@ def replace_expression_text(
             for k, s in str_map.items():
                 try:
                     value = safe_replace_expression_text(f"{s}", exp_context, da)
-                except ReplaceExpressionError as err:
+                except ExpressionError as err:
                     raise ExpressionServiceError("Bad request", f"{err}", 400) from None
 
                 result[k] = json.loads(QgsJsonUtils.encodeValue(value))

@@ -17,7 +17,7 @@ def check_expression(
     expression_str: str,
     distance_area: QgsDistanceArea,
     project: QgsProject,
-) -> tuple[QgsExpression | None, str]:
+) -> QgsExpression:
     """Check if an expression as a string has an error or not."""
     expression = QgsExpression(expression_str)
     expression.setGeomCalculator(distance_area)
@@ -25,35 +25,39 @@ def check_expression(
     expression.setAreaUnits(project.areaUnits())
 
     if expression.hasParserError():
-        return None, f'Error "{expression_str}": {expression.parserErrorString()}'
+        raise ExpressionError(f'Error "{expression_str}": {expression.parserErrorString()}')
 
     if not expression.isValid():
-        return None, f'Expression not valid "{expression_str}"'
+        raise ExpressionError(f'Expression not valid "{expression_str}"')
 
-    unauthorized = check_authorized_expression_functions(expression)
-    if unauthorized:
-        return None, unauthorized
+    check_authorized_expression_functions(expression)
 
-    return expression, ""
+    return expression
 
 
-def check_authorized_expression_functions(exp: QgsExpression) -> str | None:
+def check_authorized_expression_functions(exp: QgsExpression):
     """Return Http error 400 if the expression is not allowed"""
     for member in exp.referencedFunctions():
         if member in FORBIDDEN_EXPRESSIONS:
-            return f"Expression function '{member}' is not allowed"
-
-    return None
+            raise ForbiddenExpressionError(f"Expression function '{member}' is not allowed")
 
 
 EXPRESSION_RE = re.compile(r"\[%(.*?)%\]", re.MULTILINE | re.DOTALL)
 
 
-class ReplaceExpressionError(Exception):
+class ExpressionError(Exception):
     pass
 
 
-class ForbiddenExpressionError(ReplaceExpressionError):
+class InvalidExpressionError(ExpressionError):
+    pass
+
+
+class EvalExpressionError(ExpressionError):
+    pass
+
+
+class ForbiddenExpressionError(ExpressionError):
     pass
 
 
@@ -78,21 +82,19 @@ def safe_replace_expression_text(
         exp = QgsExpression(exp_str)
 
         if exp.hasParserError():
-            raise ReplaceExpressionError(f'Error "{exp_str}": {exp.parserErrorString()}')
+            raise InvalidExpressionError(f'Error "{exp_str}": {exp.parserErrorString()}')
 
         if not exp.isValid():
-            raise ReplaceExpressionError(f'Expression not valid "{exp_str}"')
+            raise InvalidExpressionError(f'Expression not valid "{exp_str}"')
 
-        unauthorized = check_authorized_expression_functions(exp)
-        if unauthorized is not None:
-            raise ForbiddenExpressionError(unauthorized)
+        check_authorized_expression_functions(exp)
 
         if distance_area is not None:
             exp.setGeomCalculator(distance_area)
 
         result = exp.evaluate(context)
         if exp.hasEvalError():
-            raise ReplaceExpressionError(f"Expression '{exp_str}' evaluation error: {exp.evalErrorString()}")
+            raise EvalExpressionError(f"Expression '{exp_str}' evaluation error: {exp.evalErrorString()}")
 
         match result:
             case str():
