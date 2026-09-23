@@ -344,7 +344,7 @@ WITH current_groups AS (
 SELECT
         1 AS id, ST_AsBinary(ST_Union({geom})) AS geom
 FROM
-        {table_name} AS p,
+        table_name_placeholder AS p,
         current_groups AS c
 WHERE
 c.user_group && (
@@ -364,7 +364,6 @@ c.user_group && (
                 polygon_field=sql.Identifier(self.group_field),
                 groups_or_user=sql.Literal(",".join(groups_or_user)),
                 geom=sql.Identifier(datasource.geometryColumn()),
-                table_name=sql.Identifier(FilterByPolygon._format_table_name(datasource)),
             )
             logger.info(
                 f"Requesting the database about polygons for the current groups or user with : \n{sql}"
@@ -373,7 +372,15 @@ c.user_group && (
             # psycopg2 connection
             conn = connect(datasource.connectionInfo())
             # psycopg2 recomposed request as string
-            results = self.sql_query(datasource, query.as_string(conn))
+            query_string = query.as_string(conn)
+            # Replace the table_name_placeholder with the real table name
+            # NOTE: we cannot use psycopg2.sql.Identifier here as it will add quotes around the table name
+            # And the method _format_table_name will add quotes if needed, so we need to use it here.
+            # The QGIS table name provided in the URI could also be a full SQL query, so we need to use it as is.
+            query_string = query_string.replace(
+                "table_name_placeholder", FilterByPolygon._format_table_name(datasource)
+            )
+            results = self.sql_query(datasource, query_string)
             wkb = results[0][1]
 
             geom = QgsGeometry()
@@ -455,10 +462,9 @@ c.user_group && (
 
         # psycopg2 composed request
         query = sql.SQL("""
-            SELECT {pk} FROM {table_name} WHERE {st_intersect}
+            SELECT {pk} FROM table_name_placeholder WHERE {st_intersect}
         """).format(
             pk=sql.Identifier(self.primary_key),
-            table_name=sql.SQL(FilterByPolygon._format_table_name(datasource)),
             st_intersect=sql.SQL(st_intersect),
         )
 
@@ -466,6 +472,13 @@ c.user_group && (
         conn = connect(datasource.connectionInfo())
         # psycopg2 recomposed request as string
         query_string = query.as_string(conn)
+        # Replace the table_name_placeholder with the real table name
+        # NOTE: we cannot use psycopg2.sql.Identifier here as it will add quotes around the table name
+        # And the method _format_table_name will add quotes if needed, so we need to use it here.
+        # The QGIS table name provided in the URI could also be a full SQL query, so we need to use it as is.
+        query_string = query_string.replace(
+            "table_name_placeholder", FilterByPolygon._format_table_name(datasource)
+        )
         logger.info(f"Requesting the database about IDs to filter with {query_string[0:90]}...")
         results = self.sql_query(datasource, query_string)
         unique_ids = [str(row[0]) for row in results]
