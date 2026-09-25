@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 2.15.5 - 2026-09-25
+
+* Fix SQL queries built from the QGIS layer datasource table name
+
 ## 2.15.4 - 2026-09-08
 
 * API: Remove trailing slash from api spec
