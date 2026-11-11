@@ -399,7 +399,7 @@ class Tooltip:
                         '<a href="',
                         "{name}",
                         '" target="_blank">',
-                        base_file_name("{name}"),
+                        base_file_name(nullif("{name}", '')),
                         '</a>'
                     )'''
 
