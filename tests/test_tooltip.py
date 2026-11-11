@@ -9,6 +9,8 @@ from qgis.core import (
     QgsAttributeEditorTextElement,
     QgsEditorWidgetSetup,
     QgsExpression,
+    QgsExpressionContext,
+    QgsFeature,
     QgsOptionalExpression,
     QgsProject,
     QgsRelation,
@@ -98,6 +100,18 @@ def test_tooltip_generate_external_resource():
 
     result = Tooltip._generate_external_resource({"DocumentViewer": content.NoContent}, "photo", "Photo")
     assert "base_file_name(" in result
+
+    # An empty string must not raise an evaluation error, like NULL
+    fields = _layer().fields()
+    for value, expected in (("", '<a href="" target="_blank"></a>'), ("a/b/c.pdf", "c</a>")):
+        feature = QgsFeature(fields)
+        feature.setAttribute("photo", value)
+        context = QgsExpressionContext()
+        context.setFeature(feature)
+        expression = QgsExpression(result)
+        evaluated = expression.evaluate(context)
+        assert not expression.hasEvalError(), expression.evalErrorString()
+        assert evaluated.endswith(expected)
 
     with pytest.raises(TypeError):
         Tooltip._generate_external_resource({"DocumentViewer": -1}, "photo", "Photo")
