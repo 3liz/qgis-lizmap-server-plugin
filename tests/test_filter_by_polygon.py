@@ -1,12 +1,17 @@
 """Test filter by polygon."""
 
 import gc
+import os
 import weakref
 
 from typing import Sequence
 
 import unittest
+
+import psycopg2
 import pytest
+
+from psycopg2 import sql
 
 from qgis.core import (
     QgsCoordinateReferenceSystem,
@@ -503,3 +508,92 @@ def test_format_sql_in_keeps_the_plain_values():
     """The escaping must not change the output for ordinary values."""
     assert FilterByPolygon._format_sql_in("code", (1, 2, 3)) == '"code" IN ( 1 , 2 , 3 )'
     assert FilterByPolygon._format_sql_in("code", ("a", "b")) == "\"code\" IN ( 'a' , 'b' )"
+
+
+#
+# SQL query of the polygons of the user groups
+#
+
+
+def test_polygon_for_groups_query_uses_the_polygon_field():
+    """The groups of the request must be compared with the polygon field, not with themselves."""
+    query = FilterByPolygon._polygon_for_groups_query("groups", "geom", ("grp_a", "grp_b"))
+
+    assert sql.Identifier("groups") in query.seq
+    assert sql.Identifier("geom") in query.seq
+    assert sql.Literal("grp_a,grp_b") in query.seq
+
+
+# Polygons of the PostgreSQL test table: id, value of the polygon field, side of the square
+PG_POLYGONS = (
+    (1, "grp_a", 1),
+    (2, "grp_b,grp_c", 2),
+    (3, " grp_d , other ", 3),
+    (4, "other", 4),
+    (5, None, 5),
+)
+
+
+@pytest.fixture
+def pg_cursor():
+    """A cursor on the PostgreSQL database given by the LIZMAP_TEST_PG_DSN variable.
+
+    A temporary table of polygons is created, see PG_POLYGONS. The test is skipped
+    without this variable, for example `host=localhost port=8132 dbname=lizmap
+    user=lizmap password=...` for the Lizmap Web Client docker test stack.
+    """
+    dsn = os.environ.get("LIZMAP_TEST_PG_DSN")
+    if not dsn:
+        pytest.skip("LIZMAP_TEST_PG_DSN is not set")
+
+    conn = psycopg2.connect(dsn)
+    try:
+        cursor = conn.cursor()
+        # Temporary table, dropped at the end of the session
+        cursor.execute(
+            "CREATE TEMPORARY TABLE polygons (id integer, groups text, geom geometry(Polygon, 2154))"
+        )
+        for identifier, groups, side in PG_POLYGONS:
+            # Squares side by side, the area gives the selected polygons
+            cursor.execute(
+                "INSERT INTO polygons VALUES (%s, %s, ST_MakeEnvelope(%s, 0, %s, %s, 2154))",
+                (identifier, groups, identifier * 10, identifier * 10 + side, side),
+            )
+        yield cursor
+    finally:
+        conn.close()
+
+
+def _pg_polygon_area(cursor: "psycopg2.extensions.cursor", groups_or_user: tuple) -> float | None:
+    """Run the query of the polygons of the groups, then return the area of the union.
+
+    :param cursor: The PostgreSQL cursor, with the temporary table of polygons.
+    :param groups_or_user: The groups of the user, or the user.
+    :returns: The area of the union, or None if no polygon is selected.
+    """
+    query = FilterByPolygon._polygon_for_groups_query("groups", "geom", groups_or_user)
+    query_string = query.as_string(cursor).replace("table_name_placeholder", "polygons")
+    cursor.execute(f"SELECT ST_Area(ST_GeomFromWKB(q.geom)) FROM ({query_string}) AS q")
+    return cursor.fetchone()[0]
+
+
+def test_polygon_for_groups_query_postgresql(pg_cursor):
+    """Only the polygons with a value in common with the groups are merged."""
+    # One group, alone or in a list of the polygon field
+    assert _pg_polygon_area(pg_cursor, ("grp_a",)) == 1
+    assert _pg_polygon_area(pg_cursor, ("grp_c",)) == 4
+    # Values of the polygon field with spaces
+    assert _pg_polygon_area(pg_cursor, ("grp_d",)) == 9
+    # Several groups
+    assert _pg_polygon_area(pg_cursor, ("grp_a", "grp_b")) == 1 + 4
+    assert _pg_polygon_area(pg_cursor, ("grp_x", "other")) == 9 + 16
+
+
+def test_polygon_for_groups_query_postgresql_no_polygon(pg_cursor):
+    """No polygon for unknown, empty or injected groups."""
+    assert _pg_polygon_area(pg_cursor, ("unknown",)) is None
+    assert _pg_polygon_area(pg_cursor, ("",)) is None
+    assert _pg_polygon_area(pg_cursor, ()) is None
+    assert _pg_polygon_area(pg_cursor, ("x' OR 1=1 --",)) is None
+    # Part of a value
+    assert _pg_polygon_area(pg_cursor, ("grp",)) is None

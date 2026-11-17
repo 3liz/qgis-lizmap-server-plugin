@@ -326,6 +326,49 @@ array_intersect(
 
         return QgsGeometry().collectGeometry(polygon_geoms)
 
+    @staticmethod
+    def _polygon_for_groups_query(
+        group_field: str | None, geometry_column: str, groups_or_user: tuple
+    ) -> sql.Composed:
+        """Build the SQL query of the union of the polygons of the user groups or the user.
+
+        The groups or the user, and the values of the polygon field, are split on the comma
+        and trimmed, as done by the QGIS API method. The polygons having at least one value
+        in common with the groups or the user are merged. The table name is left as the
+        `table_name_placeholder` text, to be replaced by the caller.
+
+        :param group_field: The field of the polygon layer containing the groups or users.
+        :param geometry_column: The geometry column of the polygon layer.
+        :param groups_or_user: The groups of the user, or the user, already sanitized.
+        :returns: The psycopg2 composed query, returning one row (id, geom as WKB).
+        """
+        return sql.SQL("""
+WITH current_groups AS (
+    -- Groups or user of the request, as an array of trimmed and non empty values
+    SELECT ARRAY(
+        SELECT trim(g)
+        FROM unnest(STRING_TO_ARRAY({groups_or_user}, ',')) AS g
+        WHERE trim(g) <> ''
+    ) AS user_group
+)
+SELECT
+    1 AS id, ST_AsBinary(ST_Union(p.{geom})) AS geom
+FROM
+    table_name_placeholder AS p,
+    current_groups AS c
+WHERE
+    -- At least one value in common with the values of the polygon field
+    c.user_group && ARRAY(
+        SELECT trim(g)
+        FROM unnest(STRING_TO_ARRAY(p.{polygon_field}, ',')) AS g
+        WHERE trim(g) <> ''
+    )
+""").format(
+            polygon_field=sql.Identifier(group_field),
+            groups_or_user=sql.Literal(",".join(groups_or_user)),
+            geom=sql.Identifier(geometry_column),
+        )
+
     @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_sql_query(self, groups_or_user: tuple) -> QgsGeometry:
@@ -340,54 +383,27 @@ array_intersect(
             datasource = QgsDataSourceUri(self.polygon.source())
 
             # psycopg2 composed request
-            query = sql.SQL("""
-WITH current_groups AS (
-    SELECT
-        ARRAY(
-            SELECT trim(
-                unnest(
-                    STRING_TO_ARRAY({groups_or_user}, ',')
-                )
-            ),
-        '') AS user_group
-)
-SELECT
-        1 AS id, ST_AsBinary(ST_Union({geom})) AS geom
-FROM
-        table_name_placeholder AS p,
-        current_groups AS c
-WHERE
-c.user_group && (
-    ARRAY(
-        SELECT trim(
-            unnest(
-                STRING_TO_ARRAY({groups_or_user}, ',')
-            )
-        ),
-    '')
-)
-
-
-
-""").format(
-                polygon_field=sql.Identifier(self.group_field),
-                groups_or_user=sql.Literal(",".join(safe_groups_or_user)),
-                geom=sql.Identifier(datasource.geometryColumn()),
-            )
-            logger.info(
-                f"Requesting the database about polygons for the current groups or user with : \n{sql}"
+            query = self._polygon_for_groups_query(
+                self.group_field,
+                datasource.geometryColumn(),
+                safe_groups_or_user,
             )
 
-            # psycopg2 connection
+            # psycopg2 connection, only used to build the request as a string
             conn = connect(datasource.connectionInfo())
-            # psycopg2 recomposed request as string
-            query_string = query.as_string(conn)
+            try:
+                query_string = query.as_string(conn)
+            finally:
+                conn.close()
             # Replace the table_name_placeholder with the real table name
             # NOTE: we cannot use psycopg2.sql.Identifier here as it will add quotes around the table name
             # And the method _format_table_name will add quotes if needed, so we need to use it here.
             # The QGIS table name provided in the URI could also be a full SQL query, so we need to use it as is.
             query_string = query_string.replace(
                 "table_name_placeholder", FilterByPolygon._format_table_name(datasource)
+            )
+            logger.info(
+                f"Requesting the database about polygons for the current groups or user with : \n{query_string}"
             )
             results = self.sql_query(datasource, query_string)
             wkb = results[0][1]
