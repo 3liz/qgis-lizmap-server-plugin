@@ -31,6 +31,26 @@ FORBIDDEN_EXPRESSIONS = {
     "sqlite_fetch_and_increment",
 }
 
+# Functions reading the features of other layers, without the access control
+# of these layers (filter by login, Lizmap ACL...). They are not allowed in the
+# expressions sent by the client to filter the features, e.g. the FILTER of
+# the VirtualFields request. They are still allowed in the project expressions.
+CROSS_LAYER_EXPRESSIONS = {
+    "aggregate",
+    "get_feature",
+    "get_feature_by_id",
+    "load_layer",
+    "overlay_contains",
+    "overlay_crosses",
+    "overlay_disjoint",
+    "overlay_equals",
+    "overlay_intersects",
+    "overlay_nearest",
+    "overlay_touches",
+    "overlay_within",
+    "relation_aggregate",
+}
+
 # While list usable with SAFE_VIRTUALS parameters
 SAFE_EXPRESSIONS = {
     "area",

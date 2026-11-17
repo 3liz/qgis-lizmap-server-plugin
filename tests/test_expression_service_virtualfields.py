@@ -505,6 +505,29 @@ def test_request_filter_forbidden_function(client):
         assert "is not allowed" in b["message"], expression
 
 
+def test_request_filter_cross_layer_function(client):
+    """A function reading another layer is rejected in the FILTER, as the access control of this layer is not applied."""
+    for expression in (
+        "aggregate('france_parts', 'count', 1) > 0",
+        "attribute(get_feature('france_parts', 'NAME_1', 'Bretagne'), 'ISO') IS NOT NULL",
+        "get_feature_by_id('france_parts', 1) IS NOT NULL",
+        "overlay_intersects('france_parts')",
+        "overlay_nearest('france_parts') IS NOT NULL",
+    ):
+        qs = {
+            "SERVICE": "EXPRESSION",
+            "REQUEST": "VirtualFields",
+            "MAP": "france_parts.qgs",
+            "LAYER": "france_parts",
+            "VIRTUALS": '{{"a":"{}"}}'.format(quote("1", safe="")),
+            "FILTER": quote(expression, safe=""),
+        }
+
+        rv = client.get(_build_query_string(qs), PROJECT_FILE)
+        b = _check_request(rv, http_code=400)
+        assert "is not allowed" in b["message"], expression
+
+
 def _sorted_ids(client: Client, sorting_field: str) -> list:
     """Request the features sorted by descending order of the given field, and return their ids.
 

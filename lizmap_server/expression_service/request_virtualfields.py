@@ -32,7 +32,7 @@ from ..exception import ExpressionServiceError
 from ..tools import to_bool, unwrap
 from .. import logger
 
-from .models import SAFE_EXPRESSIONS
+from .models import CROSS_LAYER_EXPRESSIONS, SAFE_EXPRESSIONS
 from .validate import (
     ExpressionError,
     ForbiddenExpressionError,
@@ -144,6 +144,10 @@ def virtual_fields(
         # The filter can be sent by the client: the forbidden functions are checked too
         try:
             req_exp = check_expression(req_filter, distance_area, project)
+            # The filter must not read other layers, whose access control is not applied
+            for member in req_exp.referencedFunctions():
+                if member in CROSS_LAYER_EXPRESSIONS:
+                    raise ForbiddenExpressionError(f"Expression function '{member}' is not allowed")
         except ExpressionError as err:
             raise ExpressionServiceError(
                 "Bad request",
