@@ -71,8 +71,12 @@ def test_login_filter_does_not_escape_the_polygon_filter():
 
 
 def test_login_filter_with_multiple_acl_values():
-    """The eight terms long chain must not escape the polygon filter either."""
-    layer = _acl_layer()
+    """The filter of multiple values must not escape the polygon filter either.
+
+    This filter is PostgreSQL SQL (string_to_array, &&), which QGIS cannot evaluate
+    on a memory layer: its structure is checked instead. It is a single parenthesised
+    term, so it cannot be split by an AND added before or after it.
+    """
     config = {
         "filterPrivate": False,
         "filterAttribute": "f",
@@ -81,8 +85,9 @@ def test_login_filter_with_multiple_acl_values():
 
     login_filter = LizmapAccessControlFilter._filter_by_login(config, ("grp_1",), "", "postgres")
 
-    assert _matching_ids(layer, login_filter) == ALL_IDS
-    assert _matching_ids(layer, f"{POLYGON_FILTER} AND {login_filter}") == INSIDE
+    assert login_filter == "(string_to_array(\"f\", ',') && ARRAY['grp_1', 'all'])"
+    # No OR left, which could take precedence over an AND
+    assert " OR " not in login_filter.upper()
 
 
 def test_private_login_filter_does_not_escape_the_polygon_filter():
