@@ -61,7 +61,8 @@ class ForbiddenExpressionError(ExpressionError):
     pass
 
 
-# NOTE: `QgsExpression.replaceExpressionText` is NOT acceptable:
+# NOTE: `QgsExpression.replaceExpressionText` is NOT acceptable alone, it is only
+# used to format the value of a block once checked:
 # - Silence errors
 # - Cannot check for unauthorized expression functions
 
@@ -92,17 +93,17 @@ def safe_replace_expression_text(
         if distance_area is not None:
             exp.setGeomCalculator(distance_area)
 
-        result = exp.evaluate(context)
+        exp.evaluate(context)
         if exp.hasEvalError():
             raise EvalExpressionError(f"Expression '{exp_str}' evaluation error: {exp.evalErrorString()}")
 
-        match result:
-            case str():
-                return result
-            case None:
-                return ""
-            case _:
-                return f"{result}"
+        # The checks are done: let QGIS replace this block only, so that the value is
+        # formatted as QGIS does (ISO dates, 'true', empty string for a geometry...).
+        # The Python value of the result cannot be used: its string is the Python one,
+        # e.g. 'PyQt5.QtCore.QDate(2024, 1, 2)' or 'True'.
+        if distance_area is not None:
+            return QgsExpression.replaceExpressionText(m.group(), context, distance_area)
+        return QgsExpression.replaceExpressionText(m.group(), context)
 
     # Replace all expressions from the string
     return EXPRESSION_RE.sub(replace, expression_str)

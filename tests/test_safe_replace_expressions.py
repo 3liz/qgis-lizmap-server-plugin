@@ -19,6 +19,7 @@ from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsCoordinateTransformContext,
     QgsDistanceArea,
+    QgsExpression,
     QgsExpressionContext,
     QgsExpressionContextUtils,
     QgsFeature,
@@ -136,9 +137,37 @@ def test_numeric_result_is_stringified(context: QgsExpressionContext) -> None:
     assert safe_replace_expression_text("[% round(1.25, 1) %]", context, None) == "1.3"
 
 
+@pytest.mark.parametrize(
+    "expression,expected",
+    [
+        # Booleans and numbers, as QGIS formats them
+        ("true", "true"),
+        ("false", "false"),
+        ("1.0", "1"),
+        ("1/4", "0.25"),
+        # Dates and times in the ISO format, not the Python representation
+        ("to_date('2024-01-02')", "2024-01-02"),
+        ("to_datetime('2024-01-02 10:11:12')", "2024-01-02T10:11:12.000"),
+        ("to_time('10:11:12')", "10:11:12.000"),
+        # Values without text representation in QGIS
+        ("array(1, 2)", ""),
+        ("map('a', 1)", ""),
+        ("make_point(1, 2)", ""),
+    ],
+)
+def test_result_is_formatted_as_qgis_does(
+    context: QgsExpressionContext, expression: str, expected: str
+) -> None:
+    """The value is formatted as `QgsExpression.replaceExpressionText` does, not as Python does."""
+    text = f"[% {expression} %]"
+    assert safe_replace_expression_text(text, context, None) == expected
+    assert QgsExpression.replaceExpressionText(text, context) == expected
+
+
 #
 # Parser errors
 #
+
 
 @pytest.mark.xfail(reason="Fail with QGIS 3.40-")
 def test_parser_error_reports_the_expression(context: QgsExpressionContext) -> None:

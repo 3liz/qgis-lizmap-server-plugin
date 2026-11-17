@@ -165,7 +165,7 @@ def test_request_with_features(client):
     assert b["results"][0]["b"] == "2"
     assert b["results"][0]["c"] == "value0"
     assert "d" in b["results"][0]
-    assert b["results"][0]["d"] == "102.0"
+    assert b["results"][0]["d"] == "102"
 
     # Make a request
     qs = dict(BASE_QUERY)
@@ -197,12 +197,12 @@ def test_request_with_features(client):
     assert b["results"][0]["b"] == "2"
     assert b["results"][0]["c"] == "value0"
     assert "d" in b["results"][0]
-    assert b["results"][0]["d"] == "102.0"
+    assert b["results"][0]["d"] == "102"
 
     assert "c" in b["results"][1]
     assert b["results"][1]["c"] == "value1"
     assert "d" in b["results"][1]
-    assert b["results"][1]["d"] == "105.0"
+    assert b["results"][1]["d"] == "105"
 
 
 def test_request_with_features_all(client):
@@ -263,7 +263,7 @@ def test_request_with_form_scope(client):
     assert b["results"][0]["b"] == "2"
     assert b["results"][0]["c"] == "value0"
     assert "d" in b["results"][0]
-    assert b["results"][0]["d"] == "102.0"
+    assert b["results"][0]["d"] == "102"
 
     # Make a request without form scope but with current_value function
     # One template has multiple expressions
@@ -292,7 +292,7 @@ def test_request_with_form_scope(client):
     assert b["results"][0]["b"] == "2"
     assert b["results"][0]["c"] == ""
     assert "d" in b["results"][0]
-    assert b["results"][0]["d"] == "102.0"
+    assert b["results"][0]["d"] == "102"
 
 
 def test_request_with_features_geojson(client):
@@ -328,7 +328,7 @@ def test_request_with_features_geojson(client):
     assert b["features"][0]["properties"]["b"] == "2"
     assert b["features"][0]["properties"]["c"] == "value0"
     assert "d" in b["features"][0]["properties"]
-    assert b["features"][0]["properties"]["d"] == "102.0"
+    assert b["features"][0]["properties"]["d"] == "102"
 
     # Make a request
     qs = dict(BASE_QUERY)
@@ -365,14 +365,14 @@ def test_request_with_features_geojson(client):
     assert b["features"][0]["properties"]["b"] == "2"
     assert b["features"][0]["properties"]["c"] == "value0"
     assert "d" in b["features"][0]["properties"]
-    assert b["features"][0]["properties"]["d"] == "102.0"
+    assert b["features"][0]["properties"]["d"] == "102"
 
     assert "id" in b["features"][1]
     assert b["features"][1]["id"] == 1
     assert "c" in b["features"][1]["properties"]
     assert b["features"][1]["properties"]["c"] == "value1"
     assert "d" in b["features"][1]["properties"]
-    assert b["features"][1]["properties"]["d"] == "105.0"
+    assert b["features"][1]["properties"]["d"] == "105"
 
 
 def test_request_with_features_all_geojson(client):
