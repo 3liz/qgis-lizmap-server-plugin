@@ -141,26 +141,15 @@ def virtual_fields(
     # get filter
     req_filter = params.get("FILTER", "")
     if req_filter:
-        req_exp = QgsExpression(req_filter)
-        req_exp.setGeomCalculator(distance_area)
-        req_exp.setDistanceUnits(project.distanceUnits())
-        req_exp.setAreaUnits(project.areaUnits())
-
-        if req_exp.hasParserError():
+        # The filter can be sent by the client: the forbidden functions are checked too
+        try:
+            req_exp = check_expression(req_filter, distance_area, project)
+        except ExpressionError as err:
             raise ExpressionServiceError(
                 "Bad request",
-                "Invalid FILTER for 'VirtualFields' Error \"{}\": {}".format(
-                    req_filter, req_exp.parserErrorString()
-                ),
+                f"Invalid FILTER for 'VirtualFields': {err}",
                 400,
-            )
-
-        if not req_exp.isValid():
-            raise ExpressionServiceError(
-                "Bad request",
-                f"Invalid FILTER for 'VirtualFields' Expression not valid \"{req_filter}\"",
-                400,
-            )
+            ) from None
 
         req_exp.prepare(exp_context)
         req = QgsFeatureRequest(req_exp, exp_context)
@@ -181,8 +170,18 @@ def virtual_fields(
     if req_sorting_order_param in ("asc", "desc"):
         # QGIS expects a boolean to know how to sort
         req_sorting_field = params.get("SORTING_FIELD", "")
-        order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order_param == "asc")
-        req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+        # The order by clause is an expression: only a field of the layer is accepted,
+        # as a quoted column reference. Otherwise, the features are not sorted.
+        if layer.fields().indexOf(req_sorting_field) >= 0:
+            order_by_clause = QgsFeatureRequest.OrderByClause(
+                QgsExpression.quotedColumnRef(req_sorting_field),
+                req_sorting_order_param == "asc",
+            )
+            req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+        else:
+            logger.warning(
+                f"Invalid SORTING_FIELD for 'VirtualFields': \"{req_sorting_field}\" is not a field"
+            )
     elif req_sorting_order_param != "":
         raise ExpressionServiceError(
             "Bad request", f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"", 400

@@ -298,19 +298,19 @@ def test_expression_virtual_fields_filter_errors(client):
 
 def test_expression_virtual_fields_invalid_filter(client, monkeypatch):
     """A FILTER which is not valid must be reported."""
-    from lizmap_server.expression_service import request_virtualfields
+    from lizmap_server.expression_service import validate
 
-    real_expression = request_virtualfields.QgsExpression
+    real_expression = validate.QgsExpression
 
     class NeverValid(real_expression):
         def isValid(self):
             return False
 
     def _factory(expression):
-        # Only the request filter is built from the module level name
+        # Only the request filter is checked, VIRTUALS is empty
         return NeverValid(expression)
 
-    monkeypatch.setattr(request_virtualfields, "QgsExpression", _factory)
+    monkeypatch.setattr(validate, "QgsExpression", _factory)
 
     body = _bad_request(
         client,
