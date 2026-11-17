@@ -646,7 +646,7 @@ def test_filter_by_login_simple_values():
         "allow_multiple_acl_values": False,
     }
     output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "grp_2"), "a", "other_provider")
-    assert output == ("\"f\" = 'a' OR \"f\" = 'all'")
+    assert output == ("((\"f\" = 'a') OR (\"f\" = 'all'))")
 
 
 def test_filter_by_login_postgres_multiple_values():
@@ -657,10 +657,18 @@ def test_filter_by_login_postgres_multiple_values():
         "allow_multiple_acl_values": True,
     }
     output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "grp_2"), "a", "postgres")
-    assert output == (
-        "\"f\" = 'a' OR \"f\" LIKE 'a,%' OR \"f\" LIKE '%,a' OR \"f\" LIKE '%,a,%' OR \"f\" = 'all' "
-        "OR \"f\" LIKE 'all,%' OR \"f\" LIKE '%,all' OR \"f\" LIKE '%,all,%'"
-    )
+    assert output == "(string_to_array(\"f\", ',') && ARRAY['a', 'all'])"
+
+
+def test_filter_by_login_postgres_multiple_values_wildcards():
+    """Test the LIKE wildcards and the quotes of the values are not interpreted with multiple values."""
+    config = {
+        "filterPrivate": False,
+        "filterAttribute": "f",
+        "allow_multiple_acl_values": True,
+    }
+    output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "%", "o'neil"), "a", "postgres")
+    assert output == "(string_to_array(\"f\", ',') && ARRAY['grp_1', '%', 'o''neil', 'all'])"
 
 
 def test_filter_by_login_postgres_multiple_values_deactivated():
@@ -674,4 +682,4 @@ def test_filter_by_login_postgres_multiple_values_deactivated():
         "allow_multiple_acl_values": False,
     }
     output = LizmapAccessControlFilter._filter_by_login(config, ("grp_1", "grp_2"), "a", "postgres")
-    assert output == ("\"f\" = 'a' OR \"f\" = 'all'")
+    assert output == ("((\"f\" = 'a') OR (\"f\" = 'all'))")

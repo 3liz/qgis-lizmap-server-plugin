@@ -402,6 +402,8 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         :param groups: List of groups for the current user
         :param login: The current user
         :param provider: The layer data provider ('postgres' for example)
+        :return: The SQL filter, used as a subset string of the layer.
+            With multiple values in the field, the values are compared as arrays.
         """
         # List of values for expression
         values = []
@@ -416,48 +418,32 @@ class LizmapAccessControlFilter(QgsAccessControlFilter):
         # Add all to values
         values.append("all")
 
+        # Quoted attribute with double-quotes
+        quoted_field = QgsExpression.quotedColumnRef(cfg_layer_login_filter["filterAttribute"])
+
         # Since LWC 3.8, we allow to have a list of groups (or logins)
         # separated by comma, with NO SPACES
         # only for PostgreSQL layers and if the option allow_multiple_acl_values
         # is set to True
         # For example the field can contain 'group_a,group_b,group_c'
-        # To use only pure SQL allowed by QGIS, we can use LIKE items
-        # For big dataset, a GIN index with pg_trgm must be used for the
-        # filter field to improve performance
-        # We cannot use array_remove, string_to_array or regexp_replace
-        # as it should be SQL safe for QGIS Server
+        # The values are compared as array items, and not with LIKE patterns:
+        # the wildcards of a login or a group, like % or _, must not match other values.
+        # A GIN index on string_to_array(field, ',') can be used by PostgreSQL.
+        if provider == "postgres" and cfg_layer_login_filter.get("allow_multiple_acl_values"):
+            # SQL quoting of the values: the single quotes are doubled
+            quoted_values = ", ".join("'{}'".format(value.replace("'", "''")) for value in values)
+            # The arrays overlap if they have at least one item in common
+            return f"(string_to_array({quoted_field}, ',') && ARRAY[{quoted_values}])"
 
+        # For each value (group, all, login, etc.), create an equality filter
         value_filters = []
-
-        # Quoted attribute with double-quotes
-        quoted_field = QgsExpression.quotedColumnRef(cfg_layer_login_filter["filterAttribute"])
-
-        # For each value (group, all, login, etc.), create a filter
-        # combining all the possibility: equality & LIKE
         for value in values:
-            filters = []
             # Quote the value with single quotes
             quoted_value = QgsExpression.quotedString(value)
+            value_filters.append(f"{quoted_field} = {quoted_value}")
 
-            # equality
-            filters.append(f"{quoted_field} = {quoted_value}")
+        # Build filter for all values and ensure OR precedence
+        if vfilter := " OR ".join(f"({filt})" for filt in value_filters):
+            vfilter = f"({vfilter})"
 
-            # Add LIKE statements to manage multiple values separated by comma
-            if provider == "postgres" and cfg_layer_login_filter.get("allow_multiple_acl_values"):
-                # begins with value & comma
-                quoted_like_value = QgsExpression.quotedString(f"{value},%")
-                filters.append(f"{quoted_field} LIKE {quoted_like_value}")
-
-                # ends with comma & value
-                quoted_like_value = QgsExpression.quotedString(f"%,{value}")
-                filters.append(f"{quoted_field} LIKE {quoted_like_value}")
-
-                # value between two commas
-                quoted_like_value = QgsExpression.quotedString(f"%,{value},%")
-                filters.append(f"{quoted_field} LIKE {quoted_like_value}")
-
-            # Build the filter for this value
-            value_filters.append(" OR ".join(filters))
-
-        # Build filter for all values
-        return " OR ".join(value_filters)
+        return vfilter
