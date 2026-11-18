@@ -419,9 +419,12 @@ class Tooltip:
         # field_view
         return dedent(
             f'''
-            format_date(
-                "{name}",
-                '{date_format}'
+            try(
+                format_date(
+                    nullif("{name}", ''),
+                    '{date_format}'
+                ),
+                "{name}"
             )''',
         )
 

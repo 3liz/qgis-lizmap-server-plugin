@@ -9,6 +9,8 @@ from qgis.core import (
     QgsAttributeEditorTextElement,
     QgsEditorWidgetSetup,
     QgsExpression,
+    QgsExpressionContext,
+    QgsFeature,
     QgsOptionalExpression,
     QgsProject,
     QgsRelation,
@@ -61,6 +63,18 @@ def test_tooltip_generate_date():
 
     result = Tooltip._generate_date({"display_format": "dd/MM/yyyy"}, "day")
     assert "'dd/MM/yyyy'" in result
+
+    # An empty string or a value which is not a date must not raise an evaluation error
+    fields = _layer().fields()
+    for value, expected in (("2024-03-01", "01/03/2024"), ("", None), ("unknown", "unknown")):
+        feature = QgsFeature(fields)
+        feature.setAttribute("day", value)
+        context = QgsExpressionContext()
+        context.setFeature(feature)
+        expression = QgsExpression(result)
+        evaluated = expression.evaluate(context)
+        assert not expression.hasEvalError(), expression.evalErrorString()
+        assert evaluated == expected, value
 
 
 def test_tooltip_generate_value_map():
