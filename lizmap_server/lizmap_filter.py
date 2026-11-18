@@ -3,6 +3,7 @@ from qgis.server import QgsServerFilter, QgsServerInterface
 
 from .core import get_lizmap_config, get_lizmap_groups
 from .exception import LizmapFilterException
+from .request_expressions import forbidden_function_in_request
 from .tools import unwrap
 from . import logger
 
@@ -15,8 +16,17 @@ class LizmapFilter(QgsServerFilter):
         self.iface = server_iface
 
     def requestReady(self):
+        """Check the request before QGIS Server handles it.
+
+        The expressions of the request are checked for every user, then the
+        access to the project is checked with the Lizmap user groups.
+        """
         # noinspection PyBroadException
         try:
+            # Check the expressions sent in the request, even for an anonymous user
+            if not self._check_request_expressions():
+                return
+
             # Check first the headers to avoid unnecessary config file reading
             # Get Lizmap user groups defined in request headers
             groups = get_lizmap_groups(unwrap(self.iface.requestHandler()))
@@ -72,6 +82,34 @@ class LizmapFilter(QgsServerFilter):
 
         except Exception as e:
             logger.log_exception(e)
+
+    def _check_request_expressions(self) -> bool:
+        """Reject the request if one of its expressions calls a forbidden function.
+
+        :returns: True if the request can go on, False if it has been rejected.
+        """
+        handler = unwrap(self.iface.requestHandler())
+
+        # The body, e.g. a WFS GetFeature or Transaction XML document
+        body = ""
+        if hasattr(handler, "data"):
+            data = handler.data()
+            if data:
+                body = bytes(data).decode("utf-8", errors="replace")
+
+        name = forbidden_function_in_request(dict(handler.parameterMap()), body)
+        if name is None:
+            return True
+
+        # use setServiceException to be sure to stop the request
+        logger.warning(f"Request rejected: the expression function '{name}' is not allowed")
+        exc = LizmapFilterException(
+            "InvalidParameterValue",
+            f"Expression function '{name}' is not allowed",
+            response_code=400,
+        )
+        handler.setServiceException(exc)
+        return False
 
     def responseComplete(self):
         # Remove lizmap variables for expression
