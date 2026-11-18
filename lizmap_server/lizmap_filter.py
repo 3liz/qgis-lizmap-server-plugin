@@ -95,7 +95,8 @@ class LizmapFilter(QgsServerFilter):
         if hasattr(handler, "data"):
             data = handler.data()
             if data:
-                body = bytes(data).decode("utf-8", errors="replace")
+                # QByteArray.data() gives the bytes, with PyQt5 and PyQt6
+                body = data.data().decode("utf-8", errors="replace")
 
         name = forbidden_function_in_request(dict(handler.parameterMap()), body)
         if name is None:
