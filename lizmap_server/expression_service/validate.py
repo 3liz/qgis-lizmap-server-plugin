@@ -71,31 +71,57 @@ def safe_replace_expression_text(
     expression_str: str,
     context: QgsExpressionContext,
     distance_area: QgsDistanceArea | None,
-) -> str:
+    errors: list[str] | None = None,
+) -> str | None:
     """A safe replacement for qgsExpression::replaceExpressionText
 
     The original version silence errors and prevent checking for allowed
     safe expression function.
+
+    In strict mode, without an error list, a parser or evaluation error raises
+    an exception. Otherwise the error is added to the list and the text has no
+    value: None is returned. A forbidden function always raises an exception.
+
+    :param expression_str: The text with expressions between [% and %].
+    :param context: The expression context.
+    :param distance_area: The calculator of the areas and lengths, or None.
+    :param errors: The list receiving the error messages, or None for the strict mode.
+    :returns: The text with the expressions replaced by their values, or None if an
+        expression is in error in lenient mode.
     """
+    # The errors already in the list are not the errors of this text
+    errors_count = len(errors) if errors is not None else 0
 
     def replace(m: re.Match) -> str:
         exp_str = m.group().removeprefix("[%").removesuffix("%]").strip()
         exp = QgsExpression(exp_str)
 
+        # Parser error: raised in strict mode, else listed
+        error: ExpressionError | None = None
         if exp.hasParserError():
-            raise InvalidExpressionError(f'Error "{exp_str}": {exp.parserErrorString()}')
+            error = InvalidExpressionError(f'Error "{exp_str}": {exp.parserErrorString()}')
+        elif not exp.isValid():
+            error = InvalidExpressionError(f'Expression not valid "{exp_str}"')
+        if error is not None:
+            if errors is None:
+                raise error
+            errors.append(str(error))
+            return m.group()
 
-        if not exp.isValid():
-            raise InvalidExpressionError(f'Expression not valid "{exp_str}"')
-
+        # A forbidden function is never evaluated, even in lenient mode
         check_authorized_expression_functions(exp)
 
         if distance_area is not None:
             exp.setGeomCalculator(distance_area)
 
+        # Evaluation error: raised in strict mode, else listed
         exp.evaluate(context)
         if exp.hasEvalError():
-            raise EvalExpressionError(f"Expression '{exp_str}' evaluation error: {exp.evalErrorString()}")
+            error = EvalExpressionError(f"Expression '{exp_str}' evaluation error: {exp.evalErrorString()}")
+            if errors is None:
+                raise error
+            errors.append(str(error))
+            return m.group()
 
         # The checks are done: let QGIS replace this block only, so that the value is
         # formatted as QGIS does (ISO dates, 'true', empty string for a geometry...).
@@ -106,4 +132,9 @@ def safe_replace_expression_text(
         return QgsExpression.replaceExpressionText(m.group(), context)
 
     # Replace all expressions from the string
-    return EXPRESSION_RE.sub(replace, expression_str)
+    text = EXPRESSION_RE.sub(replace, expression_str)
+
+    # Lenient mode: a text with an expression in error has no value
+    if errors is not None and len(errors) > errors_count:
+        return None
+    return text

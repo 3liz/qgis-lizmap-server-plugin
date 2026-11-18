@@ -2,6 +2,7 @@
 # Request REPLACEEXPRESSIONTEXT
 #
 import json
+import os
 import traceback
 
 from typing import (
@@ -50,6 +51,12 @@ if TYPE_CHECKING:
     from .models import Body
 
 
+# When this environment variable is true, an expression error stops the request with
+# an HTTP 400 error. Otherwise, the string with the expression in error is null, and the
+# error is added to the response.
+ENV_STRICT_EXPRESSION = "QGIS_SERVER_LIZMAP_STRICT_EXPRESSION"
+
+
 def replace_expression_text(
     params: Dict[str, str],
     response: QgsServerResponse,
@@ -74,6 +81,11 @@ def replace_expression_text(
         FEATURES=ALL to get Replace expression texts for all features of the layer
         FORM_SCOPE=boolean to add formScope based on provided features
         FORMAT=GeoJSON to get response as GeoJSON
+
+    The response has a status, "success" or "partial" if some expressions are in error
+    (the value of their string is then null),
+    and the list of errors: {"feature": feature id or null, "key": string key, "error": message}.
+    With the GeoJSON format, they are foreign members of the FeatureCollection.
     """
     layer_name = params.get("LAYER", "")
     if not layer_name:
@@ -157,15 +169,35 @@ def replace_expression_text(
             "features": 0,
         }
 
+        # In strict mode, the first expression error stops the request
+        strict = to_bool(os.getenv(ENV_STRICT_EXPRESSION))
+
+        def replace(key: Any, text: str, feature_id: int | None) -> str | None:
+            """Replace the expressions of a string, and keep its errors in the body.
+
+            :param key: The key of the string in the STRINGS parameter.
+            :param text: The string with expressions.
+            :param feature_id: The id of the feature, or None without feature.
+            :returns: The string with the expressions replaced, or None if an expression is in error.
+            """
+            errors: list[str] | None = None if strict else []
+            try:
+                value = safe_replace_expression_text(text, exp_context, da, errors)
+            except ExpressionError as err:
+                raise ExpressionServiceError("Bad request", f"{err}", 400) from None
+
+            # Lenient mode: the errors are reported in the response
+            for error in errors or []:
+                logger.warning(f"ReplaceExpressionText: {error}")
+                body["errors"].append({"feature": feature_id, "key": key, "error": error})
+                body["status"] = "partial"
+            return value
+
         # without features just replace expression string with layer context
         if not features:
             result = {}
             for k, s in str_map.items():
-                try:
-                    value = safe_replace_expression_text(f"{s}", exp_context, da)
-                except ExpressionError as err:
-                    raise ExpressionServiceError("Bad request", f"{err}", 400) from None
-
+                value = replace(k, f"{s}", None)
                 result[k] = json.loads(QgsJsonUtils.encodeValue(value))
             body["results"].append(result)
             write_json_response(body, response)
@@ -278,11 +310,7 @@ def replace_expression_text(
             # replace expression strings with the new feature
             result = {}
             for k, s in str_map.items():
-                try:
-                    value = safe_replace_expression_text(f"{s}", exp_context, da)
-                except ExpressionError as err:
-                    raise ExpressionServiceError("Bad request", f"{err}", 400) from None
-
+                value = replace(k, f"{s}", f.id())
                 result[k] = json.loads(QgsJsonUtils.encodeValue(value))
             if exporter:
                 feature = QgsFeature(geojson_fields, f.id())
@@ -299,6 +327,9 @@ def replace_expression_text(
                 ",\n".join(
                     [
                         '{"type": "FeatureCollection"',
+                        # Foreign members, ignored by the GeoJSON readers
+                        '"status": ' + json.dumps(body["status"]),
+                        '"errors": ' + json.dumps(body["errors"]),
                         '"features": [' + ",\n".join(body["results"]) + "]}",
                     ]
                 ),

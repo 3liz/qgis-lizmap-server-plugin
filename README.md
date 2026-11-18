@@ -11,6 +11,9 @@
   checked and required for these layers. If no API key provided in the Lizmap plugin, these layers will be discarded.
   If set to `FALSE`, these layers will be forwarded from QGIS Server to Lizmap Web Client but these layers might not work
   and the TOS from these providers might not be compliant.
+* `QGIS_SERVER_LIZMAP_STRICT_EXPRESSION`, if set to `TRUE`, an expression error in a `replaceExpressionText`
+  request returns an HTTP 400 error. By default, the string with the expression in error is `null`, and the
+  response has the status `partial` and the list of `errors`.
 
 ## Download
 

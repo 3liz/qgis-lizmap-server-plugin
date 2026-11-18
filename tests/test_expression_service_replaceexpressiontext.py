@@ -1,6 +1,8 @@
 import json
 
-from .utils import PROJECT_FILE, _build_query_string, _check_request
+from lizmap_server.expression_service.request_replaceexpressiontext import ENV_STRICT_EXPRESSION
+
+from .utils import PROJECT_FILE, Client, OWSResponse, _build_query_string, _check_request
 from urllib.parse import quote
 
 BASE_QUERY = {
@@ -525,3 +527,79 @@ def test_request_with_features_all_access_control(client):
 
     assert "features" in b
     assert len(b["features"]) == 4
+
+
+def _replace_with_errors(client: Client, output_format: str = "") -> OWSResponse:
+    """Request a replacement with a valid string, a parser error and an evaluation error.
+
+    :param client: The QGIS Server test client.
+    :param output_format: The FORMAT parameter, e.g. GeoJSON.
+    :returns: The response.
+    """
+    qs = dict(BASE_QUERY)
+    qs["LAYER"] = "france_parts"
+    qs["STRINGS"] = '{{"a":"{}", "b":"{}", "c":"{}"}}'.format(
+        quote("[% 1 + 1 %]", safe=""),
+        quote("x [% round( %] y", safe=""),
+        quote("[% round('not a number') %]", safe=""),
+    )
+    qs["FEATURE"] = (
+        '{"type":"Feature", "geometry": {"type": "Point", "coordinates": [102.0, 0.5]}, "properties": {"prop0": "value0"}}'
+    )
+    if output_format:
+        qs["FORMAT"] = output_format
+    return client.get(_build_query_string(qs), PROJECT_FILE)
+
+
+def test_request_with_errors(client):
+    """The strings in error are null, and the errors are listed in the response."""
+    b = _check_request(_replace_with_errors(client))
+
+    assert b["status"] == "partial"
+    assert b["results"] == [{"a": "2", "b": None, "c": None}]
+    assert [(error["feature"], error["key"]) for error in b["errors"]] == [(0, "b"), (0, "c")]
+    assert b["errors"][1]["error"].startswith("Expression 'round('not a number')' evaluation error")
+
+
+def test_request_with_errors_geojson(client):
+    """With the GeoJSON format, the status and the errors are foreign members."""
+    b = _check_request(_replace_with_errors(client, "GeoJSON"), content_type="application/vnd.geo+json")
+
+    assert b["type"] == "FeatureCollection"
+    assert b["status"] == "partial"
+    assert [(error["feature"], error["key"]) for error in b["errors"]] == [(0, "b"), (0, "c")]
+    assert b["features"][0]["properties"] == {"a": "2", "b": None, "c": None}
+
+
+def test_request_without_errors_geojson(client):
+    """Without error, the status is a success and the error list is empty."""
+    qs = dict(BASE_QUERY)
+    qs["LAYER"] = "france_parts"
+    qs["STRING"] = quote("[% 1 + 1 %]", safe="")
+    qs["FEATURES"] = "ALL"
+    qs["FORMAT"] = "GeoJSON"
+    b = _check_request(
+        client.get(_build_query_string(qs), PROJECT_FILE), content_type="application/vnd.geo+json"
+    )
+
+    assert b["status"] == "success"
+    assert b["errors"] == []
+    assert len(b["features"]) == 4
+
+
+def test_request_with_errors_strict(client, monkeypatch):
+    """In strict mode, an expression error stops the request."""
+    monkeypatch.setenv(ENV_STRICT_EXPRESSION, "true")
+
+    _check_request(_replace_with_errors(client), http_code=400)
+    _check_request(_replace_with_errors(client, "GeoJSON"), http_code=400)
+
+
+def test_request_with_forbidden_function(client):
+    """A forbidden function stops the request, even in lenient mode."""
+    qs = dict(BASE_QUERY)
+    qs["LAYER"] = "france_parts"
+    qs["STRINGS"] = '["{}", "{}"]'.format(quote("[% 1 %]", safe=""), quote("[% env('HOME') %]", safe=""))
+    b = _check_request(client.get(_build_query_string(qs), PROJECT_FILE), http_code=400)
+
+    assert "is not allowed" in b["message"]

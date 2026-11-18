@@ -11,6 +11,10 @@ they are replaced with) and the two error channels:
   it into an HTTP 400.
 * `ExpressionServiceError` for an evaluation error, which is reported as an
   HTTP 500 with the internal message kept out of the response.
+
+With an error list (lenient mode), the parser and evaluation errors are added
+to the list and the text has no value (None). The unauthorized functions are
+still rejected.
 """
 
 import pytest
@@ -271,3 +275,50 @@ def test_the_distance_area_is_applied(
     # One square degree, then the same square in square metres.
     assert planimetric == "1"
     assert float(ellipsoidal) == pytest.approx(1.23e10, rel=0.01)
+
+
+#
+# Lenient mode: with an error list, a text with an expression in error is None
+#
+
+
+@pytest.mark.parametrize(
+    "text",
+    (
+        "a [% round( %] b",
+        "a [% not_a_qgis_function(1) %] b",
+        "a [%%] b",
+        "a [% round('not a number') %] b",
+        '[%kk[% "ids" %]%]',
+    ),
+)
+def test_lenient_mode_returns_none(text: str, context: QgsExpressionContext) -> None:
+    """A text with an expression in error has no value, and the error is listed.
+
+    :param text: A text with an expression in error.
+    :param context: The expression context.
+    """
+    errors: list[str] = []
+
+    assert safe_replace_expression_text(text, context, None, errors) is None
+    assert len(errors) == 1
+
+
+def test_lenient_mode_lists_each_error(context: QgsExpressionContext) -> None:
+    """Each expression in error is listed, after the errors already in the list."""
+    errors: list[str] = ["a previous error"]
+
+    text = '[% 1 + 1 %] [% round( %] [% "nofield" %]'
+    assert safe_replace_expression_text(text, context, None, errors) is None
+    assert len(errors) == 3
+    assert errors[2].startswith("Expression '\"nofield\"' evaluation error")
+
+    # A text without error is replaced, even with errors already in the list
+    assert safe_replace_expression_text("[% 1 + 1 %]", context, None, errors) == "2"
+    assert len(errors) == 3
+
+
+def test_lenient_mode_still_rejects_the_unauthorized_functions(context: QgsExpressionContext) -> None:
+    """A forbidden function is never evaluated, even with an error list."""
+    with pytest.raises(ForbiddenExpressionError):
+        safe_replace_expression_text("[% 'fine' %] and [% env('HOME') %]", context, None, [])
