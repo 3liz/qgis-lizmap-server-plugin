@@ -1,4 +1,5 @@
 import configparser
+import gc
 import logging
 import os
 import sys
@@ -77,19 +78,34 @@ def pytest_sessionstart(session: pytest.Session):
 
 @pytest.fixture(scope="session", autouse=True)
 def qgis_app(request: pytest.FixtureRequest) -> Generator[QgsApplication | None, None, None]:
+    """The QGIS application of the test session.
 
+    It is torn down after the other session fixtures, e.g. the QGIS Server of the client.
+
+    :param request: The pytest request.
+    :returns: The QGIS application.
+    """
     yield qgis_application
 
-    if qgis_application:
-        pass
-        # NOTE: This actually makes segmentation fault.
-        # logging.info("EXITING QGIS")
-        # qgis_application.exitQgis()
+    # The QGIS application is exited explicitly with QGIS 4 only:
+    # - with QGIS 4, without exit, the destruction of the QGIS resources at the end
+    #   of the Python process can make a segmentation fault, e.g. after a WFS GetFeature;
+    # - with QGIS 3, the explicit exit makes a segmentation fault.
+    if qgis_application and Qgis.versionInt() >= 40000:
+        logging.info("EXITING QGIS")
+        qgis_application.exitQgis()
 
 
 @pytest.fixture(scope="session")
-def client(request: pytest.FixtureRequest) -> Client:
-    """Return a qgis server instance"""
+def client(request: pytest.FixtureRequest) -> Generator[Client, None, None]:
+    """Return a qgis server instance.
+
+    At the end of the session, the QGIS Server and the plugins are released
+    before the QGIS application is exited.
+
+    :param request: The pytest request.
+    :returns: The client of the QGIS Server.
+    """
 
     class _Client:
         def __init__(self):
@@ -164,7 +180,14 @@ def client(request: pytest.FixtureRequest) -> Client:
             self.server.handleRequest(server_request, response, project=project)
             return OWSResponse(response)
 
-    return _Client()
+    the_client = _Client()
+    yield the_client
+
+    # Release the QGIS Server and the plugins while the QGIS application is alive
+    server_plugins.clear()
+    the_client.server = None
+    del the_client
+    gc.collect()
 
 
 ##

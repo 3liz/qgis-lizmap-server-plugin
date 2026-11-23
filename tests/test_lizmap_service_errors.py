@@ -84,7 +84,9 @@ def _response_body(response: QgsBufferServerResponse) -> dict:
 
 
 def _layers():
-    polygon = QgsVectorLayer("Polygon?crs=epsg:4326&field=id:integer&field=groups:string", "polygon", "memory")
+    polygon = QgsVectorLayer(
+        "Polygon?crs=epsg:4326&field=id:integer&field=groups:string", "polygon", "memory"
+    )
     with edit(polygon):
         feature = QgsFeature(polygon.fields())
         feature.setGeometry(QgsGeometry.fromWkt("POLYGON((0 0,0 5,5 5,5 0,0 0))"))

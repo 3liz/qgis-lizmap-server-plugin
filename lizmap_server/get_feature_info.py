@@ -48,7 +48,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
             feature_elem = layer_elem.firstChildElement()
             while not feature_elem.isNull():
                 if feature_elem.hasAttribute("id"):
-                    yield layer_elem.attribute("name"), feature_elem.attribute('id')
+                    yield layer_elem.attribute("name"), feature_elem.attribute("id")
 
                 feature_elem = feature_elem.nextSiblingElement()
 
@@ -231,9 +231,7 @@ class GetFeatureInfoFilter(QgsServerFilter):
         try:
             features = self.feature_list_to_replace(cfg, project, relation_manager, xml, css_framework)
         except InvalidWidgetConfig as e:
-            logger.warning(
-                f"A field widget config has been invalid: {e}"
-            )
+            logger.warning(f"A field widget config has been invalid: {e}")
             # For embedded layer the widget config is empty, so the form could not be
             # translated to HTML. The default response is returned.
             return

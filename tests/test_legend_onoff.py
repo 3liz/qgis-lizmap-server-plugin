@@ -1,7 +1,21 @@
 import io
 import logging
 
-from qgis.core import Qgis
+import pytest
+
+from qgis.core import (
+    Qgis,
+    QgsCategorizedSymbolRenderer,
+    QgsProject,
+    QgsRasterLayer,
+    QgsRendererCategory,
+    QgsSymbol,
+    QgsVectorLayer,
+    QgsWkbTypes,
+)
+from qgis.server import QgsBufferServerResponse
+
+from lizmap_server.legend_onoff_filter import LegendOnOffAccessControl, LegendOnOffFilter
 
 from tests.utils import _build_query_string
 
@@ -255,3 +269,206 @@ def test_no_geom_layer(client):
     rv = client.get_with_project(_build_query_string(qs), project)
     assert rv.status_code == 200
     assert rv.headers.get("Content-Type", "").find("image/png") == 0
+
+
+#
+# Fakes
+#
+
+
+class FakeRequestHandler:
+    """Minimal duck typing of a QgsRequestHandler."""
+
+    def __init__(self, params=None, headers=None):
+        self._params = params if params is not None else {}
+        self._headers = headers if headers is not None else {}
+
+    def parameterMap(self):
+        return self._params
+
+    def requestHeaders(self):
+        return self._headers
+
+
+class FakeAccessControls:
+    """Minimal duck typing of a QgsAccessControlFilter chain."""
+
+    def __init__(self, subset_string):
+        self._subset_string = subset_string
+
+    def extraSubsetString(self, layer):
+        return self._subset_string
+
+
+class FakeServerInterface:
+    """Minimal duck typing of a QgsServerInterface."""
+
+    def __init__(self, handler=None, subset_string=""):
+        self._handler = handler
+        self._access_controls = FakeAccessControls(subset_string)
+
+    def requestHandler(self):
+        return self._handler
+
+    def accessControls(self):
+        return self._access_controls
+
+
+@pytest.fixture
+def project():
+    """A clean QGIS project instance."""
+    instance = QgsProject.instance()
+    instance.clear()
+    yield instance
+    instance.clear()
+
+
+#
+# Shared project state mutated per-request and not always restored
+#
+
+
+@pytest.fixture
+def france_parts(rootdir, project):
+    """The 'france_parts' layer, added to the project instance."""
+    layer = QgsVectorLayer(
+        str(rootdir.joinpath("data/france_parts/france_parts.shp")),
+        "france_parts",
+        "ogr",
+    )
+    assert layer.isValid()
+    project.addMapLayer(layer)
+    return layer
+
+
+ACL_SUBSET = "\"NAME_1\" = 'Bretagne'"
+
+
+def test_virtual_fields_restores_the_subset_string(project, france_parts, monkeypatch):
+    """An exception in the feature loop must not leave the ACL filter installed."""
+    from lizmap_server.expression_service import request_virtualfields as module
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("Failure inside the feature loop")
+
+    monkeypatch.setattr(module, "get_server_fid", boom)
+
+    params = {"LAYER": "france_parts", "VIRTUALS": '{"a": "1"}'}
+    with pytest.raises(RuntimeError):
+        module.virtual_fields(
+            params,
+            QgsBufferServerResponse(),
+            project,
+            FakeServerInterface(subset_string=ACL_SUBSET),
+        )
+
+    assert france_parts.subsetString() == ""
+
+
+def test_replace_expression_text_restores_the_subset_string(
+    project,
+    france_parts,
+    monkeypatch,
+):
+    """The same, for the REPLACEEXPRESSIONTEXT request."""
+    from lizmap_server.expression_service import request_replaceexpressiontext as module
+
+    class Boom:
+        @staticmethod
+        def encodeValue(value):
+            raise RuntimeError("Failure inside the feature loop")
+
+    monkeypatch.setattr(module, "QgsJsonUtils", Boom)
+
+    params = {
+        "LAYER": "france_parts",
+        "STRINGS": '["[% 1 + 1 %]"]',
+        "FEATURE": '{"type": "Feature", "geometry": null, "properties": {"NAME_1": "Bretagne"}}',
+    }
+    with pytest.raises(RuntimeError):
+        module.replace_expression_text(
+            params,
+            QgsBufferServerResponse(),
+            project,
+            FakeServerInterface(subset_string=ACL_SUBSET),
+        )
+
+    assert france_parts.subsetString() == ""
+
+
+def _categorized_layer(name: str = "categorized") -> QgsVectorLayer:
+    """A categorized vector layer, with two rule keys."""
+    layer = QgsVectorLayer("Point?crs=epsg:4326&field=id:integer&field=cat:string", name, "memory")
+    assert layer.isValid()
+
+    def symbol():
+        return QgsSymbol.defaultSymbol(QgsWkbTypes.GeometryType.PointGeometry)
+
+    categories = [
+        QgsRendererCategory("a", symbol(), "A"),
+        QgsRendererCategory("b", symbol(), "B"),
+    ]
+    layer.setRenderer(QgsCategorizedSymbolRenderer("cat", categories))
+    return layer
+
+
+@pytest.mark.xfail(reason="TODO: fix style restoration in LegendOnOffAccessControl")
+def test_legend_onoff_restores_the_current_style(client, project):
+    """The client supplied style must not stay on the shared project layer."""
+    layer = _categorized_layer()
+    assert layer.styleManager().addStyleFromLayer("other")
+    layer.styleManager().setCurrentStyle("default")
+    project.addMapLayer(layer)
+
+    params = {"LAYERS": "categorized", "STYLES": "other"}
+
+    access_control = LegendOnOffAccessControl(client.server.serverInterface())
+    access_control.iface = FakeServerInterface(FakeRequestHandler(params))
+    access_control.layerPermissions(layer)
+
+    legend_filter = LegendOnOffFilter(client.server.serverInterface())
+    legend_filter.serverInterface = lambda: FakeServerInterface(FakeRequestHandler(params))
+    legend_filter.responseComplete()
+
+    # The next request must not inherit the style of this one
+    assert layer.styleManager().currentStyle() == "default"
+
+
+@pytest.mark.parametrize("value", ("a", "a:b:c", "", ";", "a:b;c", ":", "a:"))
+def test_malformed_legend_on_is_not_an_error(project, value):
+    """A malformed LEGEND_ON must not raise: the request is unauthenticated."""
+    layer = _categorized_layer()
+    project.addMapLayer(layer)
+
+    LegendOnOffAccessControl._setup_legend(layer, value, True)
+    LegendOnOffFilter._reset_legend(value, project)
+
+
+@pytest.mark.parametrize("parameter", ("LEGEND_ON", "LEGEND_OFF"))
+def test_malformed_legend_parameter_in_permissions(client, project, parameter):
+    """`layerPermissions` is called on every WMS request: it must not raise."""
+    layer = _categorized_layer()
+    project.addMapLayer(layer)
+
+    access_control = LegendOnOffAccessControl(client.server.serverInterface())
+    access_control.iface = FakeServerInterface(
+        FakeRequestHandler({"LAYERS": "categorized", parameter: "categorized"}),
+    )
+
+    access_control.layerPermissions(layer)
+
+
+def test_legend_on_a_raster_layer(client, project, rootdir):
+    """A raster renderer has no 'checkLegendSymbolItem': it must be skipped."""
+    raster = QgsRasterLayer(str(rootdir.joinpath("data/raster.asc")), "raster")
+    assert raster.isValid()
+    project.addMapLayer(raster)
+
+    LegendOnOffAccessControl._setup_legend(raster, "raster:0", True)
+
+    access_control = LegendOnOffAccessControl(client.server.serverInterface())
+    access_control.iface = FakeServerInterface(
+        FakeRequestHandler({"LAYERS": "raster", "LEGEND_ON": "raster:0"}),
+    )
+
+    access_control.layerPermissions(raster)

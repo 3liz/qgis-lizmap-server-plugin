@@ -86,7 +86,6 @@ def make_acl(client, tmp_path):
     return _make
 
 
-
 def _layer(name="points"):
     layer = QgsVectorLayer("Point?crs=epsg:4326&field=id:integer&field=user:string", name, "memory")
     assert layer.isValid()
@@ -654,9 +653,7 @@ def test_acl_filter_polygon_and_anonymous(project, make_acl):
         ),
         headers={"X-Lizmap-User-Groups": ""},
     )
-    assert acl.get_lizmap_layer_filter(points, FilterType.QgisExpression) == (
-        "1 = 0 AND \"user\" = 'all'"
-    )
+    assert acl.get_lizmap_layer_filter(points, FilterType.QgisExpression) == ("1 = 0 AND \"user\" = 'all'")
 
 
 def test_acl_filter_polygon_and_login(project, make_acl):

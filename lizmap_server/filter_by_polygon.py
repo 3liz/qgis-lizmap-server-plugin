@@ -17,6 +17,7 @@ from qgis.core import (
     QgsDataSourceUri,
     QgsFeatureRequest,
     QgsGeometry,
+    QgsExpression,
     QgsProject,
     # NOTE: forgotten in type definitions ?
     QgsProviderConnectionException,  # ty: ignore[unresolved-import]
@@ -198,6 +199,11 @@ class FilterByPolygon:
 
         return self.connection.executeSql(sql)
 
+    @staticmethod
+    def sanitize_group_or_users(groups_or_user: tuple) -> tuple[str]:
+        """Sanitize the list of groups or user"""
+        return tuple(gu.strip() for gu in groups_or_user)
+
     @logger.profiling
     def subset_sql(self, groups_or_user: tuple) -> Tuple[str, str]:
         """Get the SQL subset string for the current groups of the user or the user.
@@ -206,6 +212,7 @@ class FilterByPolygon:
                                or the user if we need to filter by user.
         :returns: The subset SQL string to use
         """
+
         # Disabled, sometimes featureCount is expansive it seems ?
         # if self.layer.featureCount() == 0:
         #     # Layer is empty, let's go faster ...
@@ -293,6 +300,9 @@ class FilterByPolygon:
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_qgis_api(self, groups_or_user: tuple) -> QgsGeometry:
         """All features from the polygon layer corresponding to the user groups or the user"""
+
+        safe_groups_or_user = (gu.replace("'", "''") for gu in self.sanitize_group_or_users(groups_or_user))
+
         expression = f"""
 array_intersect(
     array_foreach(
@@ -300,7 +310,7 @@ array_intersect(
         trim(@element)
     ),
     array_foreach(
-        string_to_array('{",".join(groups_or_user)}'),
+        string_to_array('{",".join(safe_groups_or_user)}'),
         trim(@element)
     )
 )"""
@@ -316,6 +326,49 @@ array_intersect(
 
         return QgsGeometry().collectGeometry(polygon_geoms)
 
+    @staticmethod
+    def _polygon_for_groups_query(
+        group_field: str | None, geometry_column: str, groups_or_user: tuple
+    ) -> sql.Composed:
+        """Build the SQL query of the union of the polygons of the user groups or the user.
+
+        The groups or the user, and the values of the polygon field, are split on the comma
+        and trimmed, as done by the QGIS API method. The polygons having at least one value
+        in common with the groups or the user are merged. The table name is left as the
+        `table_name_placeholder` text, to be replaced by the caller.
+
+        :param group_field: The field of the polygon layer containing the groups or users.
+        :param geometry_column: The geometry column of the polygon layer.
+        :param groups_or_user: The groups of the user, or the user, already sanitized.
+        :returns: The psycopg2 composed query, returning one row (id, geom as WKB).
+        """
+        return sql.SQL("""
+WITH current_groups AS (
+    -- Groups or user of the request, as an array of trimmed and non empty values
+    SELECT ARRAY(
+        SELECT trim(g)
+        FROM unnest(STRING_TO_ARRAY({groups_or_user}, ',')) AS g
+        WHERE trim(g) <> ''
+    ) AS user_group
+)
+SELECT
+    1 AS id, ST_AsBinary(ST_Union(p.{geom})) AS geom
+FROM
+    table_name_placeholder AS p,
+    current_groups AS c
+WHERE
+    -- At least one value in common with the values of the polygon field
+    c.user_group && ARRAY(
+        SELECT trim(g)
+        FROM unnest(STRING_TO_ARRAY(p.{polygon_field}, ',')) AS g
+        WHERE trim(g) <> ''
+    )
+""").format(
+            polygon_field=sql.Identifier(group_field),
+            groups_or_user=sql.Literal(",".join(groups_or_user)),
+            geom=sql.Identifier(geometry_column),
+        )
+
     @logger.profiling
     @lru_cache(maxsize=CACHE_MAX_SIZE)
     def _polygon_for_groups_with_sql_query(self, groups_or_user: tuple) -> QgsGeometry:
@@ -324,61 +377,33 @@ array_intersect(
 
         Only for QGIS >= 3.10
         """
+        safe_groups_or_user = self.sanitize_group_or_users(groups_or_user)
 
         try:
             datasource = QgsDataSourceUri(self.polygon.source())
 
             # psycopg2 composed request
-            query = sql.SQL("""
-WITH current_groups AS (
-    SELECT
-        ARRAY_REMOVE(
-            STRING_TO_ARRAY(
-                regexp_replace(
-                    {groups_or_user}, '[^a-zA-Z0-9_-]', ',', 'g'
-                ),
-                ','
-            ),
-        '') AS user_group
-)
-SELECT
-        1 AS id, ST_AsBinary(ST_Union({geom})) AS geom
-FROM
-        table_name_placeholder AS p,
-        current_groups AS c
-WHERE
-c.user_group && (
-    ARRAY_REMOVE(
-        STRING_TO_ARRAY(
-            regexp_replace(
-                {polygon_field}, '[^a-zA-Z0-9_-]', ',', 'g'
-            ),
-            ','
-        ),
-    '')
-)
-
-
-
-""").format(
-                polygon_field=sql.Identifier(self.group_field),
-                groups_or_user=sql.Literal(",".join(groups_or_user)),
-                geom=sql.Identifier(datasource.geometryColumn()),
-            )
-            logger.info(
-                f"Requesting the database about polygons for the current groups or user with : \n{sql}"
+            query = self._polygon_for_groups_query(
+                self.group_field,
+                datasource.geometryColumn(),
+                safe_groups_or_user,
             )
 
-            # psycopg2 connection
+            # psycopg2 connection, only used to build the request as a string
             conn = connect(datasource.connectionInfo())
-            # psycopg2 recomposed request as string
-            query_string = query.as_string(conn)
+            try:
+                query_string = query.as_string(conn)
+            finally:
+                conn.close()
             # Replace the table_name_placeholder with the real table name
             # NOTE: we cannot use psycopg2.sql.Identifier here as it will add quotes around the table name
             # And the method _format_table_name will add quotes if needed, so we need to use it here.
             # The QGIS table name provided in the URI could also be a full SQL query, so we need to use it as is.
             query_string = query_string.replace(
                 "table_name_placeholder", FilterByPolygon._format_table_name(datasource)
+            )
+            logger.info(
+                f"Requesting the database about polygons for the current groups or user with : \n{query_string}"
             )
             results = self.sql_query(datasource, query_string)
             wkb = results[0][1]
@@ -492,14 +517,18 @@ c.user_group && (
             logger.info(f"No values, returning default NO VALUES {NO_FEATURES}")
             return NO_FEATURES
 
-        cleaned = []
-        for value in values:
-            if isinstance(value, str):
-                cleaned.append(f"'{value}'")
-            else:
-                cleaned.append(str(value))
+        def clean(value):
+            match value:
+                case str():
+                    return QgsExpression.quotedString(value)
+                case int() | float() | bool():
+                    return str(value)
+                case _:
+                    raise TypeError(f"Unsupported sql value: {value} ({type(value)}")
 
-        return f'"{primary_key}" IN ( {" , ".join(cleaned)} )'
+        cleaned = (clean(value) for value in values)
+        primary_key = QgsExpression.quotedColumnRef(primary_key)
+        return f"{primary_key} IN ( {' , '.join(cleaned)} )"
 
     @classmethod
     def _format_sql_st_relationship(

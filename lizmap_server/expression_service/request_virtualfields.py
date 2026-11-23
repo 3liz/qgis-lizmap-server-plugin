@@ -7,7 +7,6 @@ import traceback
 from typing import (
     Dict,
     Optional,
-    Tuple,
 )
 
 from qgis.core import (
@@ -33,9 +32,11 @@ from ..exception import ExpressionServiceError
 from ..tools import to_bool, unwrap
 from .. import logger
 
-from .models import (
-    ALLOWED_SAFE_EXPRESSIONS,
-    NOT_ALLOWED_EXPRESSION,
+from .models import CROSS_LAYER_EXPRESSIONS, SAFE_EXPRESSIONS
+from .validate import (
+    ExpressionError,
+    ForbiddenExpressionError,
+    check_expression,
 )
 
 
@@ -101,35 +102,28 @@ def virtual_fields(
     exp_map = {}
     exp_parser_errors = []
     for field, expression in vir_json.items():
-        exp, error = check_expression(expression, distance_area, project)
-        if error:
-            exp_parser_errors.append(error)
-            continue
-
-        exp = unwrap(exp)
+        try:
+            exp = check_expression(expression, distance_area, project)
+        except ExpressionError as err:
+            exp_parser_errors.append(str(err))
+            break
 
         exp.prepare(exp_context)
         exp_map[field] = exp
 
     for field, expression in safe_vir_json.items():
-        exp, error = check_expression(expression, distance_area, project)
-        if error:
-            exp_parser_errors.append(error)
+        try:
+            exp = check_expression(expression, distance_area, project)
+            # Check safe expressions
+            for member in exp.referencedFunctions():
+                if member not in SAFE_EXPRESSIONS:
+                    raise ForbiddenExpressionError(f"Expression '{member}' not allowed")
+        except ForbiddenExpressionError as err:
+            logger.error(f"Forbidden SAFE_VIRTUALS expression: {err}")
+            exp = QgsExpression("'not allowed'")
+        except ExpressionError as err:
+            exp_parser_errors.append(str(err))
             continue
-
-        exp = unwrap(exp)
-
-        for member in exp.referencedFunctions():
-            if member not in ALLOWED_SAFE_EXPRESSIONS:
-                allowed = ",".join(ALLOWED_SAFE_EXPRESSIONS)
-                logger.warning(
-                    f"Project {project.fileName()}, "
-                    f"layer {layer_name}, "
-                    f"input expression '{expression}' has been discarded from evaluation, "
-                    f"replaced by '{NOT_ALLOWED_EXPRESSION}'. "
-                    f"Only '{allowed}' are allowed.",
-                )
-                exp = QgsExpression(NOT_ALLOWED_EXPRESSION)
 
         exp.prepare(exp_context)
         exp_map[field] = exp
@@ -147,31 +141,25 @@ def virtual_fields(
     # get filter
     req_filter = params.get("FILTER", "")
     if req_filter:
-        req_exp = QgsExpression(req_filter)
-        req_exp.setGeomCalculator(distance_area)
-        req_exp.setDistanceUnits(project.distanceUnits())
-        req_exp.setAreaUnits(project.areaUnits())
-
-        if req_exp.hasParserError():
+        # The filter can be sent by the client: the forbidden functions are checked too
+        try:
+            req_exp = check_expression(req_filter, distance_area, project)
+            # The filter must not read other layers, whose access control is not applied
+            for member in req_exp.referencedFunctions():
+                if member in CROSS_LAYER_EXPRESSIONS:
+                    raise ForbiddenExpressionError(f"Expression function '{member}' is not allowed")
+        except ExpressionError as err:
             raise ExpressionServiceError(
                 "Bad request",
-                "Invalid FILTER for 'VirtualFields' Error \"{}\": {}".format(
-                    req_filter, req_exp.parserErrorString()
-                ),
+                f"Invalid FILTER for 'VirtualFields': {err}",
                 400,
-            )
-
-        if not req_exp.isValid():
-            raise ExpressionServiceError(
-                "Bad request",
-                f"Invalid FILTER for 'VirtualFields' Expression not valid \"{req_filter}\"",
-                400,
-            )
+            ) from None
 
         req_exp.prepare(exp_context)
         req = QgsFeatureRequest(req_exp, exp_context)
 
     # set limit
+    # XXX Set hard limit instead of -1
     req_limit = params.get("LIMIT", "-1")
     try:
         req.setLimit(int(req_limit))
@@ -186,8 +174,18 @@ def virtual_fields(
     if req_sorting_order_param in ("asc", "desc"):
         # QGIS expects a boolean to know how to sort
         req_sorting_field = params.get("SORTING_FIELD", "")
-        order_by_clause = QgsFeatureRequest.OrderByClause(req_sorting_field, req_sorting_order_param == "asc")
-        req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+        # The order by clause is an expression: only a field of the layer is accepted,
+        # as a quoted column reference. Otherwise, the features are not sorted.
+        if layer.fields().indexOf(req_sorting_field) >= 0:
+            order_by_clause = QgsFeatureRequest.OrderByClause(
+                QgsExpression.quotedColumnRef(req_sorting_field),
+                req_sorting_order_param == "asc",
+            )
+            req.setOrderBy(QgsFeatureRequest.OrderBy([order_by_clause]))
+        else:
+            logger.warning(
+                f"Invalid SORTING_FIELD for 'VirtualFields': \"{req_sorting_field}\" is not a field"
+            )
     elif req_sorting_order_param != "":
         raise ExpressionServiceError(
             "Bad request", f"Invalid SORTING_ORDER for 'VirtualFields': \"{req_sorting_order_param}\"", 400
@@ -215,45 +213,46 @@ def virtual_fields(
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 
-    # response
-    response.setStatusCode(200)
-    response.setHeader("Content-Type", "application/json")
-    response.write('{ "type": "FeatureCollection","features":[')
-    response.flush()
-
-    json_exporter = QgsJsonExporter(layer)
-    if attribute_list:
-        json_exporter.setAttributes(attribute_list)
-
-    separator = ""
-    for feat in layer.getFeatures(req):  # ty: ignore[not-iterable]
-        fid = layer_name + "." + get_server_fid(feat, pk_attributes)
-
-        extra: dict = {}
-
-        # Update context
-        exp_context.setFeature(feat)
-        exp_context.setFields(feat.fields())
-
-        # Evaluate expressions for virtual fields
-        errors = {}
-        for field, exp in exp_map.items():
-            value = exp.evaluate(exp_context)
-            if exp.hasEvalError():
-                extra[field] = None
-                errors[field] = exp.evalErrorString()
-            else:
-                extra[field] = json.loads(QgsJsonUtils.encodeValue(value))
-                errors[field] = exp.expression()
-
-        response.write(separator + json_exporter.exportFeature(feat, extra, fid))
+    try:
+        # response
+        response.setStatusCode(200)
+        response.setHeader("Content-Type", "application/json")
+        response.write('{ "type": "FeatureCollection","features":[')
         response.flush()
-        separator = ",\n"
-    response.write("]}")
 
-    # reset subset string before ending request
-    if extra_sql:
-        layer.setSubsetString(subset_sql)
+        json_exporter = QgsJsonExporter(layer)
+        if attribute_list:
+            json_exporter.setAttributes(attribute_list)
+
+        separator = ""
+        for feat in layer.getFeatures(req):  # ty: ignore[not-iterable]
+            fid = f"{layer_name}.{get_server_fid(feat, pk_attributes)}"
+
+            extra: dict = {}
+
+            # Update context
+            exp_context.setFeature(feat)
+            exp_context.setFields(feat.fields())
+
+            # Evaluate expressions for virtual fields
+            errors = {}
+            for field, exp in exp_map.items():
+                value = exp.evaluate(exp_context)
+                if exp.hasEvalError():
+                    extra[field] = None
+                    errors[field] = exp.evalErrorString()
+                else:
+                    extra[field] = json.loads(QgsJsonUtils.encodeValue(value))
+                    errors[field] = exp.expression()
+
+            response.write(separator + json_exporter.exportFeature(feat, extra, fid))
+            response.flush()
+            separator = ",\n"
+        response.write("]}")
+    finally:
+        # reset subset string before ending request
+        if extra_sql:
+            layer.setSubsetString(subset_sql)
 
 
 def check_json_virtuals(name: str, virtuals: Optional[str]) -> dict:
@@ -275,23 +274,3 @@ def check_json_virtuals(name: str, virtuals: Optional[str]) -> dict:
         )
 
     return virtual_json
-
-
-def check_expression(
-    expression_str: str,
-    distance_area: QgsDistanceArea,
-    project: QgsProject,
-) -> Tuple[Optional[QgsExpression], str]:
-    """Check if an expression as a string has an error or not."""
-    expression = QgsExpression(expression_str)
-    expression.setGeomCalculator(distance_area)
-    expression.setDistanceUnits(project.distanceUnits())
-    expression.setAreaUnits(project.areaUnits())
-
-    if expression.hasParserError():
-        return None, f'Error "{expression_str}": {expression.parserErrorString()}'
-
-    if not expression.isValid():
-        return None, f'Expression not valid "{expression_str}"'
-
-    return expression, ""

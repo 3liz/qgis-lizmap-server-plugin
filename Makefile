@@ -97,6 +97,7 @@ docker-test:
 		--mount type=bind,source=$$(pwd),target=/src \
 		--workdir /src \
 		--env QGIS_VERSION=$(QGIS_VERSION) \
+		--env LIZMAP_TEST_PG_DSN \
 		$(QGIS_IMAGE_TAG) .docker/run-tests.sh
 
 #

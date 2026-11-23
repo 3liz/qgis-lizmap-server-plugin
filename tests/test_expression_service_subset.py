@@ -123,9 +123,7 @@ def test_replace_features_not_a_feature(project, iface):
 
     response = QgsBufferServerResponse()
     with pytest.raises(ExpressionServiceError):
-        replace_expression_text(
-            _params(FEATURES='[{"type": "FeatureCollection"}]'), response, project, iface
-        )
+        replace_expression_text(_params(FEATURES='[{"type": "FeatureCollection"}]'), response, project, iface)
 
     assert layer.subsetString() == ""
 

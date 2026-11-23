@@ -5,6 +5,9 @@ import sys
 
 import pytest
 
+from pathlib import Path
+
+from qgis.core import QgsProject
 from qgis.server import (
     QgsBufferServerRequest,
     QgsBufferServerResponse,
@@ -12,7 +15,8 @@ from qgis.server import (
     QgsServerRequest,
 )
 
-from lizmap_server.api.errors import HTTPError
+from lizmap_server.api import defaults
+from lizmap_server.api.errors import HTTPError, HTTPForbidden
 from lizmap_server.api.models import Link
 from lizmap_server.api.request import HTTPRequestDelegate
 
@@ -170,3 +174,71 @@ def test_api_request_send_error_after_finish(client):
     delegate.send_error(500, reason="Too late")
 
     assert response.statusCode() == 500
+
+
+#
+# Security tests
+#
+
+#
+#  Path traversal in the Lizmap API project endpoints
+#
+
+
+TRAVERSALS = (
+    "/data/../../etc/passwd",
+    "/data/../conftest.py",
+    "/data/montpellier/../../../etc/passwd",
+    "/data/..",
+    "../other",
+)
+
+
+@pytest.mark.parametrize("path", TRAVERSALS)
+def test_api_resolve_defaults_project_uri_rejects_traversal(path):
+    """A path escaping the search path must not be resolved."""
+    with pytest.raises(HTTPForbidden):
+        defaults.resolve_project_uri(path)
+
+
+@pytest.mark.parametrize("path", TRAVERSALS)
+def test_api_collect_projects_rejects_traversal(path):
+    """No project may be collected from outside the search path."""
+    with pytest.raises(HTTPForbidden):
+        list(defaults.collect_projects("Test", path))
+
+
+def test_api_description_cannot_escape_the_root(client, rootdir, tmp_path):
+    """A project outside the configured root must not be opened by the API."""
+    outside = tmp_path / "outside.qgs"
+    assert QgsProject().write(str(outside))
+
+    relative = Path(rootdir).joinpath("data").relative_to(outside, walk_up=True)
+    assert str(relative).startswith("..")
+
+    response = client.get(f"/lizmap/api/v1/projects/description?p=/data/{relative}")
+
+    assert response.status_code == 403, response.content
+
+
+def test_api_layers_cannot_escape_the_root(client, rootdir, tmp_path):
+    """The '?p=' parameter of the other endpoints must be checked as well."""
+    outside = tmp_path / "outside.qgs"
+    assert QgsProject().write(str(outside))
+
+    relative = Path(rootdir).joinpath("data").relative_to(outside, walk_up=True)
+    query = f"?p=/data/{relative}"
+
+    assert client.get(f"/lizmap/api/v1/projects/layers/unknown{query}").status_code == 403
+    assert client.get(f"/lizmap/api/v1/projects/layouts{query}").status_code == 403
+
+
+def test_api_list_cannot_escape_the_root(client):
+    """The '{PATH:.+}' pattern matches '..': no project may be listed from above."""
+    response = client.get("/lizmap/api/v1/projects/list/data/..")
+
+    if response.status_code == 200:
+        content = json.loads(response.content.decode("utf-8"))
+        assert content["projects"] == [], "Projects listed from outside the search path"
+    else:
+        assert response.status_code == 403

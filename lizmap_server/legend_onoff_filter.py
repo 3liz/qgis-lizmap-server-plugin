@@ -15,6 +15,7 @@ from qgis.core import (
     Qgis,
     QgsMapLayer,
     QgsProject,
+    QgsVectorLayer,
 )
 from qgis.server import (
     QgsAccessControlFilter,
@@ -40,19 +41,25 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         layer_short_name = unwrap(layer.serverProperties()).shortName()
 
         for legend_layer in qs.split(";"):
-            layer_name, key_list = legend_layer.split(":")
+            layer_split = legend_layer.split(":")
+            # NOTE: may be this should be an error 400
+            if len(layer_split) < 2:
+                continue
             # not empty
+            layer_name, key_list, *_ = layer_split
             if layer_name == "" or key_list == "":
                 continue
             # for the layer
             if layer_name not in (layer_short_name, layer.name(), layer.id()):
                 continue
 
-            # TODO: check that layer is a vector layer
-            for key in key_list.split(","):
-                layer.renderer().checkLegendSymbolItem(key, onoff)  # ty: ignore[unresolved-attribute]
+            if isinstance(layer, QgsVectorLayer):
+                for key in key_list.split(","):
+                    layer.renderer().checkLegendSymbolItem(key, onoff)  # ty: ignore[unresolved-attribute]
 
     def layerPermissions(self, layer: Optional[QgsMapLayer]) -> QgsAccessControlFilter.LayerPermissions:
+
+        # TODO: Check style restoration
 
         layer = unwrap(layer)
 
@@ -73,20 +80,20 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
             # TODO: check return type
             layers = params.get("LAYER", [])
 
-        # noinspection PyBroadException
         try:
             style_map = dict(zip(layers, styles))
         except Exception:
             style_map = {}
 
         sm = unwrap(layer.styleManager())
-        style = sm.currentStyle()
+        # current_style = sm.currentStyle()
+
+        style = None
 
         # check short name
         layer_short_name = unwrap(layer.serverProperties()).shortName()
         if layer_short_name in style_map:
             style = style_map[layer_short_name]
-
         # check layer name
         elif layer.name() in style_map:
             style = style_map[layer.name()]
@@ -94,7 +101,8 @@ class LegendOnOffAccessControl(QgsAccessControlFilter):
         elif layer.id() in style_map:
             style = style_map[layer.id()]
 
-        sm.setCurrentStyle(style)
+        if style is not None:
+            sm.setCurrentStyle(style)
 
         if "LEGEND_ON" in params:
             self._setup_legend(layer, params["LEGEND_ON"], True)
@@ -133,11 +141,11 @@ class LegendOnOffFilter(QgsServerFilter):
 
     @staticmethod
     def _reset_legend(qs: str, project: QgsProject):
-        if not qs or ":" not in qs:
-            return
-
         for legend_layer in qs.split(";"):
-            layer_name, key_list = legend_layer.split(":")
+            layer_split = legend_layer.split(":")
+            if len(layer_split) < 2:
+                continue
+            layer_name, key_list, *_ = layer_split
             if layer_name == "" or key_list == "":
                 continue
 

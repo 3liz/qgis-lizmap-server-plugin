@@ -1,7 +1,13 @@
 import json
 
 from urllib.parse import quote
-from .utils import PROJECT_FILE, BASE, _build_query_string, _check_request
+from .utils import (
+    PROJECT_FILE,
+    Client,
+    BASE,
+    _build_query_string,
+    _check_request,
+)
 
 BASE = dict(
     BASE,
@@ -339,11 +345,7 @@ def test_request_safe_virtuals(client):
     )
     qs = _build_query_string(qs)
     rv = client.get(qs, PROJECT_FILE)
-    b = _check_request(rv)
-    # On local, and GitHub Action, it's 'True', while on GitLab, it's 'true'.
-    assert str(b["features"][0]["properties"]["a"]).lower() == "true"
-    assert b["features"][0]["properties"]["b"] == "not allowed"
-    assert int(b["features"][0]["properties"]["c"]) >= 2000
+    _check_request(rv, http_code=400)
 
 
 def test_request_access_control(client):
@@ -484,3 +486,82 @@ def test_request_access_control(client):
 
     assert "features" in b
     assert len(b["features"]) == 4
+
+
+def test_request_filter_forbidden_function(client):
+    """A forbidden function in the FILTER is rejected, as the filter can be sent by the client."""
+    for expression in ("env('HOME') IS NOT NULL", "file_exists('/etc/passwd')", "NAME_1 = eval('1')"):
+        qs = {
+            "SERVICE": "EXPRESSION",
+            "REQUEST": "VirtualFields",
+            "MAP": "france_parts.qgs",
+            "LAYER": "france_parts",
+            "VIRTUALS": '{{"a":"{}"}}'.format(quote("1", safe="")),
+            "FILTER": quote(expression, safe=""),
+        }
+
+        rv = client.get(_build_query_string(qs), PROJECT_FILE)
+        b = _check_request(rv, http_code=400)
+        assert "is not allowed" in b["message"], expression
+
+
+def test_request_filter_cross_layer_function(client):
+    """A function reading another layer is rejected in the FILTER, as the access control of this layer is not applied."""
+    for expression in (
+        "aggregate('france_parts', 'count', 1) > 0",
+        "attribute(get_feature('france_parts', 'NAME_1', 'Bretagne'), 'ISO') IS NOT NULL",
+        "get_feature_by_id('france_parts', 1) IS NOT NULL",
+        "overlay_intersects('france_parts')",
+        "overlay_nearest('france_parts') IS NOT NULL",
+    ):
+        qs = {
+            "SERVICE": "EXPRESSION",
+            "REQUEST": "VirtualFields",
+            "MAP": "france_parts.qgs",
+            "LAYER": "france_parts",
+            "VIRTUALS": '{{"a":"{}"}}'.format(quote("1", safe="")),
+            "FILTER": quote(expression, safe=""),
+        }
+
+        rv = client.get(_build_query_string(qs), PROJECT_FILE)
+        b = _check_request(rv, http_code=400)
+        assert "is not allowed" in b["message"], expression
+
+
+def _sorted_ids(client: Client, sorting_field: str) -> list:
+    """Request the features sorted by descending order of the given field, and return their ids.
+
+    :param client: The QGIS Server test client.
+    :param sorting_field: The SORTING_FIELD parameter.
+    :returns: The ids of the features, in the order of the response.
+    """
+    qs = {
+        "SERVICE": "EXPRESSION",
+        "REQUEST": "VirtualFields",
+        "MAP": "france_parts.qgs",
+        "LAYER": "france_parts",
+        "VIRTUALS": '{{"a":"{}"}}'.format(quote("1", safe="")),
+        "SORTING_ORDER": "DESC",
+        "SORTING_FIELD": quote(sorting_field, safe=""),
+    }
+
+    rv = client.get(_build_query_string(qs), PROJECT_FILE)
+    b = _check_request(rv)
+    return [feature["id"] for feature in b["features"]]
+
+
+def test_request_order_only_by_a_field(client):
+    """The SORTING_FIELD must be a field: an expression is not evaluated and the features are not sorted."""
+    unsorted = _sorted_ids(client, "null")
+
+    # A field: the features are sorted
+    assert _sorted_ids(client, "NAME_1") == [
+        "france_parts.2",
+        "france_parts.3",
+        "france_parts.1",
+        "france_parts.0",
+    ]
+
+    # Not a field: same order as without sorting
+    assert _sorted_ids(client, "env('HOME')") == unsorted
+    assert _sorted_ids(client, '-"OBJECTID"') == unsorted

@@ -2,6 +2,7 @@
 # Request REPLACEEXPRESSIONTEXT
 #
 import json
+import os
 import traceback
 
 from typing import (
@@ -15,7 +16,6 @@ from typing import (
 
 from qgis.core import (
     QgsDistanceArea,
-    QgsExpression,
     QgsExpressionContext,
     QgsExpressionContextUtils,
     QgsFeature,
@@ -44,9 +44,17 @@ from ..tools import to_bool, unwrap
 
 from .. import logger
 
+from .validate import ExpressionError, safe_replace_expression_text
+
 if TYPE_CHECKING:
     from qgis.core import QgsFeatureIterator
     from .models import Body
+
+
+# When this environment variable is true, an expression error stops the request with
+# an HTTP 400 error. Otherwise, the string with the expression in error is null, and the
+# error is added to the response.
+ENV_STRICT_EXPRESSION = "QGIS_SERVER_LIZMAP_STRICT_EXPRESSION"
 
 
 def replace_expression_text(
@@ -73,6 +81,11 @@ def replace_expression_text(
         FEATURES=ALL to get Replace expression texts for all features of the layer
         FORM_SCOPE=boolean to add formScope based on provided features
         FORMAT=GeoJSON to get response as GeoJSON
+
+    The response has a status, "success" or "partial" if some expressions are in error
+    (the value of their string is then null),
+    and the list of errors: {"feature": feature id or null, "key": string key, "error": message}.
+    With the GeoJSON format, they are foreign members of the FeatureCollection.
     """
     layer_name = params.get("LAYER", "")
     if not layer_name:
@@ -117,186 +130,213 @@ def replace_expression_text(
     if extra_sql:
         layer.setSubsetString(f"({subset_sql}) AND ({extra_sql})" if subset_sql else extra_sql)
 
-    # get features
-    features = params.get("FEATURES", "")
-    if not features and (feat := params.get("FEATURE", "")):
-        features = f"[{feat}]"
+    try:
+        # get features
+        features = params.get("FEATURES", "")
+        if not features and (feat := params.get("FEATURE", "")):
+            features = f"[{feat}]"
 
-    # create expression context
-    exp_context = QgsExpressionContext()
-    exp_context.appendScope(QgsExpressionContextUtils.globalScope())
-    exp_context.appendScope(QgsExpressionContextUtils.projectScope(project))
-    exp_context.appendScope(QgsExpressionContextUtils.layerScope(layer))
+        # create expression context
+        exp_context = QgsExpressionContext()
+        exp_context.appendScope(QgsExpressionContextUtils.globalScope())
+        exp_context.appendScope(QgsExpressionContextUtils.projectScope(project))
+        exp_context.appendScope(QgsExpressionContextUtils.layerScope(layer))
 
-    # create distance area context
-    da = QgsDistanceArea()
-    da.setSourceCrs(layer.crs(), project.transformContext())
-    da.setEllipsoid(project.ellipsoid())
+        # create distance area context
+        da = QgsDistanceArea()
+        da.setSourceCrs(layer.crs(), project.transformContext())
+        da.setEllipsoid(project.ellipsoid())
 
-    # organized strings
-    # TODO: add type annotation
-    str_map = {}
-    str_items: Iterable[Tuple[Any, Any]]
-    if isinstance(str_json, list):
-        str_items = enumerate(str_json)
-    elif isinstance(str_json, dict):
-        str_items = str_json.items()
-    else:
-        str_items = ()
+        # organized strings
+        # TODO: add type annotation
+        str_map = {}
+        str_items: Iterable[Tuple[Any, Any]]
+        if isinstance(str_json, list):
+            str_items = enumerate(str_json)
+        elif isinstance(str_json, dict):
+            str_items = str_json.items()
+        else:
+            str_items = ()
 
-    for k, s in str_items:
-        str_map[k] = s
+        for k, s in str_items:
+            str_map[k] = s
 
-    # create the body
-    body: "Body" = {
-        "status": "success",
-        "results": [],
-        "errors": [],
-        "features": 0,
-    }
+        # create the body
+        body: "Body" = {
+            "status": "success",
+            "results": [],
+            "errors": [],
+            "features": 0,
+        }
 
-    # without features just replace expression string with layer context
-    if not features:
-        result = {}
-        for k, s in str_map.items():
-            #value = QgsExpression.replaceExpressionText(cast("str", s), exp_context, da)
-            value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
-            result[k] = json.loads(QgsJsonUtils.encodeValue(value))
-        body["results"].append(result)
-        write_json_response(body, response)
-        # reset subset string before ending request
-        if extra_sql:
-            layer.setSubsetString(subset_sql)
-        return
+        # In strict mode, the first expression error stops the request
+        strict = to_bool(os.getenv(ENV_STRICT_EXPRESSION))
 
-    feature_list: Union["QgsFeatureIterator", Iterable[QgsFeature]]
+        def replace(key: Any, text: str, feature_id: int | None) -> str | None:
+            """Replace the expressions of a string, and keep its errors in the body.
 
-    # Check features
-    if features.upper() == "ALL":
-        feature_fields = layer.fields()
-        feature_list = layer.getFeatures()
-    else:
-        try:
-            geojson = json.loads(features)
-        except Exception:
-            # reset subset string before raising error
-            if extra_sql:
-                layer.setSubsetString(subset_sql)
-            logger.critical(f"JSON loads features '{features}' exception:\n{traceback.format_exc()}")
-            raise ExpressionServiceError(
-                "Bad request", f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed", 400
+            :param key: The key of the string in the STRINGS parameter.
+            :param text: The string with expressions.
+            :param feature_id: The id of the feature, or None without feature.
+            :returns: The string with the expressions replaced, or None if an expression is in error.
+            """
+            errors: list[str] | None = None if strict else []
+            try:
+                value = safe_replace_expression_text(text, exp_context, da, errors)
+            except ExpressionError as err:
+                raise ExpressionServiceError("Bad request", f"{err}", 400) from None
+
+            # Lenient mode: the errors are reported in the response
+            for error in errors or []:
+                logger.warning(f"ReplaceExpressionText: {error}")
+                body["errors"].append({"feature": feature_id, "key": key, "error": error})
+                body["status"] = "partial"
+            return value
+
+        # without features just replace expression string with layer context
+        if not features:
+            result = {}
+            for k, s in str_map.items():
+                value = replace(k, f"{s}", None)
+                result[k] = json.loads(QgsJsonUtils.encodeValue(value))
+            body["results"].append(result)
+            write_json_response(body, response)
+            return
+
+        feature_list: Union["QgsFeatureIterator", Iterable[QgsFeature]]
+
+        # Check features
+        if features.upper() == "ALL":
+            feature_fields = layer.fields()
+            feature_list = layer.getFeatures()
+        else:
+            try:
+                geojson = json.loads(features)
+            except Exception:
+                # reset subset string before raising error
+                if extra_sql:
+                    layer.setSubsetString(subset_sql)
+                logger.critical(f"JSON loads features '{features}' exception:\n{traceback.format_exc()}")
+                raise ExpressionServiceError(
+                    "Bad request",
+                    f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
+                    400,
+                )
+
+            if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
+                # reset subset string before raising error
+                if extra_sql:
+                    layer.setSubsetString(subset_sql)
+                raise ExpressionServiceError(
+                    "Bad request",
+                    f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed",
+                    400,
+                )
+
+            if ("type" not in geojson[0]) or geojson[0]["type"] != "Feature":
+                # reset subset string before raising error
+                if extra_sql:
+                    layer.setSubsetString(subset_sql)
+                raise ExpressionServiceError(
+                    "Bad request",
+                    (
+                        "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed: type not defined or not "
+                        "Feature."
+                    ).format(features),
+                    400,
+                )
+
+            # try to load features
+            # read fields
+            feature_fields = QgsJsonUtils_stringToFields(
+                f'{{ "type": "FeatureCollection","features": {features} }}',
+            )
+            # read features
+            feature_list = QgsJsonUtils_stringToFeatureList(
+                f'{{ "type": "FeatureCollection","features": {features} }}',
+                feature_fields,
             )
 
-        if not geojson or not isinstance(geojson, list) or len(geojson) == 0:
-            # reset subset string before raising error
-            if extra_sql:
-                layer.setSubsetString(subset_sql)
-            raise ExpressionServiceError(
-                "Bad request", f"Invalid 'Evaluate' REQUEST: FEATURES '{features}' are not well formed", 400
-            )
-
-        if ("type" not in geojson[0]) or geojson[0]["type"] != "Feature":
+        # features not well-formed
+        if feature_list is None:
             # reset subset string before raising error
             if extra_sql:
                 layer.setSubsetString(subset_sql)
             raise ExpressionServiceError(
                 "Bad request",
                 (
-                    "Invalid 'Evaluate' REQUEST: FEATURES '{}' are not well formed: type not defined or not "
-                    "Feature."
+                    "Invalid FEATURES for 'ReplaceExpressionText': not GeoJSON features array provided\n{}"
                 ).format(features),
                 400,
             )
 
-        # try to load features
-        # read fields
-        feature_fields = QgsJsonUtils_stringToFields(
-            f'{{ "type": "FeatureCollection","features": {features} }}',
-        )
-        # read features
-        feature_list = QgsJsonUtils_stringToFeatureList(
-            f'{{ "type": "FeatureCollection","features": {features} }}',
-            feature_fields,
-        )
+        # Extend layer fields with this provided in GeoJSON Features
+        feat_fields = QgsFields(layer.fields())
+        feat_fields.extend(feature_fields)
 
-    # features not well-formed
-    if feature_list is None:
-        # reset subset string before raising error
+        # form scope
+        add_form_scope = to_bool(params.get("FORM_SCOPE"))
+
+        geojson_output = params.get("FORMAT", "").upper() == "GEOJSON"
+        geojson_fields = QgsFields()
+        if geojson_output:
+            exporter = QgsJsonExporter()
+            exporter.setSourceCrs(layer.crs())
+            for k in str_map:
+                # NOTE: QgsField QGIS 4 annotations is incomplete (missing constructors)
+                field = QgsField(str(k), QMetaType.Type.QString)  # ty: ignore
+                geojson_fields.append(field)
+        else:
+            exporter = None
+
+        # loop through provided features to replace expression strings
+        for f in feature_list:  # ty: ignore[not-iterable]
+            # clone the features with all attributes
+            # those defined in layer + fields from GeoJSON Features
+            feature = QgsFeature(feat_fields)
+            feature.setGeometry(f.geometry())
+            for field in f.fields():
+                field_name = field.name()
+                if feat_fields.indexOf(field_name) != -1:
+                    feature.setAttribute(field_name, f[field_name])
+
+            # Add form scope to expression context
+            if add_form_scope:
+                exp_context.appendScope(QgsExpressionContextUtils.formScope(feature))
+
+            exp_context.setFeature(feature)
+            exp_context.setFields(feature.fields())
+
+            # replace expression strings with the new feature
+            result = {}
+            for k, s in str_map.items():
+                value = replace(k, f"{s}", f.id())
+                result[k] = json.loads(QgsJsonUtils.encodeValue(value))
+            if exporter:
+                feature = QgsFeature(geojson_fields, f.id())
+                feature.setGeometry(f.geometry())
+                feature.setAttributes(list(result.values()))
+                body["results"].append(exporter.exportFeature(feature))
+            else:
+                body["results"].append(result)
+
+        if geojson_output:
+            response.setStatusCode(200)
+            response.setHeader("Content-Type", "application/vnd.geo+json; charset=utf-8")
+            response.write(
+                ",\n".join(
+                    [
+                        '{"type": "FeatureCollection"',
+                        # Foreign members, ignored by the GeoJSON readers
+                        '"status": ' + json.dumps(body["status"]),
+                        '"errors": ' + json.dumps(body["errors"]),
+                        '"features": [' + ",\n".join(body["results"]) + "]}",
+                    ]
+                ),
+            )
+        else:
+            write_json_response(body, response)
+    finally:
+        # reset subset string before ending request
         if extra_sql:
             layer.setSubsetString(subset_sql)
-        raise ExpressionServiceError(
-            "Bad request",
-            ("Invalid FEATURES for 'ReplaceExpressionText': not GeoJSON features array provided\n{}").format(
-                features
-            ),
-            400,
-        )
-
-    # Extend layer fields with this provided in GeoJSON Features
-    feat_fields = QgsFields(layer.fields())
-    feat_fields.extend(feature_fields)
-
-    # form scope
-    add_form_scope = to_bool(params.get("FORM_SCOPE"))
-
-    geojson_output = params.get("FORMAT", "").upper() == "GEOJSON"
-    geojson_fields = QgsFields()
-    if geojson_output:
-        exporter = QgsJsonExporter()
-        exporter.setSourceCrs(layer.crs())
-        for k in str_map:
-            # NOTE: QgsField QGIS 4 annotations is incomplete (missing constructors)
-            field = QgsField(str(k), QMetaType.Type.QString)  # ty: ignore
-            geojson_fields.append(field)
-    else:
-        exporter = None
-
-    # loop through provided features to replace expression strings
-    for f in feature_list:  # ty: ignore[not-iterable]
-        # clone the features with all attributes
-        # those defined in layer + fields from GeoJSON Features
-        feature = QgsFeature(feat_fields)
-        feature.setGeometry(f.geometry())
-        for field in f.fields():
-            field_name = field.name()
-            if feat_fields.indexOf(field_name) != -1:
-                feature.setAttribute(field_name, f[field_name])
-
-        # Add form scope to expression context
-        if add_form_scope:
-            exp_context.appendScope(QgsExpressionContextUtils.formScope(feature))
-
-        exp_context.setFeature(feature)
-        exp_context.setFields(feature.fields())
-
-        # replace expression strings with the new feature
-        result = {}
-        for k, s in str_map.items():
-            #value = QgsExpression.replaceExpressionText(cast("str", s), exp_context, da)
-            value = QgsExpression.replaceExpressionText(f"{s}", exp_context, da)
-            result[k] = json.loads(QgsJsonUtils.encodeValue(value))
-        if exporter:
-            feature = QgsFeature(geojson_fields, f.id())
-            feature.setGeometry(f.geometry())
-            feature.setAttributes(list(result.values()))
-            body["results"].append(exporter.exportFeature(feature))
-        else:
-            body["results"].append(result)
-
-    if geojson_output:
-        response.setStatusCode(200)
-        response.setHeader("Content-Type", "application/vnd.geo+json; charset=utf-8")
-        response.write(
-            ",\n".join(
-                [
-                    '{"type": "FeatureCollection"',
-                    '"features": [' + ",\n".join(body["results"]) + "]}",
-                ]
-            ),
-        )
-    else:
-        write_json_response(body, response)
-
-    # reset subset string before ending request
-    if extra_sql:
-        layer.setSubsetString(subset_sql)

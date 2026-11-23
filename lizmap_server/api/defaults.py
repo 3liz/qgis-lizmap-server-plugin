@@ -28,6 +28,7 @@ from typing import (
 from urllib.parse import SplitResult as Url, urlsplit
 
 from .conditions import assert_precondition
+from .errors import HTTPForbidden
 from .routes import Route, build_route
 
 from . import logger
@@ -56,14 +57,16 @@ def resolve_project_uri(path: Union[PurePosixPath, str]) -> Optional[Url]:
     if not route:
         return None
 
-    path = PurePosixPath(path)
-    assert_precondition(path.is_absolute(), "Search path must be absolute")
-
     uri = cast("str", project_uri())
     assert_precondition(
         uri is not None,
         "No default projects LIZMAP_PROJECTS_URI template defined",
     )
+
+    path = PurePosixPath(path)
+    if not path.is_absolute() or any(p == ".." for p in path.parts):
+        logger.error(f"Invalid project's path: {path}")
+        raise HTTPForbidden()
 
     result = route.resolve_path(path)
     if not result:
@@ -77,6 +80,7 @@ def resolve_project_uri(path: Union[PurePosixPath, str]) -> Optional[Url]:
 
     # Get relative path
     path = path.relative_to(location)
+
     # Check for {path} template in rooturl
     query = rooturl.query.format(path=path)
     if query != rooturl.query:

@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+* Remove QGIS 3.34 support
+* Fix QGIS expression injection via user group/login
+* Mitigate parsing errors in `legend_onoff_filter`
+* Restore mutated state per-request
+* Handle clients expressions restrictions
+* Handle path traversal in the Lizmap API project endpoints
+* Fix operator precedence in polygon filter
+* Filter by login: compare the multiple values as arrays instead of LIKE patterns
+* Filter by polygon: fix the SQL query of the polygons of the user groups
+* Expression service: format the values as QGIS does
+* Expression service: stricter checks of the filter and of the sorting field of `VirtualFields`
+* Check the expression functions used in the OGC requests
+* Expression service: report the errors of `ReplaceExpressionText`, new environment
+  variable `QGIS_SERVER_LIZMAP_STRICT_EXPRESSION`
+* Improve test coverage
+* Fix GetLegendGraphic JSON with duplicated rule labels
+    - Contributed from https://github.com/3liz/qgis-lizmap-server-plugin/pull/158    
+
+## 2.15.5 - 2026-09-25
+
+* Fix SQL queries built from the QGIS layer datasource table name
+
+## 2.15.4 - 2026-09-08
+
 * API: Remove trailing slash from api spec
 * API: Fix url in Qjazz context project loader
 * API: Take care of projects already in Qjazz cache
@@ -9,7 +33,6 @@
   several branches, the rule keys were duplicated and the legend tree was broken
 * Update dependecies
 * Fix single quotes escaping to avoid broken HTML output
-* Remove QGIS 3.34 support
 
 ## 2.15.3 - 2026-07-28
 
