@@ -2,23 +2,20 @@
 
 ## Unreleased
 
-* Remove QGIS 3.34 support
-* Fix QGIS expression injection via user group/login
-* Mitigate parsing errors in `legend_onoff_filter`
-* Restore mutated state per-request
-* Handle clients expressions restrictions
-* Handle path traversal in the Lizmap API project endpoints
-* Fix operator precedence in polygon filter
-* Filter by login: compare the multiple values as arrays instead of LIKE patterns
-* Filter by polygon: fix the SQL query of the polygons of the user groups
-* Expression service: format the values as QGIS does
-* Expression service: stricter checks of the filter and of the sorting field of `VirtualFields`
-* Check the expression functions used in the OGC requests
-* Expression service: report the errors of `ReplaceExpressionText`, new environment
-  variable `QGIS_SERVER_LIZMAP_STRICT_EXPRESSION`
-* Improve test coverage
-* Fix GetLegendGraphic JSON with duplicated rule labels
-    - Contributed from https://github.com/3liz/qgis-lizmap-server-plugin/pull/158    
+## 2.16.0 - 2026-11-23
+
+* Remove QGIS 3.34 support, QGIS 3.40 minimum
+* **Filter by login**: exact match of the multiple values of the filter field
+* **Filter by login**: fix the special characters in the user groups and logins
+* **Filter by polygon**: fix the polygons of the user groups and the combination with the filter by login
+* **Stricter checks of the expressions** sent by the clients, in the OGC requests and the expression service
+* **Lizmap API**: stricter checks of the project paths
+* Restore the layer filters and styles after each request
+* **Legend**: more robust parsing of the `LEGEND_ON` and `LEGEND_OFF` parameters
+* **Expression service**: values formatted as in QGIS
+* **Expression service**: errors of `ReplaceExpressionText` listed in the response, environment variable
+  `QGIS_SERVER_LIZMAP_STRICT_EXPRESSION` to reject the request instead
+* Improve the test coverage
 
 ## 2.15.5 - 2026-09-25
 
